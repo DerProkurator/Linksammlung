@@ -138,7 +138,7 @@
             transform: translateX(400px);
             transition: transform 0.3s ease, opacity 0.3s ease;
             opacity: 0;
-            max-width: 300px;
+            max-width: 350px;
             word-wrap: break-word;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
@@ -150,15 +150,49 @@
         }
 
         .status-success {
-            background: rgba(46, 204, 113, 0.2);
-            border: 1px solid rgba(46, 204, 113, 0.4);
-            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.25);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            color: #7bed9f;
         }
 
         .status-error {
-            background: rgba(231, 76, 60, 0.2);
-            border: 1px solid rgba(231, 76, 60, 0.4);
-            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.25);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #ff7675;
+        }
+
+        .status-warning {
+            background: rgba(255, 193, 7, 0.25);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #fdcb6e;
+        }
+
+        .status-info {
+            background: rgba(52, 152, 219, 0.25);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            color: #74b9ff;
+        }
+
+        /* Erweiterte Toast-Nachrichten für wichtige Warnungen */
+        .status-message.important {
+            max-width: 420px;
+            padding: 18px 24px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+            border-width: 2px;
+        }
+
+        .status-message.important .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        .status-message.important .status-content {
+            opacity: 0.95;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .category {
@@ -173,7 +207,6 @@
             z-index: 1000;
         }
 
-        /* FIXED: Neue Styles für zugeklappte Kategorien - sie nehmen nicht mehr die volle Breite ein */
         .category.collapsed .link-grid {
             display: none;
         }
@@ -195,12 +228,10 @@
             transition: opacity 0.2s ease;
         }
 
-        /* FIXED: Zugeklappte Kategorien sollen NICHT die volle Breite einnehmen */
         .category.collapsed.has-many-items {
             grid-column: auto !important;
         }
 
-        /* Neue Styles für leere Kategorien beim Drag & Drop */
         .category.empty-category {
             opacity: 0.7;
             border: 2px dashed rgba(64, 224, 208, 0.3);
@@ -237,7 +268,6 @@
             opacity: 0.6;
         }
 
-        /* Verbesserte Drag-Over-Visualisierung */
         .category.drag-over-before {
             transform: translateY(-3px);
             transition: transform 0.2s ease;
@@ -248,7 +278,6 @@
             transition: transform 0.2s ease;
         }
 
-        /* Drop-Indikator-Linien für verschiedene Richtungen */
         .drop-indicator-line {
             position: absolute;
             background: linear-gradient(90deg, transparent, rgba(64, 224, 208, 0.8), transparent);
@@ -339,7 +368,6 @@
             transition: all 0.3s ease;
             user-select: none;
             opacity: 0.7;
-            /* FIXED: Z-Index erhöht für bessere Zugänglichkeit */
             z-index: 10;
             position: relative;
         }
@@ -387,7 +415,6 @@
             cursor: grabbing;
         }
 
-        /* Neue Styles für Intra-Kategorie Drag-and-Drop */
         .link-item.drag-over-top {
             border-top: 3px solid rgba(64, 224, 208, 0.8);
             background: rgba(64, 224, 208, 0.05);
@@ -510,7 +537,6 @@
             background: rgba(64, 224, 208, 0.1);
         }
 
-        /* Neue Styles für kompakte Link-Struktur */
         .link-header {
             display: flex;
             align-items: center;
@@ -566,7 +592,6 @@
             transform: rotate(45deg);
         }
 
-        /* Erweiterte Menü-Struktur mit Untermenüs */
         .menu-submenu {
             position: fixed;
             bottom: 110px;
@@ -665,9 +690,21 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
             z-index: 1000;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+            to {
+                opacity: 1;
+                backdrop-filter: blur(8px);
+            }
         }
 
         .modal-content {
@@ -675,102 +712,170 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(20, 20, 35, 0.95);
-            backdrop-filter: blur(20px);
+            background: rgba(25, 25, 40, 0.98);
+            backdrop-filter: blur(25px);
             border-radius: 20px;
-            padding: 30px;
+            padding: 35px;
             width: 90%;
-            max-width: 400px;
-            border: 1px solid rgba(64, 224, 208, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            max-width: 450px;
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            animation: modalSlideIn 0.4s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
         }
 
         .modal h2 {
-            color: #e0e0e0;
-            margin-bottom: 20px;
+            color: #ffffff;
+            margin-bottom: 25px;
             text-align: center;
             background: linear-gradient(45deg, #40e0d0, #64ffda);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-size: 1.6em;
+            font-weight: 600;
         }
 
         .modal p {
-            color: #e0e0e0;
+            color: #e8e8e8;
             margin-bottom: 20px;
-            line-height: 1.5;
+            line-height: 1.6;
             font-size: 14px;
         }
 
         #categorySelectMessage {
-            background: rgba(64, 224, 208, 0.1);
-            border: 1px solid rgba(64, 224, 208, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            color: #e0e0e0;
+            background: rgba(64, 224, 208, 0.15);
+            border: 1px solid rgba(64, 224, 208, 0.4);
+            border-radius: 12px;
+            padding: 18px;
+            color: #f0f0f0;
             font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        /* Leere Kategorie Modal Styles - Optimiert für Dark Mode */
+        .empty-category-section {
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border: 1px solid;
+        }
+
+        .empty-category-section.success {
+            background: rgba(46, 204, 113, 0.15);
+            border-color: rgba(46, 204, 113, 0.4);
+        }
+
+        .empty-category-section.warning {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        .empty-category-section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 15px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .empty-category-section-content {
+            color: rgba(255, 255, 255, 0.9);
             line-height: 1.5;
-            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .empty-category-section-content strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .empty-category-section-note {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 13px;
+            margin-top: 8px;
+            font-style: italic;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         .form-group label {
             display: block;
-            color: #e0e0e0;
-            margin-bottom: 5px;
+            color: #f0f0f0;
+            margin-bottom: 8px;
             font-weight: 500;
+            font-size: 14px;
         }
 
         .form-group input, .form-group textarea, .form-group select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(64, 224, 208, 0.3);
-            border-radius: 10px;
-            background: rgba(30, 30, 50, 0.8);
-            color: #e0e0e0;
+            padding: 14px;
+            border: 1px solid rgba(64, 224, 208, 0.4);
+            border-radius: 12px;
+            background: rgba(35, 35, 55, 0.9);
+            color: #f0f0f0;
             font-size: 16px;
             backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
 
         .form-group optgroup {
-            background: rgba(20, 20, 35, 0.9);
+            background: rgba(25, 25, 40, 0.95);
             color: #40e0d0;
             font-weight: bold;
             font-style: normal;
         }
 
         .form-group option {
-            background: rgba(30, 30, 50, 0.9);
-            color: #e0e0e0;
+            background: rgba(35, 35, 55, 0.95);
+            color: #f0f0f0;
             padding: 8px;
         }
 
         .form-group input::placeholder, .form-group textarea::placeholder {
-            color: rgba(224, 224, 224, 0.5);
+            color: rgba(240, 240, 240, 0.5);
         }
 
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-color: #40e0d0;
-            box-shadow: 0 0 10px rgba(64, 224, 208, 0.5);
+            box-shadow: 0 0 12px rgba(64, 224, 208, 0.4);
+            background: rgba(40, 40, 60, 0.9);
         }
 
         .form-buttons {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: flex-end;
+            margin-top: 30px;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -779,22 +884,30 @@
             font-weight: bold;
         }
 
-        .btn-secondary {
-            background: rgba(30, 30, 50, 0.8);
-            color: #e0e0e0;
-            border: 1px solid rgba(64, 224, 208, 0.3);
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #50f0e0, #74ffea);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(64, 224, 208, 0.4);
         }
 
-        .btn:hover {
+        .btn-secondary {
+            background: rgba(40, 40, 60, 0.9);
+            color: #f0f0f0;
+            border: 1px solid rgba(64, 224, 208, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(50, 50, 70, 0.9);
+            border-color: rgba(64, 224, 208, 0.6);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
         }
 
         .context-menu {
             position: fixed;
-            background: rgba(20, 20, 35, 0.95);
+            background: rgba(25, 25, 40, 0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(64, 224, 208, 0.3);
+            border: 1px solid rgba(64, 224, 208, 0.4);
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
             z-index: 1001;
@@ -816,7 +929,7 @@
 
         .context-menu-item {
             padding: 12px 16px;
-            color: #e0e0e0;
+            color: #f0f0f0;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -839,23 +952,23 @@
         }
 
         .context-menu-item:hover {
-            background: rgba(64, 224, 208, 0.1);
+            background: rgba(64, 224, 208, 0.15);
             color: #40e0d0;
         }
 
         .context-menu-item.delete:hover {
             background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
+            color: #ff7675;
         }
 
         .context-menu-item.export:hover {
             background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
+            color: #7bed9f;
         }
 
         .context-menu-item.toggle:hover {
             background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
+            color: #fdcb6e;
         }
 
         .drag-ghost {
@@ -867,7 +980,6 @@
             max-width: 280px;
         }
 
-        /* NEUE Styles für bessere Drag-Images */
         .category.dragging {
             opacity: 0.5;
             transform: rotate(5deg);
@@ -881,7 +993,6 @@
             cursor: grabbing;
         }
 
-        /* Verbesserte Drag-Handle Styles */
         .drag-handle {
             color: rgba(64, 224, 208, 0.4);
             font-size: 1.5em;
@@ -924,9 +1035,9 @@
             top: 100%;
             left: 0;
             right: 0;
-            background: rgba(20, 20, 35, 0.98);
+            background: rgba(25, 25, 40, 0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(64, 224, 208, 0.3);
+            border: 1px solid rgba(64, 224, 208, 0.4);
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
             max-height: 250px;
@@ -954,19 +1065,19 @@
 
         .emoji-picker-header {
             padding: 12px 16px 8px;
-            border-bottom: 1px solid rgba(64, 224, 208, 0.2);
-            background: rgba(20, 20, 35, 0.98);
+            border-bottom: 1px solid rgba(64, 224, 208, 0.3);
+            background: rgba(25, 25, 40, 0.98);
             backdrop-filter: blur(20px);
             flex-shrink: 0;
         }
 
         .emoji-search {
             width: 100%;
-            padding: 6px 10px;
-            border: 1px solid rgba(64, 224, 208, 0.3);
-            border-radius: 6px;
-            background: rgba(30, 30, 50, 0.8);
-            color: #e0e0e0;
+            padding: 8px 12px;
+            border: 1px solid rgba(64, 224, 208, 0.4);
+            border-radius: 8px;
+            background: rgba(35, 35, 55, 0.9);
+            color: #f0f0f0;
             font-size: 12px;
             margin-bottom: 8px;
         }
@@ -974,7 +1085,7 @@
         .emoji-search:focus {
             outline: none;
             border-color: #40e0d0;
-            box-shadow: 0 0 6px rgba(64, 224, 208, 0.3);
+            box-shadow: 0 0 8px rgba(64, 224, 208, 0.3);
         }
 
         .emoji-categories {
@@ -985,9 +1096,9 @@
         }
 
         .emoji-category-btn {
-            background: rgba(30, 30, 50, 0.6);
-            border: 1px solid rgba(64, 224, 208, 0.2);
-            border-radius: 4px;
+            background: rgba(35, 35, 55, 0.8);
+            border: 1px solid rgba(64, 224, 208, 0.3);
+            border-radius: 6px;
             padding: 4px 6px;
             font-size: 14px;
             cursor: pointer;
@@ -997,13 +1108,13 @@
         }
 
         .emoji-category-btn:hover {
-            background: rgba(64, 224, 208, 0.1);
-            border-color: rgba(64, 224, 208, 0.4);
+            background: rgba(64, 224, 208, 0.15);
+            border-color: rgba(64, 224, 208, 0.5);
         }
 
         .emoji-category-btn.active {
-            background: rgba(64, 224, 208, 0.2);
-            border-color: rgba(64, 224, 208, 0.6);
+            background: rgba(64, 224, 208, 0.25);
+            border-color: rgba(64, 224, 208, 0.7);
         }
 
         .emoji-grid {
@@ -1015,7 +1126,7 @@
             flex: 1;
             max-height: 160px;
             scrollbar-width: thin;
-            scrollbar-color: rgba(64, 224, 208, 0.3) rgba(30, 30, 50, 0.5);
+            scrollbar-color: rgba(64, 224, 208, 0.4) rgba(35, 35, 55, 0.6);
         }
 
         .emoji-grid::-webkit-scrollbar {
@@ -1023,22 +1134,22 @@
         }
 
         .emoji-grid::-webkit-scrollbar-track {
-            background: rgba(30, 30, 50, 0.5);
+            background: rgba(35, 35, 55, 0.6);
             border-radius: 3px;
         }
 
         .emoji-grid::-webkit-scrollbar-thumb {
-            background: rgba(64, 224, 208, 0.3);
+            background: rgba(64, 224, 208, 0.4);
             border-radius: 3px;
         }
 
         .emoji-grid::-webkit-scrollbar-thumb:hover {
-            background: rgba(64, 224, 208, 0.5);
+            background: rgba(64, 224, 208, 0.6);
         }
 
         .emoji-item {
-            background: rgba(30, 30, 50, 0.4);
-            border: 1px solid rgba(64, 224, 208, 0.1);
+            background: rgba(35, 35, 55, 0.6);
+            border: 1px solid rgba(64, 224, 208, 0.2);
             border-radius: 6px;
             padding: 4px;
             font-size: 16px;
@@ -1053,8 +1164,8 @@
         }
 
         .emoji-item:hover {
-            background: rgba(64, 224, 208, 0.1);
-            border-color: rgba(64, 224, 208, 0.4);
+            background: rgba(64, 224, 208, 0.15);
+            border-color: rgba(64, 224, 208, 0.5);
             transform: scale(1.05);
         }
 
@@ -1067,10 +1178,10 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             color: white;
-            padding: 3px 6px;
-            border-radius: 3px;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 10px;
             white-space: nowrap;
             opacity: 0;
@@ -1093,18 +1204,18 @@
 
         .emoji-input-container input {
             flex: 1;
-            padding-right: 45px !important;
+            padding-right: 50px !important;
         }
 
         .emoji-trigger {
             position: absolute;
-            right: 10px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(64, 224, 208, 0.2);
-            border: 1px solid rgba(64, 224, 208, 0.4);
-            border-radius: 6px;
-            padding: 4px 8px;
+            background: rgba(64, 224, 208, 0.25);
+            border: 1px solid rgba(64, 224, 208, 0.5);
+            border-radius: 8px;
+            padding: 6px 10px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -1112,23 +1223,23 @@
         }
 
         .emoji-trigger:hover {
-            background: rgba(64, 224, 208, 0.3);
-            border-color: rgba(64, 224, 208, 0.6);
+            background: rgba(64, 224, 208, 0.35);
+            border-color: rgba(64, 224, 208, 0.7);
         }
 
         .emoji-trigger.active {
-            background: rgba(64, 224, 208, 0.4);
+            background: rgba(64, 224, 208, 0.45);
             border-color: rgba(64, 224, 208, 0.8);
         }
 
         .emoji-no-results {
             padding: 20px;
             text-align: center;
-            color: rgba(224, 224, 224, 0.6);
+            color: rgba(240, 240, 240, 0.6);
             font-size: 12px;
         }
 
-        /* Responsive Design mit besserer Platzausnutzung */
+        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -1181,13 +1292,11 @@
                 margin-bottom: 0;
             }
             
-            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
             .category.has-many-items:not(.collapsed) {
                 width: 100%;
                 margin-bottom: 30px;
             }
             
-            /* Kleinere Kategorien in Grid anordnen */
             .categories-grid-section {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1217,13 +1326,11 @@
                 margin-bottom: 0;
             }
             
-            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
             .category.has-many-items:not(.collapsed) {
                 width: 100%;
                 margin-bottom: 35px;
             }
             
-            /* Kleinere Kategorien in Grid anordnen */
             .categories-grid-section {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1261,13 +1368,11 @@
                 margin-bottom: 0;
             }
             
-            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
             .category.has-many-items:not(.collapsed) {
                 width: 100%;
                 margin-bottom: 40px;
             }
             
-            /* Kleinere Kategorien in Grid anordnen */
             .categories-grid-section {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1301,7 +1406,6 @@
             transition: opacity 0.3s ease;
         }
 
-        /* NEUE Styles für Auto-Scroll-Zonen */
         .scroll-zone {
             position: fixed;
             left: 0;
@@ -1538,7 +1642,6 @@
         </div>
     </div>
 
-    <!-- Neues Modal für Kategorie-Auswahl beim Link-Import -->
     <div class="modal" id="categorySelectModal">
         <div class="modal-content">
             <h2>Kategorie auswählen</h2>
@@ -1559,7 +1662,6 @@
                 </select>
             </div>
             
-            <!-- Felder für neue Kategorie (standardmäßig versteckt) -->
             <div id="newCategoryFields" style="display: none;">
                 <div class="form-group">
                     <label>Neuer Kategorie-Name</label>
@@ -1588,6 +1690,24 @@
             <div class="form-buttons">
                 <button type="button" class="btn btn-secondary" onclick="closeCategorySelectModal()">Abbrechen</button>
                 <button type="button" class="btn btn-primary" onclick="confirmLinkImport()">Importieren</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Neues Modal für leere Kategorie-Bestätigung -->
+    <div class="modal" id="emptyCategoryModal">
+        <div class="modal-content">
+            <h2>🗑️ Leere Kategorie gefunden</h2>
+            <div id="emptyCategoryMessage" style="margin-bottom: 20px;">
+                <!-- Dynamischer Inhalt wird hier eingefügt -->
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="handleEmptyCategoryDecision(false)">
+                    <span>📁</span> Kategorie behalten
+                </button>
+                <button type="button" class="btn btn-primary" onclick="handleEmptyCategoryDecision(true)">
+                    <span>🗑️</span> Kategorie löschen
+                </button>
             </div>
         </div>
     </div>
@@ -1750,6 +1870,9 @@
         // Variables für Link-Import
         let pendingLinkImport = null;
         let pendingOriginalCategoryTitle = null;
+
+        // Variables für leere Kategorie-Behandlung
+        let pendingEmptyCategoryData = null;
 
         // Emoji-Picker Funktionen
         function toggleEmojiPicker(inputId) {
@@ -1976,7 +2099,7 @@
             categoryOrder: ['Websites', 'Entwicklung', 'Server', 'Sicherheit', 'Sonstiges']
         };
 
-        // Aktuelle Konfiguration (wird aus localStorage geladen oder Standard verwendet)
+        // Aktuelle Konfiguration
         let config = {};
         let linkCategories = {};
         let categoryOrder = [];
@@ -1996,8 +2119,6 @@
         let draggedCategoryKey = null;
         let draggedLinkData = null;
         let draggedLinkElement = null;
-
-        // Verbesserte Variablen für Drag-and-Drop
         let dragOverElement = null;
         let dropPosition = null;
         let currentDropIndicator = null;
@@ -2007,25 +2128,20 @@
         let tempEmptyCategories = [];
         let isLinkDragActive = false;
 
-        // NEUE VARIABLEN: Auto-Scroll während Drag-and-Drop
+        // Auto-Scroll während Drag-and-Drop
         let autoScrollInterval = null;
         let isDragging = false;
         let currentMouseY = 0;
 
-        // === NEUE FUNKTIONEN FÜR AUTO-SCROLL ===
-
-        // Scroll-Zonen erstellen und verwalten
+        // Auto-Scroll Funktionen
         function createScrollZones() {
-            // Prüfe ob bereits vorhanden
             if (document.querySelector('.scroll-zone')) return;
             
-            // Obere Scroll-Zone
             const topZone = document.createElement('div');
             topZone.className = 'scroll-zone top';
             topZone.id = 'scroll-zone-top';
             document.body.appendChild(topZone);
             
-            // Untere Scroll-Zone
             const bottomZone = document.createElement('div');
             bottomZone.className = 'scroll-zone bottom';
             bottomZone.id = 'scroll-zone-bottom';
@@ -2053,7 +2169,6 @@
             zones.forEach(zone => zone.remove());
         }
 
-        // Auto-Scroll-Funktionalität
         function startAutoScroll() {
             if (autoScrollInterval) return;
             
@@ -2063,21 +2178,18 @@
                     return;
                 }
                 
-                const scrollZoneSize = 100; // Pixel vom Rand
-                const scrollSpeed = 15; // Pixel pro Interval
+                const scrollZoneSize = 100;
+                const scrollSpeed = 15;
                 const windowHeight = window.innerHeight;
                 
-                // Prüfe ob Maus in oberer Scroll-Zone
                 if (currentMouseY < scrollZoneSize) {
                     const intensity = (scrollZoneSize - currentMouseY) / scrollZoneSize;
                     window.scrollBy(0, -scrollSpeed * intensity);
-                }
-                // Prüfe ob Maus in unterer Scroll-Zone  
-                else if (currentMouseY > windowHeight - scrollZoneSize) {
+                } else if (currentMouseY > windowHeight - scrollZoneSize) {
                     const intensity = (currentMouseY - (windowHeight - scrollZoneSize)) / scrollZoneSize;
                     window.scrollBy(0, scrollSpeed * intensity);
                 }
-            }, 16); // ~60fps
+            }, 16);
         }
 
         function stopAutoScroll() {
@@ -2092,7 +2204,6 @@
             if (isDragging) {
                 currentMouseY = e.clientY;
                 
-                // Starte Auto-Scroll wenn nahe am Rand
                 const scrollZoneSize = 100;
                 const windowHeight = window.innerHeight;
                 
@@ -2104,16 +2215,13 @@
             }
         });
 
-        // Auto-Scroll bei globalem Drag-Ende stoppen
         document.addEventListener('dragend', function(e) {
             isDragging = false;
             stopAutoScroll();
             hideScrollZones();
         });
 
-        // === NEUE FUNKTIONEN FÜR ERWEITERTE FEATURES ===
-
-        // 1. Funktion zum Sortieren der Kategorien (leere ans Ende)
+        // Funktion zum Sortieren der Kategorien (leere ans Ende)
         function sortCategoriesEmptyLast() {
             const filledCategories = [];
             const emptyCategories = [];
@@ -2127,18 +2235,16 @@
                 }
             });
             
-            // Neue Reihenfolge: Gefüllte Kategorien zuerst, dann leere
             const newOrder = [...filledCategories, ...emptyCategories];
             
-            // Nur aktualisieren wenn sich etwas geändert hat
             if (JSON.stringify(categoryOrder) !== JSON.stringify(newOrder)) {
                 categoryOrder = newOrder;
-                return true; // Zeigt an, dass sich etwas geändert hat
+                return true;
             }
             return false;
         }
 
-        // 2. Funktionen zum Auf-/Zuklappen einzelner Kategorien
+        // Funktionen zum Auf-/Zuklappen einzelner Kategorien
         function toggleCategoryCollapsed(categoryKey) {
             if (linkCategories[categoryKey]) {
                 linkCategories[categoryKey].collapsed = !linkCategories[categoryKey].collapsed;
@@ -2158,7 +2264,7 @@
             hideContextMenu();
         }
 
-        // 3. Funktionen zum Auf-/Zuklappen aller Kategorien
+        // Funktionen zum Auf-/Zuklappen aller Kategorien
         function collapseAllCategories() {
             closeMenu();
             let changedCount = 0;
@@ -2199,7 +2305,7 @@
             }
         }
 
-        // 4. Verbesserte Konfiguration laden mit Rückwärtskompatibilität
+        // Konfiguration laden mit Rückwärtskompatibilität
         function loadConfigWithCollapsedSupport() {
             try {
                 const saved = localStorage.getItem('linkConfig');
@@ -2230,7 +2336,7 @@
                     const orderChanged = sortCategoriesEmptyLast();
                     
                     if (missingKeys.length > 0 || categoryOrder.length !== originalOrderLength || orderChanged) {
-                        saveConfig(true); // Aktualisierte Order speichern
+                        saveConfig(true);
                     }
                     
                     showMessage('Konfiguration aus dem lokalen Speicher geladen', 'success');
@@ -2251,7 +2357,6 @@
                         config = { categories: linkCategories, categoryOrder: categoryOrder };
                         localStorage.removeItem('linkCategories');
                         
-                        // Leere Kategorien ans Ende sortieren
                         sortCategoriesEmptyLast();
                         
                         saveConfig(true);
@@ -2272,6 +2377,124 @@
             }
         }
 
+        // Status-Nachricht anzeigen - VERBESSERT für Dark Mode
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('statusMessage');
+            messageEl.className = `status-message status-${type}`;
+            
+            // Unterscheide zwischen einfachen und wichtigen Nachrichten
+            if (typeof message === 'object') {
+                messageEl.classList.add('important');
+                messageEl.innerHTML = `
+                    <div class="status-title">${message.title}</div>
+                    <div class="status-content">${message.content}</div>
+                `;
+            } else {
+                messageEl.textContent = message;
+            }
+            
+            // Toast anzeigen
+            setTimeout(() => {
+                messageEl.classList.add('show');
+            }, 100);
+            
+            // Toast nach längerer Zeit ausblenden wenn wichtig
+            const duration = messageEl.classList.contains('important') ? 6000 : 3000;
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, duration);
+        }
+
+        // Neue Funktionen für leere Kategorie-Modal - VERBESSERT für Dark Mode
+        function showEmptyCategoryModal(data) {
+            pendingEmptyCategoryData = data;
+            
+            const modal = document.getElementById('emptyCategoryModal');
+            const messageDiv = document.getElementById('emptyCategoryMessage');
+            
+            // Dynamische Nachricht mit besserer Dark Mode Formatierung
+            let message = '';
+            if (data.action === 'move') {
+                message = `
+                    <div class="empty-category-section success">
+                        <div class="empty-category-section-title">✅ Link erfolgreich verschoben</div>
+                        <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde von "<strong>${data.sourceTitle}</strong>" zu "<strong>${data.targetTitle}</strong>" verschoben.</div>
+                    </div>
+                    <div class="empty-category-section warning">
+                        <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
+                        <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
+                        <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
+                    </div>
+                `;
+            } else if (data.action === 'delete') {
+                message = `
+                    <div class="empty-category-section success">
+                        <div class="empty-category-section-title">✅ Link erfolgreich gelöscht</div>
+                        <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde gelöscht.</div>
+                    </div>
+                    <div class="empty-category-section warning">
+                        <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
+                        <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
+                        <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = message;
+            modal.style.display = 'block';
+        }
+
+        function closeEmptyCategoryModal() {
+            document.getElementById('emptyCategoryModal').style.display = 'none';
+            pendingEmptyCategoryData = null;
+        }
+
+        function handleEmptyCategoryDecision(shouldDelete) {
+            if (!pendingEmptyCategoryData) return;
+            
+            const data = pendingEmptyCategoryData;
+            
+            if (shouldDelete) {
+                // Kategorie löschen
+                delete linkCategories[data.sourceCategoryKey];
+                categoryOrder = categoryOrder.filter(key => key !== data.sourceCategoryKey);
+                
+                let successMessage = '';
+                if (data.action === 'move') {
+                    successMessage = `Link verschoben und leere Kategorie "${data.sourceTitle}" gelöscht`;
+                } else {
+                    successMessage = `Link gelöscht und leere Kategorie "${data.sourceTitle}" entfernt`;
+                }
+                
+                showMessage(successMessage, 'success');
+            } else {
+                // Kategorie behalten mit schöner Warnung
+                sortCategoriesEmptyLast();
+                
+                let successMessage = '';
+                if (data.action === 'move') {
+                    successMessage = `Link verschoben - leere Kategorie "${data.sourceTitle}" beibehalten`;
+                } else {
+                    successMessage = `Link gelöscht - leere Kategorie "${data.sourceTitle}" beibehalten`;
+                }
+                
+                showMessage(successMessage, 'success');
+                
+                // Schöne Warnung als Toast
+                setTimeout(() => {
+                    showMessage({
+                        title: '💡 Hinweis zu leeren Kategorien',
+                        content: `Die Kategorie "${data.sourceTitle}" ist leer und kann bei Drag & Drop zu visuellen Problemen führen. Sie können jederzeit neue Links hinzufügen oder die Kategorie über Rechtsklick löschen.`
+                    }, 'warning');
+                }, 1000);
+            }
+            
+            // Konfiguration speichern und Interface aktualisieren
+            saveConfig(true);
+            renderCategories();
+            closeEmptyCategoryModal();
+        }
+
         // Hilfsfunktionen für Layout-Erkennung
         function isElementInGridLayout(element) {
             const parent = element.parentElement;
@@ -2281,7 +2504,6 @@
 
         function isCategoryInGridLayout(categoryElement) {
             const parent = categoryElement.parentElement;
-            // FIXED: Prüfe sowohl direkte Grid-Sections als auch Wrapper
             const computedStyle = window.getComputedStyle(parent);
             return (parent.classList.contains('categories-grid-section') || 
                    (computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none'));
@@ -2296,13 +2518,11 @@
         }
 
         function createDropIndicator(element, position) {
-            // Entferne vorherige Indikatoren
             const existingIndicator = element.querySelector('.drop-indicator-line');
             if (existingIndicator) {
                 existingIndicator.remove();
             }
 
-            // Erstelle neuen Indikator
             const indicator = document.createElement('div');
             indicator.className = `drop-indicator-line ${position} active`;
             element.appendChild(indicator);
@@ -2317,17 +2537,15 @@
             }
         }
 
-        // NEUE FUNKTIONEN: Temporäre leere Kategorien anzeigen/verstecken
+        // Temporäre leere Kategorien anzeigen/verstecken
         function showEmptyCategories() {
-            if (isLinkDragActive) return; // Verhindere mehrfache Ausführung
+            if (isLinkDragActive) return;
             
-            // FIXED: Bereinige erst alle vorherigen temporären Elemente
             cleanupAllTemporaryElements();
             
             isLinkDragActive = true;
             tempEmptyCategories = [];
             
-            // FIXED: Aktualisiere Liste der leeren Kategorien
             categoryOrder.forEach(categoryKey => {
                 const category = linkCategories[categoryKey];
                 if (category && category.links.length === 0) {
@@ -2335,7 +2553,6 @@
                 }
             });
             
-            // Wenn es leere Kategorien gibt, füge sie temporär hinzu
             if (tempEmptyCategories.length > 0) {
                 addEmptyCategoriesToDom();
             }
@@ -2343,8 +2560,6 @@
 
         function hideEmptyCategories() {
             if (!isLinkDragActive) return;
-            
-            // FIXED: Verwende die verbesserte Cleanup-Funktion
             cleanupAllTemporaryElements();
         }
 
@@ -2352,11 +2567,9 @@
             const categoriesWrapper = document.querySelector('.categories-wrapper');
             if (!categoriesWrapper) return;
             
-            // FIXED: Erstelle immer eine separate Grid-Section für leere Kategorien am Ende
             const emptyGridSection = document.createElement('div');
             emptyGridSection.className = 'categories-grid-section empty-categories-section';
             
-            // Für jede leere Kategorie ein temporäres DOM-Element erstellen
             tempEmptyCategories.forEach(categoryKey => {
                 const category = linkCategories[categoryKey];
                 if (!category) return;
@@ -2365,7 +2578,6 @@
                 categoryDiv.className = 'category empty-category';
                 categoryDiv.setAttribute('data-category-key', categoryKey);
                 
-                // Kategorie-Header
                 const categoryHeader = document.createElement('div');
                 categoryHeader.className = 'category-header';
                 
@@ -2373,114 +2585,20 @@
                 categoryTitle.className = 'category-title';
                 categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
                 
-                // Kein Drag-Handle für temporäre leere Kategorien
                 categoryHeader.appendChild(categoryTitle);
                 categoryDiv.appendChild(categoryHeader);
                 
-                // Drop-Funktionalität für Links hinzufügen
                 makeCategoryDroppable(categoryDiv, categoryKey);
                 
-                // In die separate Grid-Section einfügen
                 emptyGridSection.appendChild(categoryDiv);
             });
             
-            // Leere Grid-Section am Ende hinzufügen
             if (tempEmptyCategories.length > 0) {
                 categoriesWrapper.appendChild(emptyGridSection);
             }
         }
 
-        function insertCategoryAtCorrectPosition(categoryDiv, categoryKey, categoriesWrapper) {
-            const categoryIndex = categoryOrder.indexOf(categoryKey);
-            if (categoryIndex === -1) return;
-            
-            // FIXED: Leere Kategorien gehören immer in eine Grid-Section
-            // Finde die richtige Position basierend auf categoryOrder
-            
-            let insertionPoint = null;
-            let targetContainer = null;
-            
-            // Durchsuche categoryOrder um die richtige Position zu finden
-            for (let i = 0; i < categoryOrder.length; i++) {
-                const currentCategoryKey = categoryOrder[i];
-                const currentCategory = linkCategories[currentCategoryKey];
-                
-                if (!currentCategory || currentCategory.links.length === 0) continue;
-                
-                if (i > categoryIndex) {
-                    // Das ist die erste Kategorie nach unserer Position
-                    const existingElement = findCategoryElement(currentCategoryKey, categoriesWrapper);
-                    if (existingElement) {
-                        insertionPoint = existingElement;
-                        targetContainer = existingElement.parentElement;
-                        break;
-                    }
-                } else if (i === categoryIndex - 1) {
-                    // Das ist die Kategorie direkt vor unserer Position
-                    const existingElement = findCategoryElement(currentCategoryKey, categoriesWrapper);
-                    if (existingElement) {
-                        const isLargeCategory = currentCategory.links.length >= 4 && !currentCategory.collapsed;
-                        
-                        if (isLargeCategory) {
-                            // Nach einer großen Kategorie brauchen wir eine neue Grid-Section
-                            let nextGridSection = existingElement.nextElementSibling;
-                            if (!nextGridSection || !nextGridSection.classList.contains('categories-grid-section')) {
-                                nextGridSection = document.createElement('div');
-                                nextGridSection.className = 'categories-grid-section';
-                                existingElement.parentElement.insertBefore(nextGridSection, existingElement.nextSibling);
-                            }
-                            targetContainer = nextGridSection;
-                        } else {
-                            // Nach einer kleinen Kategorie können wir in dieselbe Grid-Section
-                            targetContainer = existingElement.parentElement;
-                            insertionPoint = existingElement.nextSibling;
-                        }
-                        break;
-                    }
-                }
-            }
-            
-            // Fallback: Wenn keine Position gefunden, erstelle neue Grid-Section am Ende
-            if (!targetContainer) {
-                let gridSection = categoriesWrapper.querySelector('.categories-grid-section:last-child');
-                if (!gridSection) {
-                    gridSection = document.createElement('div');
-                    gridSection.className = 'categories-grid-section';
-                    categoriesWrapper.appendChild(gridSection);
-                }
-                targetContainer = gridSection;
-            }
-            
-            // Element einfügen
-            if (insertionPoint && targetContainer === insertionPoint.parentElement) {
-                targetContainer.insertBefore(categoryDiv, insertionPoint);
-            } else {
-                targetContainer.appendChild(categoryDiv);
-            }
-        }
-        
-        // NEUE HILFSFUNKTION: Findet ein Kategorie-Element in der DOM-Struktur
-        function findCategoryElement(categoryKey, container) {
-            // Suche in allen Grid-Sections und direkt im Container
-            const directChild = Array.from(container.children).find(el => 
-                el.classList.contains('category') && el.getAttribute('data-category-key') === categoryKey
-            );
-            
-            if (directChild) return directChild;
-            
-            // Suche in Grid-Sections
-            const gridSections = container.querySelectorAll('.categories-grid-section');
-            for (const gridSection of gridSections) {
-                const element = Array.from(gridSection.children).find(el => 
-                    el.classList.contains('category') && el.getAttribute('data-category-key') === categoryKey
-                );
-                if (element) return element;
-            }
-            
-            return null;
-        }
-
-        // Neue Funktionen für Link-Import/Export
+        // Link-Import/Export Funktionen
         function exportSingleLink() {
             if (!currentContextLink) return;
             
@@ -2509,7 +2627,6 @@
                 const link_el = document.createElement('a');
                 link_el.href = url;
                 
-                // Dateiname: Link-Titel bereinigen für Dateisystem
                 const cleanTitle = link.title.replace(/[^a-zA-Z0-9äöüÄÖÜß\s\-_]/g, '').replace(/\s+/g, '-');
                 link_el.download = `link-${cleanTitle}.json`;
                 link_el.click();
@@ -2534,7 +2651,6 @@
                 try {
                     const linkData = JSON.parse(e.target.result);
                     
-                    // Validierung der Link-Daten
                     if (!validateSingleLink(linkData)) {
                         throw new Error('Ungültige Link-Datei');
                     }
@@ -2543,14 +2659,11 @@
                     const originalCategoryKey = linkData.originalCategoryKey;
                     const originalCategoryTitle = linkData.originalCategory;
                     
-                    // Prüfen ob die ursprüngliche Kategorie existiert
                     let targetCategoryKey = null;
                     
-                    // Exakte Übereinstimmung mit originalCategoryKey
                     if (originalCategoryKey && linkCategories[originalCategoryKey]) {
                         targetCategoryKey = originalCategoryKey;
                     } else {
-                        // Suche nach Kategorie mit gleichem Titel
                         for (const [key, category] of Object.entries(linkCategories)) {
                             if (category.title === originalCategoryTitle) {
                                 targetCategoryKey = key;
@@ -2560,10 +2673,8 @@
                     }
                     
                     if (targetCategoryKey) {
-                        // Kategorie gefunden - direkt importieren
                         linkCategories[targetCategoryKey].links.push(link);
                         
-                        // Automatisch leere Kategorien ans Ende verschieben
                         if (sortCategoriesEmptyLast()) {
                             saveConfig(true);
                         } else {
@@ -2573,7 +2684,6 @@
                         renderCategories();
                         showMessage(`Link "${link.title}" erfolgreich in "${linkCategories[targetCategoryKey].title}" importiert`, 'success');
                     } else {
-                        // Kategorie nicht gefunden - Benutzer fragen
                         showCategorySelectionModal(link, originalCategoryTitle);
                     }
                     
@@ -2584,7 +2694,6 @@
             };
             reader.readAsText(file);
             
-            // Input zurücksetzen
             event.target.value = '';
         }
 
@@ -2596,7 +2705,6 @@
             const link = linkData.link;
             if (!link.title || !link.url || !link.description || !link.icon) return false;
             
-            // URL-Validierung
             try {
                 new URL(link.url);
             } catch {
@@ -2610,35 +2718,28 @@
             pendingLinkImport = link;
             pendingOriginalCategoryTitle = originalCategoryTitle;
             
-            // Modal-Daten setzen
             document.getElementById('importLinkTitle').value = link.title;
             document.getElementById('importLinkUrl').value = link.url;
             
-            // Nachricht anpassen
             const messageEl = document.getElementById('categorySelectMessage');
             messageEl.textContent = `Die ursprüngliche Kategorie "${originalCategoryTitle}" wurde nicht gefunden. Wählen Sie eine Option:`;
             
-            // Kategorien-Dropdown füllen
             const select = document.getElementById('importLinkCategory');
             select.innerHTML = '<option value="">Option auswählen</option>';
             
-            // Option für ursprüngliche Kategorie übernehmen
             const originalCategoryOption = document.createElement('option');
             originalCategoryOption.value = '__original__';
             originalCategoryOption.textContent = `📁 Ursprüngliche Kategorie "${originalCategoryTitle}" erstellen`;
             select.appendChild(originalCategoryOption);
             
-            // Option für neue Kategorie hinzufügen
             const newCategoryOption = document.createElement('option');
             newCategoryOption.value = '__new__';
             newCategoryOption.textContent = '📝 Neue Kategorie erstellen';
             select.appendChild(newCategoryOption);
             
-            // Trennlinie als optgroup
             const existingGroup = document.createElement('optgroup');
             existingGroup.label = 'In vorhandene Kategorie einfügen:';
             
-            // Bestehende Kategorien hinzufügen
             categoryOrder.forEach(categoryKey => {
                 if (linkCategories[categoryKey]) {
                     const category = linkCategories[categoryKey];
@@ -2651,10 +2752,7 @@
             
             select.appendChild(existingGroup);
             
-            // Neue Kategorie-Felder verstecken
             document.getElementById('newCategoryFields').style.display = 'none';
-            
-            // Modal anzeigen
             document.getElementById('categorySelectModal').style.display = 'block';
         }
 
@@ -2664,7 +2762,6 @@
             
             if (select.value === '__new__') {
                 newCategoryFields.style.display = 'block';
-                // Felder leeren und Fokus setzen
                 document.getElementById('newCategoryTitle').value = '';
                 document.getElementById('newCategoryIcon').value = '';
                 setTimeout(() => {
@@ -2672,7 +2769,6 @@
                 }, 100);
             } else {
                 newCategoryFields.style.display = 'none';
-                // Felder zurücksetzen
                 document.getElementById('newCategoryTitle').value = '';
                 document.getElementById('newCategoryIcon').value = '';
             }
@@ -2681,7 +2777,6 @@
         function closeCategorySelectModal() {
             document.getElementById('categorySelectModal').style.display = 'none';
             
-            // Alle Felder zurücksetzen
             document.getElementById('importLinkCategory').value = '';
             document.getElementById('newCategoryFields').style.display = 'none';
             document.getElementById('newCategoryTitle').value = '';
@@ -2701,58 +2796,47 @@
             }
             
             if (categoryKey === '__original__') {
-                // Ursprüngliche Kategorie erstellen
                 const originalCategoryTitle = pendingOriginalCategoryTitle;
                 const newCategoryKey = originalCategoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '_');
                 
-                // Prüfen ob Kategorie bereits existiert (sollte nicht der Fall sein, aber sicherheitshalber)
                 if (linkCategories[newCategoryKey]) {
                     alert('Eine Kategorie mit diesem Namen existiert bereits!');
                     return;
                 }
                 
-                // Ursprüngliche Kategorie mit Standard-Icon erstellen
                 linkCategories[newCategoryKey] = {
                     title: originalCategoryTitle,
-                    icon: '📁', // Standard-Icon für ursprüngliche Kategorie
+                    icon: '📁',
                     collapsed: false,
                     links: []
                 };
                 
-                // Kategorie zur Order hinzufügen
                 categoryOrder.push(newCategoryKey);
-                
-                // Link in ursprüngliche Kategorie einfügen
                 linkCategories[newCategoryKey].links.push(pendingLinkImport);
                 
-                // Automatisch leere Kategorien ans Ende verschieben
                 sortCategoriesEmptyLast();
                 saveConfig(true);
                 renderCategories();
-                populateCategorySelect(); // Dropdown aktualisieren
+                populateCategorySelect();
                 
                 showMessage(`Ursprüngliche Kategorie "${originalCategoryTitle}" erstellt und Link "${pendingLinkImport.title}" importiert`, 'success');
                 
             } else if (categoryKey === '__new__') {
-                // Neue Kategorie erstellen
                 const newCategoryTitle = document.getElementById('newCategoryTitle').value.trim();
-                const newCategoryIcon = document.getElementById('newCategoryIcon').value.trim() || '📁'; // Standard-Icon wenn leer
+                const newCategoryIcon = document.getElementById('newCategoryIcon').value.trim() || '📁';
                 
                 if (!newCategoryTitle) {
                     alert('Bitte geben Sie einen Namen für die neue Kategorie ein!');
                     return;
                 }
                 
-                // Neuen Kategorie-Key generieren
                 const newCategoryKey = newCategoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '_');
                 
-                // Prüfen ob Kategorie bereits existiert
                 if (linkCategories[newCategoryKey]) {
                     alert('Eine Kategorie mit diesem Namen existiert bereits!');
                     return;
                 }
                 
-                // Neue Kategorie erstellen
                 linkCategories[newCategoryKey] = {
                     title: newCategoryTitle,
                     icon: newCategoryIcon,
@@ -2760,25 +2844,19 @@
                     links: []
                 };
                 
-                // Kategorie zur Order hinzufügen
                 categoryOrder.push(newCategoryKey);
-                
-                // Link in neue Kategorie einfügen
                 linkCategories[newCategoryKey].links.push(pendingLinkImport);
                 
-                // Automatisch leere Kategorien ans Ende verschieben
                 sortCategoriesEmptyLast();
                 saveConfig(true);
                 renderCategories();
-                populateCategorySelect(); // Dropdown aktualisieren
+                populateCategorySelect();
                 
                 showMessage(`Neue Kategorie "${newCategoryTitle}" erstellt und Link "${pendingLinkImport.title}" importiert`, 'success');
                 
             } else {
-                // Bestehende Kategorie verwenden
                 linkCategories[categoryKey].links.push(pendingLinkImport);
                 
-                // Automatisch leere Kategorien ans Ende verschieben
                 sortCategoriesEmptyLast();
                 saveConfig(true);
                 renderCategories();
@@ -2803,7 +2881,6 @@
                 
                 localStorage.setItem('linkConfig', JSON.stringify(config));
                 
-                // Nur Success-Message anzeigen wenn explizit aufgerufen
                 if (arguments.length === 0) {
                     showMessage('Konfiguration gespeichert', 'success');
                 }
@@ -2813,16 +2890,14 @@
             }
         }
 
-        // Verbesserte Drag and Drop Funktionalität für Kategorien
+        // Drag and Drop Funktionalität für Kategorien
         function makeCategoryDraggable(categoryElement, categoryKey) {
             const dragHandle = categoryElement.querySelector('.drag-handle');
             
-            // Nur der drag-handle ist draggable
             dragHandle.draggable = true;
             dragHandle.addEventListener('dragstart', handleCategoryDragStart);
             dragHandle.addEventListener('dragend', handleCategoryDragEnd);
             
-            // Drop-Events für Kategorien-Sortierung
             categoryElement.addEventListener('dragover', handleCategoryDragOver);
             categoryElement.addEventListener('drop', handleCategoryDrop);
             categoryElement.addEventListener('dragenter', handleCategoryDragEnter);
@@ -2837,18 +2912,15 @@
             draggedCategoryKey = this.getAttribute('data-category-key');
             draggedElement.classList.add('dragging');
             
-            // FIXED: Auto-Scroll aktivieren
             isDragging = true;
             createScrollZones();
             showScrollZones();
             
-            // Drag-Handle als aktiv markieren
             this.classList.add('active');
             
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', draggedElement.outerHTML);
             
-            // FIXED: Gesamte Kategorie als Drag-Image verwenden, nicht nur das Handle
             const categoryClone = draggedElement.cloneNode(true);
             categoryClone.style.transform = 'rotate(5deg)';
             categoryClone.style.opacity = '0.8';
@@ -2860,10 +2932,8 @@
             categoryClone.style.maxWidth = '300px';
             document.body.appendChild(categoryClone);
             
-            // Drag-Image auf das geklonte Element setzen
             e.dataTransfer.setDragImage(categoryClone, 150, 50);
             
-            // Clone nach kurzer Zeit wieder entfernen
             setTimeout(() => {
                 if (document.body.contains(categoryClone)) {
                     document.body.removeChild(categoryClone);
@@ -2878,16 +2948,13 @@
             categoryElement.classList.remove('dragging');
             dragHandle.classList.remove('active');
             
-            // FIXED: Auto-Scroll deaktivieren und Scroll-Zonen entfernen
             isDragging = false;
             stopAutoScroll();
             hideScrollZones();
-            setTimeout(removeScrollZones, 300); // Nach Fade-out entfernen
+            setTimeout(removeScrollZones, 300);
             
-            // Universelle Cleanup-Funktion verwenden
             cleanupDragAndDrop();
             
-            // Timeouts bereinigen
             if (dragStabilityTimeout) {
                 clearTimeout(dragStabilityTimeout);
                 dragStabilityTimeout = null;
@@ -2901,22 +2968,18 @@
         }
 
         function handleCategoryDragOver(e) {
-            // Nur für Kategorie-Drag-and-Drop, nicht für Link-Drag-and-Drop
             if (draggedCategoryKey && !draggedLinkData) {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 
                 if (this !== draggedElement) {
-                    // Bereinige vorherige Timeouts
                     if (dragStabilityTimeout) {
                         clearTimeout(dragStabilityTimeout);
                     }
                     
                     const currentElement = this;
                     
-                    // Timeout für stabilere Darstellung
                     dragStabilityTimeout = setTimeout(() => {
-                        // Alle anderen Elemente bereinigen
                         document.querySelectorAll('.category').forEach(cat => {
                             if (cat !== currentElement) {
                                 removeAllDragOverClasses(cat);
@@ -2924,38 +2987,31 @@
                             }
                         });
                         
-                        // Prüfe ob wir im Grid-Layout sind
                         const isInGrid = isCategoryInGridLayout(currentElement);
                         const rect = currentElement.getBoundingClientRect();
                         
                         if (isInGrid) {
-                            // Grid-Layout: Links/Rechts-Erkennung
                             const mouseX = e.clientX - rect.left;
                             const elementWidth = rect.width;
                             
                             if (mouseX < elementWidth * 0.5) {
-                                // Links einfügen
                                 currentElement.classList.add('drag-over-before');
                                 createDropIndicator(currentElement, 'left');
                                 dropPosition = 'before';
                             } else {
-                                // Rechts einfügen
                                 currentElement.classList.add('drag-over-after');
                                 createDropIndicator(currentElement, 'right');
                                 dropPosition = 'after';
                             }
                         } else {
-                            // Block-Layout: Oben/Unten-Erkennung
                             const mouseY = e.clientY - rect.top;
                             const elementHeight = rect.height;
                             
                             if (mouseY < elementHeight * 0.5) {
-                                // Oben einfügen
                                 currentElement.classList.add('drag-over-before');
                                 createDropIndicator(currentElement, 'before');
                                 dropPosition = 'before';
                             } else {
-                                // Unten einfügen
                                 currentElement.classList.add('drag-over-after');
                                 createDropIndicator(currentElement, 'after');
                                 dropPosition = 'after';
@@ -2963,7 +3019,7 @@
                         }
                         
                         dragOverElement = currentElement;
-                    }, 50); // Kürzerer Timeout für bessere Responsivität
+                    }, 50);
                 }
                 
                 return false;
@@ -2975,11 +3031,9 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Fallback ohne Timeout für sofortige Erkennung
                 if (!dragStabilityTimeout) {
                     dragOverElement = this;
                     
-                    // Einfache Logik für sofortige Anzeige
                     const rect = this.getBoundingClientRect();
                     const isInGrid = isCategoryInGridLayout(this);
                     
@@ -2998,16 +3052,12 @@
 
         function handleCategoryDragLeave(e) {
             if (draggedCategoryKey && !draggedLinkData) {
-                // Verbesserte Drag-Leave-Erkennung
                 const rect = this.getBoundingClientRect();
                 const x = e.clientX;
                 const y = e.clientY;
                 
-                // Größere Toleranz für stabilere Darstellung
                 if (x < rect.left - 15 || x > rect.right + 15 || y < rect.top - 15 || y > rect.bottom + 15) {
-                    // Kurze Verzögerung vor dem Aufräumen
                     setTimeout(() => {
-                        // Nochmal prüfen ob wir wirklich außerhalb sind
                         const currentRect = this.getBoundingClientRect();
                         const currentX = e.clientX;
                         const currentY = e.clientY;
@@ -3035,30 +3085,24 @@
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
                 if (draggedElement && draggedElement !== this && targetCategoryKey) {
-                    // Neue Reihenfolge berechnen
                     const draggedIndex = categoryOrder.indexOf(draggedCategoryKey);
                     const targetIndex = categoryOrder.indexOf(targetCategoryKey);
                     
                     if (draggedIndex !== -1 && targetIndex !== -1) {
-                        // Kategorie aus alter Position entfernen
                         categoryOrder.splice(draggedIndex, 1);
                         
-                        // Neue Position berechnen basierend auf Drop-Position
                         let newIndex = targetIndex;
                         
-                        // Wenn wir nach rechts/unten verschieben, Index anpassen
                         if (draggedIndex < targetIndex) {
                             newIndex--;
                         }
                         
-                        // Je nach Drop-Position einfügen
                         if (dropPosition === 'before') {
                             categoryOrder.splice(newIndex, 0, draggedCategoryKey);
                         } else if (dropPosition === 'after') {
                             categoryOrder.splice(newIndex + 1, 0, draggedCategoryKey);
                         }
                         
-                        // Konfiguration speichern und neu rendern
                         saveConfig(true);
                         renderCategories();
                         
@@ -3066,7 +3110,6 @@
                     }
                 }
 
-                // Cleanup
                 removeAllDragOverClasses(this);
                 removeDropIndicator(this);
                 dragOverElement = null;
@@ -3079,7 +3122,6 @@
         function makeLinkDraggable(linkElement, categoryKey, linkIndex) {
             const linkDragHandle = linkElement.querySelector('.link-drag-handle');
             
-            // Drag-Handle für Link draggable machen
             linkDragHandle.draggable = true;
             linkDragHandle.addEventListener('dragstart', handleLinkDragStart);
             linkDragHandle.addEventListener('dragend', handleLinkDragEnd);
@@ -3090,7 +3132,6 @@
             linkDragHandle.setAttribute('data-link-index', linkIndex);
         }
 
-        // Erweiterte Funktion: Links als Drop-Targets konfigurieren
         function makeLinkDroppable(linkElement, categoryKey, linkIndex) {
             linkElement.addEventListener('dragover', handleLinkDragOver);
             linkElement.addEventListener('drop', handleLinkDrop);
@@ -3101,27 +3142,22 @@
             linkElement.setAttribute('data-link-index', linkIndex);
         }
 
-        // Drop-Events für Links zu Kategorien hinzufügen
         function makeCategoryDroppable(categoryElement, categoryKey) {
-            // Entferne vorherige Event-Listener um Duplikate zu vermeiden
             categoryElement.removeEventListener('dragover', handleCategoryLinkDragOver);
             categoryElement.removeEventListener('drop', handleCategoryLinkDrop);
             categoryElement.removeEventListener('dragenter', handleCategoryLinkDragEnter);
             categoryElement.removeEventListener('dragleave', handleCategoryLinkDragLeave);
             
-            // Normale Event-Listener hinzufügen
             categoryElement.addEventListener('dragover', handleCategoryLinkDragOver);
             categoryElement.addEventListener('drop', handleCategoryLinkDrop);
             categoryElement.addEventListener('dragenter', handleCategoryLinkDragEnter);
             categoryElement.addEventListener('dragleave', handleCategoryLinkDragLeave);
         }
 
-        // MODIFIZIERTE FUNKTION: Link-Drag-Start mit leeren Kategorien
         function handleLinkDragStart(e) {
             const categoryKey = this.getAttribute('data-category-key');
             const linkIndex = parseInt(this.getAttribute('data-link-index'));
             
-            // Bereinige alle vorherigen Drag-States (Sicherheitsmaßnahme)
             document.querySelectorAll('.category').forEach(cat => {
                 cat.classList.remove('link-drag-over');
             });
@@ -3136,7 +3172,6 @@
                 linkData: linkCategories[categoryKey].links[linkIndex]
             };
             
-            // FIXED: Auto-Scroll aktivieren
             isDragging = true;
             createScrollZones();
             showScrollZones();
@@ -3145,7 +3180,6 @@
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', draggedLinkElement.outerHTML);
             
-            // FIXED: Gesamten Link als Drag-Image verwenden, nicht nur das Handle
             const linkClone = draggedLinkElement.cloneNode(true);
             linkClone.style.transform = 'rotate(5deg)';
             linkClone.style.opacity = '0.8';
@@ -3157,54 +3191,43 @@
             linkClone.style.maxWidth = '280px';
             document.body.appendChild(linkClone);
             
-            // Drag-Image auf das geklonte Element setzen
             e.dataTransfer.setDragImage(linkClone, 140, 30);
             
-            // Clone nach kurzer Zeit wieder entfernen
             setTimeout(() => {
                 if (document.body.contains(linkClone)) {
                     document.body.removeChild(linkClone);
                 }
             }, 100);
             
-            // NEUE FUNKTION: Leere Kategorien anzeigen
             showEmptyCategories();
             
-            // Verhindert das Öffnen des Links
             e.stopPropagation();
         }
 
-        // Universelle Cleanup-Funktion für alle Drag-and-Drop-Operationen
         function cleanupDragAndDrop() {
-            // FIXED: Verwende die verbesserte Cleanup-Funktion
             cleanupAllTemporaryElements();
             
-            // Entferne alle drag-over Klassen von Kategorien
             document.querySelectorAll('.category').forEach(cat => {
                 cat.classList.remove('link-drag-over');
                 removeAllDragOverClasses(cat);
                 removeDropIndicator(cat);
             });
             
-            // Entferne alle drag-over Klassen von Links
             document.querySelectorAll('.link-item').forEach(link => {
                 removeAllDragOverClasses(link);
             });
         }
 
-        // MODIFIZIERTE FUNKTION: Link-Drag-End mit verbesserter Cleanup
         function handleLinkDragEnd(e) {
             if (draggedLinkElement) {
                 draggedLinkElement.classList.remove('dragging');
             }
             
-            // FIXED: Auto-Scroll deaktivieren und Scroll-Zonen entfernen
             isDragging = false;
             stopAutoScroll();
             hideScrollZones();
-            setTimeout(removeScrollZones, 300); // Nach Fade-out entfernen
+            setTimeout(removeScrollZones, 300);
             
-            // Universelle Cleanup-Funktion verwenden
             cleanupDragAndDrop();
             
             draggedLinkElement = null;
@@ -3213,42 +3236,32 @@
             dropPosition = null;
         }
 
-        // KRITISCHE ÄNDERUNG: Verbesserte Drag-Over-Handler für Links
         function handleLinkDragOver(e) {
             if (draggedLinkData && draggedLinkData.linkData) {
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 const targetLinkIndex = parseInt(this.getAttribute('data-link-index'));
                 
-                // Prüfe ob es Inter-Kategorie oder Intra-Kategorie Drag ist
                 if (targetCategoryKey !== draggedLinkData.categoryKey) {
-                    // Inter-Kategorie: Event NICHT stoppen, damit es zur Kategorie weitergeleitet wird
-                    // Aber trotzdem verhindern, dass der Browser den Drop ablehnt
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'move';
                     
-                    // Event zur Kategorie weiterleiten (nicht stoppen!)
                     const categoryElement = this.closest('.category');
                     if (categoryElement) {
-                        // Alle anderen Kategorien bereinigen
                         document.querySelectorAll('.category').forEach(cat => {
                             if (cat !== categoryElement) {
                                 cat.classList.remove('link-drag-over');
                             }
                         });
                         
-                        // Diese Kategorie hervorheben
                         categoryElement.classList.add('link-drag-over');
                     }
                     
-                    // Event NICHT stoppen für Inter-Kategorie
                     return true;
                 } else if (targetLinkIndex !== draggedLinkData.linkIndex) {
-                    // Intra-Kategorie: Normale Link-Sortierung
                     e.preventDefault();
                     e.stopPropagation();
                     e.dataTransfer.dropEffect = 'move';
                     
-                    // Kategorie-Highlights entfernen
                     document.querySelectorAll('.category').forEach(cat => {
                         cat.classList.remove('link-drag-over');
                     });
@@ -3259,17 +3272,14 @@
                     const rect = this.getBoundingClientRect();
                     
                     if (isInGrid) {
-                        // Grid-Layout: Erkennung basierend auf Position
                         const mouseX = e.clientX - rect.left;
                         const mouseY = e.clientY - rect.top;
                         const elementWidth = rect.width;
                         const elementHeight = rect.height;
                         
-                        // Erkenne ob wir in derselben Reihe sind
                         const inSameRow = areElementsInSameRow(this, draggedLinkElement);
                         
                         if (inSameRow) {
-                            // Gleiche Reihe: Links/Rechts
                             if (mouseX < elementWidth * 0.3) {
                                 this.classList.add('drag-over-top-left');
                                 dropPosition = 'before';
@@ -3281,7 +3291,6 @@
                                 dropPosition = 'replace';
                             }
                         } else {
-                            // Verschiedene Reihen: Oben/Unten
                             if (mouseY < elementHeight * 0.3) {
                                 this.classList.add('drag-over-top-left');
                                 dropPosition = 'before';
@@ -3294,7 +3303,6 @@
                             }
                         }
                     } else {
-                        // Liste-Layout: Oben/Unten
                         const mouseY = e.clientY - rect.top;
                         const elementHeight = rect.height;
                         
@@ -3320,25 +3328,20 @@
             if (draggedLinkData && draggedLinkData.linkData) {
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
-                // Wenn es Inter-Kategorie Drag ist
                 if (targetCategoryKey !== draggedLinkData.categoryKey) {
                     e.preventDefault();
-                    // Event NICHT stoppen für Inter-Kategorie
                     
                     const categoryElement = this.closest('.category');
                     if (categoryElement) {
-                        // Erst alle anderen Kategorien bereinigen
                         document.querySelectorAll('.category').forEach(cat => {
                             if (cat !== categoryElement) {
                                 cat.classList.remove('link-drag-over');
                             }
                         });
                         
-                        // Dann diese Kategorie hervorheben
                         categoryElement.classList.add('link-drag-over');
                     }
                 } else {
-                    // Intra-Kategorie
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -3349,7 +3352,6 @@
             if (draggedLinkData && draggedLinkData.linkData) {
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
-                // Intra-Kategorie: Link-Drop-Klassen entfernen
                 if (targetCategoryKey === draggedLinkData.categoryKey) {
                     if (!this.contains(e.relatedTarget)) {
                         removeAllDragOverClasses(this);
@@ -3360,7 +3362,6 @@
                         }
                     }
                 }
-                // Inter-Kategorie: Lass die Kategorie-Handler das übernehmen
             }
         }
 
@@ -3371,25 +3372,20 @@
                 
                 if (targetCategoryKey === draggedLinkData.categoryKey && 
                     targetLinkIndex !== draggedLinkData.linkIndex) {
-                    // Intra-Kategorie: Link innerhalb derselben Kategorie verschieben
                     e.preventDefault();
                     e.stopPropagation();
                     
                     const category = linkCategories[targetCategoryKey];
                     const linkToMove = category.links[draggedLinkData.linkIndex];
                     
-                    // Link aus alter Position entfernen
                     category.links.splice(draggedLinkData.linkIndex, 1);
                     
-                    // Neue Position berechnen
                     let newIndex = targetLinkIndex;
                     
-                    // Wenn wir nach rechts/unten verschieben, Index anpassen
                     if (draggedLinkData.linkIndex < targetLinkIndex) {
                         newIndex--;
                     }
                     
-                    // Je nach Drop-Position einfügen
                     if (dropPosition === 'before') {
                         category.links.splice(newIndex, 0, linkToMove);
                     } else if (dropPosition === 'after') {
@@ -3398,17 +3394,14 @@
                         category.links.splice(newIndex, 0, linkToMove);
                     }
                     
-                    // FIXED: Vollständiges Cleanup vor dem Re-render
                     cleanupAllTemporaryElements();
                     
-                    // Konfiguration speichern und neu rendern
                     saveConfig(true);
                     renderCategories();
                     
                     showMessage(`Link "${linkToMove.title}" neu positioniert`, 'success');
                 }
                 
-                // Alle Drop-Klassen entfernen
                 removeAllDragOverClasses(this);
                 dragOverElement = null;
                 dropPosition = null;
@@ -3417,25 +3410,21 @@
             }
         }
 
-        // KRITISCHE ÄNDERUNG: Verbesserte Drag-Over-Handler für Kategorien (für Inter-Kategorie-Verschiebung)
         function handleCategoryLinkDragOver(e) {
             if (draggedLinkData && draggedLinkData.linkData) {
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
-                // Nur wenn wir zu einer anderen Kategorie verschieben
                 if (targetCategoryKey !== draggedLinkData.categoryKey) {
                     e.preventDefault();
                     e.stopPropagation();
                     e.dataTransfer.dropEffect = 'move';
                     
-                    // Alle anderen Kategorien bereinigen
                     document.querySelectorAll('.category').forEach(cat => {
                         if (cat !== this) {
                             cat.classList.remove('link-drag-over');
                         }
                     });
                     
-                    // Diese Kategorie hervorheben
                     this.classList.add('link-drag-over');
                     
                     return false;
@@ -3450,14 +3439,12 @@
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
                 if (targetCategoryKey && targetCategoryKey !== draggedLinkData.categoryKey) {
-                    // Alle anderen Kategorien bereinigen
                     document.querySelectorAll('.category').forEach(cat => {
                         if (cat !== this) {
                             cat.classList.remove('link-drag-over');
                         }
                     });
                     
-                    // Diese Kategorie hervorheben
                     this.classList.add('link-drag-over');
                 }
             }
@@ -3465,20 +3452,16 @@
 
         function handleCategoryLinkDragLeave(e) {
             if (draggedLinkData && draggedLinkData.linkData) {
-                // Verbesserte Leave-Erkennung: Nur entfernen wenn wir die Kategorie wirklich verlassen
                 const rect = this.getBoundingClientRect();
                 const x = e.clientX;
                 const y = e.clientY;
                 
-                // Toleranz für bessere UX
                 if (x < rect.left - 10 || x > rect.right + 10 || y < rect.top - 10 || y > rect.bottom + 10) {
                     setTimeout(() => {
-                        // Prüfe ob die Maus nicht über einer Link-Item dieser Kategorie ist
                         const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
                         const linkUnderMouse = elementUnderMouse?.closest('.link-item');
                         const categoryUnderMouse = elementUnderMouse?.closest('.category[data-category-key]');
                         
-                        // Nur entfernen wenn wir wirklich außerhalb der gesamten Kategorie sind
                         if (!categoryUnderMouse || categoryUnderMouse !== this) {
                             this.classList.remove('link-drag-over');
                         }
@@ -3495,21 +3478,16 @@
                 const targetCategoryKey = this.getAttribute('data-category-key');
                 
                 if (targetCategoryKey && targetCategoryKey !== draggedLinkData.categoryKey) {
-                    // Inter-Kategorie: Link aus alter Kategorie entfernen und in neue einfügen
                     const sourceCategory = linkCategories[draggedLinkData.categoryKey];
                     const sourceCategoryKey = draggedLinkData.categoryKey;
                     const linkToMove = sourceCategory.links.splice(draggedLinkData.linkIndex, 1)[0];
                     
-                    // Link in neue Kategorie einfügen
                     linkCategories[targetCategoryKey].links.push(linkToMove);
                     
-                    // Cleanup vor der Überprüfung
                     cleanupAllTemporaryElements();
                     this.classList.remove('link-drag-over');
                     
-                    // Prüfen ob die Quellkategorie jetzt leer ist
                     if (sourceCategory.links.length === 0) {
-                        // Schönes Modal für leere Kategorie anzeigen
                         showEmptyCategoryModal({
                             action: 'move',
                             linkTitle: linkToMove.title,
@@ -3518,20 +3496,16 @@
                             sourceCategoryKey: sourceCategoryKey
                         });
                     } else {
-                        // Normale Verschiebung ohne leere Kategorie
                         const sourceTitle = sourceCategory.title;
                         const targetTitle = linkCategories[targetCategoryKey].title;
                         showMessage(`Link "${linkToMove.title}" von "${sourceTitle}" zu "${targetTitle}" verschoben`, 'success');
                         
-                        // Automatisch leere Kategorien ans Ende verschieben
                         sortCategoriesEmptyLast();
                         
-                        // Konfiguration speichern und neu rendern
                         saveConfig(true);
                         renderCategories();
                     }
                 } else {
-                    // Cleanup: Kategorie-Highlighting entfernen
                     this.classList.remove('link-drag-over');
                 }
                 
@@ -3539,11 +3513,36 @@
             }
         }
 
-        // Hilfsfunktionen für bessere Drag-Erkennung
         function areElementsInSameRow(element1, element2) {
             const rect1 = element1.getBoundingClientRect();
             const rect2 = element2.getBoundingClientRect();
-            return Math.abs(rect1.top - rect2.top) < 10; // 10px Toleranz
+            return Math.abs(rect1.top - rect2.top) < 10;
+        }
+
+        function cleanupAllTemporaryElements() {
+            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
+                categoryElement.remove();
+            });
+            
+            document.querySelectorAll('.empty-categories-section').forEach(section => {
+                section.remove();
+            });
+            
+            document.querySelectorAll('.scroll-zone').forEach(zone => {
+                zone.remove();
+            });
+            
+            isLinkDragActive = false;
+            tempEmptyCategories = [];
+            
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+            
+            if (isDragging) {
+                isDragging = false;
+            }
         }
 
         // Touch-Events für mobile Geräte
@@ -3552,7 +3551,6 @@
         let isTouching = false;
 
         function handleTouchStart(e) {
-            // Nur auf drag-handle reagieren
             if (e.target.classList.contains('drag-handle')) {
                 isTouching = true;
                 touchStartY = e.touches[0].clientY;
@@ -3561,7 +3559,6 @@
                 draggedCategoryKey = e.target.getAttribute('data-category-key');
                 draggedElement.classList.add('dragging');
                 
-                // Verhindert das Scrollen während des Ziehens
                 e.preventDefault();
             }
         }
@@ -3573,17 +3570,14 @@
             const touch = e.touches[0];
             const currentY = touch.clientY;
             
-            // Element unter dem Finger finden
             const elementBelow = document.elementFromPoint(touch.clientX, currentY);
             const categoryBelow = elementBelow?.closest('.category');
             
-            // Alle drag-over Klassen entfernen
             document.querySelectorAll('.category').forEach(cat => {
                 removeAllDragOverClasses(cat);
                 removeDropIndicator(cat);
             });
             
-            // Drag-over Klasse hinzufügen
             if (categoryBelow && categoryBelow !== draggedElement) {
                 categoryBelow.classList.add('drag-over-after');
                 createDropIndicator(categoryBelow, 'after');
@@ -3602,17 +3596,12 @@
             if (categoryBelow && categoryBelow !== draggedElement) {
                 const targetCategoryKey = categoryBelow.getAttribute('data-category-key');
                 
-                // Neue Reihenfolge berechnen
                 const draggedIndex = categoryOrder.indexOf(draggedCategoryKey);
                 const targetIndex = categoryOrder.indexOf(targetCategoryKey);
                 
-                // Kategorie aus alter Position entfernen
                 categoryOrder.splice(draggedIndex, 1);
-                
-                // Kategorie an neuer Position einfügen
                 categoryOrder.splice(targetIndex, 0, draggedCategoryKey);
                 
-                // Konfiguration speichern und neu rendern
                 saveConfig(true);
                 renderCategories();
                 
@@ -3659,12 +3648,10 @@
             const contextMenu = document.getElementById('contextMenu');
             currentContextLink = { categoryKey, linkIndex };
             
-            // Position des Kontextmenüs berechnen
             const rect = contextMenu.getBoundingClientRect();
             let x = event.clientX;
             let y = event.clientY;
             
-            // Sicherstellen, dass das Menü nicht über den Bildschirmrand hinausgeht
             if (x + 200 > window.innerWidth) {
                 x = window.innerWidth - 200;
             }
@@ -3686,11 +3673,9 @@
             const categoryContextMenu = document.getElementById('categoryContextMenu');
             currentContextCategory = categoryKey;
             
-            // Position des Kontextmenüs berechnen
             let x = event.clientX;
             let y = event.clientY;
             
-            // Sicherstellen, dass das Menü nicht über den Bildschirmrand hinausgeht
             if (x + 200 > window.innerWidth) {
                 x = window.innerWidth - 200;
             }
@@ -3720,22 +3705,18 @@
             const { categoryKey, linkIndex } = currentContextLink;
             const link = linkCategories[categoryKey].links[linkIndex];
             
-            // Bearbeitungsmodus aktivieren
             isEditMode = true;
             currentEditingLink = { categoryKey, linkIndex };
             
-            // Formular mit aktuellen Werten füllen
             document.getElementById('linkCategory').value = categoryKey;
             document.getElementById('linkTitle').value = link.title;
             document.getElementById('linkUrl').value = link.url;
             document.getElementById('linkDescription').value = link.description;
             document.getElementById('linkIcon').value = link.icon;
             
-            // Modal-Titel ändern
             document.querySelector('#linkModal h2').textContent = 'Link bearbeiten';
             document.querySelector('#linkModal .btn-primary').textContent = 'Speichern';
             
-            // Kategorieauswahl beim Bearbeiten verstecken und required entfernen
             document.getElementById('linkCategoryGroup').style.display = 'none';
             document.getElementById('linkCategory').removeAttribute('required');
             
@@ -3749,16 +3730,25 @@
             
             const { categoryKey, linkIndex } = currentContextLink;
             const link = linkCategories[categoryKey].links[linkIndex];
+            const category = linkCategories[categoryKey];
             
             if (confirm(`Möchten Sie den Link "${link.title}" wirklich löschen?`)) {
                 linkCategories[categoryKey].links.splice(linkIndex, 1);
                 
-                // Automatisch leere Kategorien ans Ende verschieben
-                sortCategoriesEmptyLast();
-                
-                saveConfig(true);
-                renderCategories();
-                showMessage('Link erfolgreich gelöscht', 'success');
+                if (category.links.length === 0) {
+                    showEmptyCategoryModal({
+                        action: 'delete',
+                        linkTitle: link.title,
+                        sourceTitle: category.title,
+                        sourceCategoryKey: categoryKey
+                    });
+                } else {
+                    sortCategoriesEmptyLast();
+                    showMessage('Link erfolgreich gelöscht', 'success');
+                    
+                    saveConfig(true);
+                    renderCategories();
+                }
             }
             
             hideContextMenu();
@@ -3770,15 +3760,12 @@
             
             const category = linkCategories[currentContextCategory];
             
-            // Bearbeitungsmodus aktivieren
             isCategoryEditMode = true;
             currentEditingCategory = currentContextCategory;
             
-            // Formular mit aktuellen Werten füllen
             document.getElementById('categoryTitle').value = category.title;
             document.getElementById('categoryIcon').value = category.icon;
             
-            // Modal-Titel ändern
             document.querySelector('#categoryModal h2').textContent = 'Kategorie bearbeiten';
             document.querySelector('#categoryModal .btn-primary').textContent = 'Speichern';
             
@@ -3798,10 +3785,7 @@
             }
             
             if (confirm(confirmMessage)) {
-                // Kategorie aus linkCategories entfernen
                 delete linkCategories[currentContextCategory];
-                
-                // Kategorie aus categoryOrder entfernen
                 categoryOrder = categoryOrder.filter(key => key !== currentContextCategory);
                 
                 saveConfig(true);
@@ -3815,7 +3799,6 @@
         function openCategoryModal() {
             closeMenu();
             
-            // Zurücksetzen für neue Kategorie
             if (!isCategoryEditMode) {
                 document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
                 document.querySelector('#categoryModal .btn-primary').textContent = 'Erstellen';
@@ -3830,7 +3813,6 @@
             document.getElementById('categoryModal').style.display = 'none';
             document.getElementById('categoryForm').reset();
             
-            // Bearbeitungsmodus zurücksetzen
             isCategoryEditMode = false;
             currentEditingCategory = null;
             document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
@@ -3866,42 +3848,35 @@
                 try {
                     const importedConfig = JSON.parse(e.target.result);
                     
-                    // Validierung der importierten Konfiguration
                     if (!validateConfig(importedConfig)) {
                         throw new Error('Ungültige Konfiguration');
                     }
 
                     if (confirm('Möchten Sie die aktuelle Konfiguration ersetzen?')) {
-                        // Neue Struktur mit categories und categoryOrder
                         if (importedConfig.categories) {
                             config = importedConfig;
                             linkCategories = config.categories;
                             categoryOrder = config.categoryOrder || Object.keys(linkCategories);
                         } else {
-                            // Alte Struktur ohne categories wrapper - konvertieren
                             linkCategories = importedConfig;
                             categoryOrder = Object.keys(linkCategories);
                             config = { categories: linkCategories, categoryOrder: categoryOrder };
                         }
                         
-                        // Collapsed-Eigenschaft zu importierten Kategorien hinzufügen falls nicht vorhanden
                         Object.keys(linkCategories).forEach(categoryKey => {
                             if (linkCategories[categoryKey].collapsed === undefined) {
                                 linkCategories[categoryKey].collapsed = false;
                             }
                         });
                         
-                        // Sicherstellen, dass categoryOrder alle Kategorien enthält
                         const existingKeys = Object.keys(linkCategories);
                         const missingKeys = existingKeys.filter(key => !categoryOrder.includes(key));
                         if (missingKeys.length > 0) {
                             categoryOrder = [...categoryOrder, ...missingKeys];
                         }
                         
-                        // Entfernen von Kategorien aus der Order, die nicht mehr existieren
                         categoryOrder = categoryOrder.filter(key => linkCategories[key]);
                         
-                        // Automatisch leere Kategorien ans Ende verschieben
                         sortCategoriesEmptyLast();
                         
                         saveConfig(true);
@@ -3915,7 +3890,6 @@
             };
             reader.readAsText(file);
             
-            // Input zurücksetzen
             event.target.value = '';
         }
 
@@ -3925,13 +3899,10 @@
             
             let categoriesToValidate = {};
             
-            // Neue Struktur mit categories und categoryOrder
             if (config.categories) {
                 categoriesToValidate = config.categories;
                 
-                // categoryOrder validieren falls vorhanden
                 if (config.categoryOrder && Array.isArray(config.categoryOrder)) {
-                    // Prüfen ob alle Kategorien in der Order auch existieren
                     for (const key of config.categoryOrder) {
                         if (!categoriesToValidate[key]) {
                             console.warn(`Category ${key} in categoryOrder not found in categories`);
@@ -3939,11 +3910,9 @@
                     }
                 }
             } else {
-                // Alte Struktur ohne categories wrapper
                 categoriesToValidate = config;
             }
             
-            // Kategorien validieren
             for (const [key, category] of Object.entries(categoriesToValidate)) {
                 if (!category.title || !category.icon || !Array.isArray(category.links)) {
                     return false;
@@ -3971,34 +3940,15 @@
             }
         }
 
-        // Status-Nachricht anzeigen
-        function showMessage(message, type) {
-            const messageEl = document.getElementById('statusMessage');
-            messageEl.textContent = message;
-            messageEl.className = `status-message status-${type}`;
-            
-            // Toast anzeigen
-            setTimeout(() => {
-                messageEl.classList.add('show');
-            }, 100);
-            
-            // Toast nach 3 Sekunden ausblenden
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, 3000);
-        }
-
         function openModal() {
             closeMenu();
             
-            // Zurücksetzen für neuen Link
             if (!isEditMode) {
                 document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
                 document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
                 document.getElementById('linkForm').reset();
                 currentEditingLink = null;
                 
-                // Kategorieauswahl beim Erstellen neuer Links anzeigen und required setzen
                 document.getElementById('linkCategoryGroup').style.display = 'block';
                 document.getElementById('linkCategory').setAttribute('required', 'required');
             }
@@ -4011,11 +3961,9 @@
             document.getElementById('linkModal').style.display = 'none';
             document.getElementById('linkForm').reset();
             
-            // Kategorieauswahl wieder anzeigen und required wieder setzen (für das nächste Mal)
             document.getElementById('linkCategoryGroup').style.display = 'block';
             document.getElementById('linkCategory').setAttribute('required', 'required');
             
-            // Bearbeitungsmodus zurücksetzen
             isEditMode = false;
             currentEditingLink = null;
             document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
@@ -4041,32 +3989,26 @@
             const container = document.getElementById('categoriesContainer');
             container.innerHTML = '';
 
-            // FIXED: Cleanup aller temporären Elemente vor dem Neurendern
             cleanupAllTemporaryElements();
 
-            // Wrapper für Kategorien erstellen
             const categoriesWrapper = document.createElement('div');
             categoriesWrapper.className = 'categories-wrapper';
 
-            // FIXED: Kategorien in ursprünglicher Reihenfolge verarbeiten
             let currentGridSection = null;
             
             categoryOrder.forEach(categoryKey => {
                 const category = linkCategories[categoryKey];
                 
-                // Nur Kategorien mit Links rendern
                 if (category && category.links.length > 0) {
                     const isLargeCategory = category.links.length >= 4 && !category.collapsed;
                     
                     if (isLargeCategory) {
-                        // Große Kategorie: Schließe vorherige Grid-Section und erstelle Block-Element
                         currentGridSection = null;
                         
                         const categoryDiv = createCategoryElement(categoryKey, category);
                         categoriesWrapper.appendChild(categoryDiv);
                         
                     } else {
-                        // Kleine Kategorie: In Grid-Section einfügen
                         if (!currentGridSection) {
                             currentGridSection = document.createElement('div');
                             currentGridSection.className = 'categories-grid-section';
@@ -4081,61 +4023,23 @@
 
             container.appendChild(categoriesWrapper);
             
-            // Touch-Events für mobile Geräte
             container.addEventListener('touchstart', handleTouchStart, { passive: false });
             container.addEventListener('touchmove', handleTouchMove, { passive: false });
             container.addEventListener('touchend', handleTouchEnd, { passive: false });
         }
 
-        // NEUE FUNKTION: Bereinige alle temporären Elemente und Referenzen
-        function cleanupAllTemporaryElements() {
-            // Entferne alle temporären leeren Kategorien
-            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
-                categoryElement.remove();
-            });
-            
-            // Entferne alle leeren Grid-Sections
-            document.querySelectorAll('.empty-categories-section').forEach(section => {
-                section.remove();
-            });
-            
-            // Entferne alle Scroll-Zonen
-            document.querySelectorAll('.scroll-zone').forEach(zone => {
-                zone.remove();
-            });
-            
-            // Reset aller Drag-Variablen
-            isLinkDragActive = false;
-            tempEmptyCategories = [];
-            
-            // Stoppe alle laufenden Auto-Scroll-Timer
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
-                autoScrollInterval = null;
-            }
-            
-            // Reset Drag-States
-            if (isDragging) {
-                isDragging = false;
-            }
-        }
-
-        // NEUE HILFSFUNKTION: Erstellt ein Kategorie-Element
         function createCategoryElement(categoryKey, category) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'category';
             
-            // Collapsed-Klasse hinzufügen wenn zugeklappt
             if (category.collapsed) {
                 categoryDiv.classList.add('collapsed');
             }
             
-            // Spezielle Klasse für Kategorien mit vielen Links hinzufügen
             if (category.links.length >= 4) {
                 categoryDiv.classList.add('has-many-items');
             }
             
-            // Kategorie-Header mit Drag-Handle
             const categoryHeader = document.createElement('div');
             categoryHeader.className = 'category-header';
             
@@ -4143,12 +4047,10 @@
             categoryTitle.className = 'category-title';
             categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
             
-            // Klick-Event für Auf-/Zuklappen hinzufügen
             categoryTitle.addEventListener('click', () => {
                 toggleCategoryCollapsed(categoryKey);
             });
             
-            // Rechtsklick-Event für Kategorie-Kontextmenü hinzufügen
             categoryTitle.addEventListener('contextmenu', (e) => {
                 showCategoryContextMenu(e, categoryKey);
             });
@@ -4164,12 +4066,10 @@
             const linkGrid = document.createElement('div');
             linkGrid.className = 'link-grid';
             
-            // Spezielle Klasse für Link-Grid mit vielen Links hinzufügen
             if (category.links.length >= 4) {
                 linkGrid.classList.add('many-items');
             }
             
-            // Links nur anzeigen wenn Kategorie nicht zugeklappt ist
             if (!category.collapsed) {
                 category.links.forEach((link, linkIndex) => {
                     const linkElement = document.createElement('div');
@@ -4183,20 +4083,16 @@
                         <div class="link-drag-handle" title="Link verschieben">⋮⋮</div>
                     `;
                     
-                    // Rechtsklick-Event für Kontextmenü hinzufügen
                     linkElement.addEventListener('contextmenu', (e) => {
                         showContextMenu(e, categoryKey, linkIndex);
                     });
                     
-                    // Normale Klick-Funktion für URL-Öffnung
                     linkElement.addEventListener('click', (e) => {
-                        // Nur öffnen wenn nicht auf dem Drag-Handle geklickt wurde
                         if (!e.target.classList.contains('link-drag-handle')) {
                             window.open(link.url, '_blank');
                         }
                     });
                     
-                    // Drag-Handle Click-Event verhindern
                     const dragHandle = linkElement.querySelector('.link-drag-handle');
                     dragHandle.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -4204,10 +4100,7 @@
                     
                     linkGrid.appendChild(linkElement);
                     
-                    // Drag and Drop für Links aktivieren
                     makeLinkDraggable(linkElement, categoryKey, linkIndex);
-                    
-                    // Links als Drop-Targets aktivieren
                     makeLinkDroppable(linkElement, categoryKey, linkIndex);
                 });
             }
@@ -4215,10 +4108,7 @@
             categoryDiv.appendChild(categoryHeader);
             categoryDiv.appendChild(linkGrid);
             
-            // Drag and Drop Funktionalität für Kategorien hinzufügen
             makeCategoryDraggable(categoryDiv, categoryKey);
-            
-            // Drop-Funktionalität für Links hinzufügen
             makeCategoryDroppable(categoryDiv, categoryKey);
             
             return categoryDiv;
@@ -4230,10 +4120,9 @@
             const title = document.getElementById('linkTitle').value;
             const url = document.getElementById('linkUrl').value;
             const description = document.getElementById('linkDescription').value;
-            const icon = document.getElementById('linkIcon').value.trim() || '🔗'; // Standard-Icon wenn leer
+            const icon = document.getElementById('linkIcon').value.trim() || '🔗';
             
             if (isEditMode && currentEditingLink) {
-                // Link bearbeiten (Kategorie bleibt gleich)
                 const { categoryKey, linkIndex } = currentEditingLink;
                 linkCategories[categoryKey].links[linkIndex] = { title, url, description, icon };
                 saveConfig(true);
@@ -4241,7 +4130,6 @@
                 renderCategories();
                 closeModal();
             } else {
-                // Neuen Link hinzufügen
                 const category = document.getElementById('linkCategory').value;
                 
                 if (!category) {
@@ -4251,7 +4139,6 @@
                 
                 linkCategories[category].links.push({ title, url, description, icon });
                 
-                // Automatisch leere Kategorien ans Ende verschieben
                 sortCategoriesEmptyLast();
                 
                 saveConfig(true);
@@ -4265,19 +4152,16 @@
             e.preventDefault();
             
             const title = document.getElementById('categoryTitle').value;
-            const icon = document.getElementById('categoryIcon').value.trim() || '📁'; // Standard-Icon wenn leer
+            const icon = document.getElementById('categoryIcon').value.trim() || '📁';
             
             if (isCategoryEditMode && currentEditingCategory) {
-                // Kategorie bearbeiten
                 linkCategories[currentEditingCategory].title = title;
                 linkCategories[currentEditingCategory].icon = icon;
                 saveConfig(true);
                 showMessage('Kategorie erfolgreich bearbeitet', 'success');
             } else {
-                // Neue Kategorie erstellen
                 const categoryKey = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
                 
-                // Prüfen ob Kategorie bereits existiert
                 if (linkCategories[categoryKey]) {
                     alert('Eine Kategorie mit diesem Namen existiert bereits!');
                     return;
@@ -4290,10 +4174,8 @@
                     links: []
                 };
                 
-                // Kategorie zur Order hinzufügen
                 categoryOrder.push(categoryKey);
                 
-                // Automatisch leere Kategorien ans Ende verschieben
                 sortCategoriesEmptyLast();
                 
                 saveConfig(true);
@@ -4301,7 +4183,7 @@
             }
             
             renderCategories();
-            populateCategorySelect(); // Dropdown aktualisieren
+            populateCategorySelect();
             closeCategoryModal();
         });
 
@@ -4310,6 +4192,7 @@
             const modal = document.getElementById('linkModal');
             const categoryModal = document.getElementById('categoryModal');
             const categorySelectModal = document.getElementById('categorySelectModal');
+            const emptyCategoryModal = document.getElementById('emptyCategoryModal');
             const submenu = document.getElementById('menuSubmenu');
             const menuButton = document.getElementById('mainMenuButton');
             const contextMenu = document.getElementById('contextMenu');
@@ -4327,12 +4210,14 @@
                 closeCategorySelectModal();
             }
             
-            // Menü schließen, wenn außerhalb geklickt wird (aber nicht auf den Button selbst)
+            if (event.target === emptyCategoryModal) {
+                closeEmptyCategoryModal();
+            }
+            
             if (!submenu.contains(event.target) && !menuButton.contains(event.target)) {
                 closeMenu();
             }
             
-            // Kontextmenüs schließen, wenn außerhalb geklickt wird
             if (!contextMenu.contains(event.target) && !categoryContextMenu.contains(event.target)) {
                 hideContextMenu();
             }
@@ -4340,12 +4225,10 @@
 
         // Sicherheits-Cleanup beim Klicken außerhalb von Drag-Bereichen
         document.addEventListener('click', function(event) {
-            // Nur cleanup wenn nicht auf einem draggable Element geklickt wurde
             if (!event.target.closest('.drag-handle') && 
                 !event.target.closest('.link-drag-handle') && 
                 !event.target.closest('.category.empty-category')) {
                 
-                // Cleanup temporärer leerer Kategorien als Sicherheitsmaßnahme
                 if (document.querySelectorAll('.category.empty-category').length > 0) {
                     cleanupDragAndDrop();
                 }
@@ -4358,10 +4241,10 @@
                 closeModal();
                 closeCategoryModal();
                 closeCategorySelectModal();
+                closeEmptyCategoryModal();
                 closeMenu();
                 hideContextMenu();
                 
-                // FIXED: Auto-Scroll stoppen bei Escape
                 if (isDragging) {
                     isDragging = false;
                     stopAutoScroll();
@@ -4369,7 +4252,6 @@
                     setTimeout(removeScrollZones, 300);
                 }
                 
-                // Auch Drag-and-Drop cleanup bei Escape
                 cleanupDragAndDrop();
             }
         }); 
