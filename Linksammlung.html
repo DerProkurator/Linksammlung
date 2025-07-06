@@ -173,7 +173,7 @@
             z-index: 1000;
         }
 
-        /* Neue Styles für zugeklappte Kategorien */
+        /* FIXED: Neue Styles für zugeklappte Kategorien - sie nehmen nicht mehr die volle Breite ein */
         .category.collapsed .link-grid {
             display: none;
         }
@@ -195,6 +195,11 @@
             transition: opacity 0.2s ease;
         }
 
+        /* FIXED: Zugeklappte Kategorien sollen NICHT die volle Breite einnehmen */
+        .category.collapsed.has-many-items {
+            grid-column: auto !important;
+        }
+
         /* Neue Styles für leere Kategorien beim Drag & Drop */
         .category.empty-category {
             opacity: 0.7;
@@ -203,6 +208,11 @@
             padding: 15px;
             background: rgba(64, 224, 208, 0.05);
             animation: emptyGlow 2s ease-in-out infinite alternate;
+        }
+
+        .category.empty-category.link-drag-over {
+            border-color: rgba(255, 193, 7, 0.6);
+            background: rgba(255, 193, 7, 0.1);
         }
 
         @keyframes emptyGlow {
@@ -329,6 +339,9 @@
             transition: all 0.3s ease;
             user-select: none;
             opacity: 0.7;
+            /* FIXED: Z-Index erhöht für bessere Zugänglichkeit */
+            z-index: 10;
+            position: relative;
         }
 
         .drag-handle:hover {
@@ -854,6 +867,57 @@
             max-width: 280px;
         }
 
+        /* NEUE Styles für bessere Drag-Images */
+        .category.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            z-index: 1000;
+        }
+
+        .link-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            z-index: 1000;
+            cursor: grabbing;
+        }
+
+        /* Verbesserte Drag-Handle Styles */
+        .drag-handle {
+            color: rgba(64, 224, 208, 0.4);
+            font-size: 1.5em;
+            cursor: grab;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            user-select: none;
+            opacity: 0.7;
+            z-index: 10;
+            position: relative;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .link-drag-handle {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: rgba(64, 224, 208, 0.6);
+            font-size: 1.2em;
+            cursor: grab;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            user-select: none;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .link-drag-handle:active {
+            cursor: grabbing;
+        }
+
         /* Emoji Picker Styles */
         .emoji-picker {
             position: absolute;
@@ -1108,18 +1172,27 @@
             }
             
             .categories-wrapper {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: 25px;
-                align-items: start;
             }
             
             .category {
                 margin-bottom: 0;
             }
             
-            .category.has-many-items {
-                grid-column: 1 / -1;
+            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
+            .category.has-many-items:not(.collapsed) {
+                width: 100%;
+                margin-bottom: 30px;
+            }
+            
+            /* Kleinere Kategorien in Grid anordnen */
+            .categories-grid-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 25px;
+                align-items: start;
             }
             
             .link-grid {
@@ -1135,18 +1208,27 @@
 
         @media (min-width: 1025px) and (max-width: 1400px) {
             .categories-wrapper {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: 30px;
-                align-items: start;
             }
             
             .category {
                 margin-bottom: 0;
             }
             
-            .category.has-many-items {
-                grid-column: 1 / -1;
+            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
+            .category.has-many-items:not(.collapsed) {
+                width: 100%;
+                margin-bottom: 35px;
+            }
+            
+            /* Kleinere Kategorien in Grid anordnen */
+            .categories-grid-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 30px;
+                align-items: start;
             }
             
             .link-grid {
@@ -1170,19 +1252,27 @@
 
         @media (min-width: 1401px) {
             .categories-wrapper {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: 35px;
-                align-items: start;
             }
             
             .category {
                 margin-bottom: 0;
             }
             
-            .category.has-many-items {
-                grid-column: 1 / -1;
+            /* FIXED: Spezielle Behandlung für Kategorien mit vielen Links */
+            .category.has-many-items:not(.collapsed) {
+                width: 100%;
                 margin-bottom: 40px;
+            }
+            
+            /* Kleinere Kategorien in Grid anordnen */
+            .categories-grid-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 35px;
+                align-items: start;
             }
             
             .link-grid {
@@ -1209,6 +1299,58 @@
         .copyright:hover {
             opacity: 1;
             transition: opacity 0.3s ease;
+        }
+
+        /* NEUE Styles für Auto-Scroll-Zonen */
+        .scroll-zone {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 100px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: linear-gradient(transparent, rgba(64, 224, 208, 0.1));
+            border: 2px dashed rgba(64, 224, 208, 0.3);
+        }
+
+        .scroll-zone.top {
+            top: 0;
+            background: linear-gradient(rgba(64, 224, 208, 0.1), transparent);
+            border-bottom: 2px dashed rgba(64, 224, 208, 0.5);
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .scroll-zone.bottom {
+            bottom: 0;
+            background: linear-gradient(transparent, rgba(64, 224, 208, 0.1));
+            border-top: 2px dashed rgba(64, 224, 208, 0.5);
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .scroll-zone.active {
+            opacity: 1;
+        }
+
+        .scroll-zone::after {
+            content: '↑ Zum Scrollen hier halten';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(64, 224, 208, 0.8);
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .scroll-zone.bottom::after {
+            content: '↓ Zum Scrollen hier halten';
         }
     </style>
 </head>
@@ -1865,6 +2007,110 @@
         let tempEmptyCategories = [];
         let isLinkDragActive = false;
 
+        // NEUE VARIABLEN: Auto-Scroll während Drag-and-Drop
+        let autoScrollInterval = null;
+        let isDragging = false;
+        let currentMouseY = 0;
+
+        // === NEUE FUNKTIONEN FÜR AUTO-SCROLL ===
+
+        // Scroll-Zonen erstellen und verwalten
+        function createScrollZones() {
+            // Prüfe ob bereits vorhanden
+            if (document.querySelector('.scroll-zone')) return;
+            
+            // Obere Scroll-Zone
+            const topZone = document.createElement('div');
+            topZone.className = 'scroll-zone top';
+            topZone.id = 'scroll-zone-top';
+            document.body.appendChild(topZone);
+            
+            // Untere Scroll-Zone
+            const bottomZone = document.createElement('div');
+            bottomZone.className = 'scroll-zone bottom';
+            bottomZone.id = 'scroll-zone-bottom';
+            document.body.appendChild(bottomZone);
+        }
+
+        function showScrollZones() {
+            const topZone = document.getElementById('scroll-zone-top');
+            const bottomZone = document.getElementById('scroll-zone-bottom');
+            
+            if (topZone) topZone.classList.add('active');
+            if (bottomZone) bottomZone.classList.add('active');
+        }
+
+        function hideScrollZones() {
+            const topZone = document.getElementById('scroll-zone-top');
+            const bottomZone = document.getElementById('scroll-zone-bottom');
+            
+            if (topZone) topZone.classList.remove('active');
+            if (bottomZone) bottomZone.classList.remove('active');
+        }
+
+        function removeScrollZones() {
+            const zones = document.querySelectorAll('.scroll-zone');
+            zones.forEach(zone => zone.remove());
+        }
+
+        // Auto-Scroll-Funktionalität
+        function startAutoScroll() {
+            if (autoScrollInterval) return;
+            
+            autoScrollInterval = setInterval(() => {
+                if (!isDragging) {
+                    stopAutoScroll();
+                    return;
+                }
+                
+                const scrollZoneSize = 100; // Pixel vom Rand
+                const scrollSpeed = 15; // Pixel pro Interval
+                const windowHeight = window.innerHeight;
+                
+                // Prüfe ob Maus in oberer Scroll-Zone
+                if (currentMouseY < scrollZoneSize) {
+                    const intensity = (scrollZoneSize - currentMouseY) / scrollZoneSize;
+                    window.scrollBy(0, -scrollSpeed * intensity);
+                }
+                // Prüfe ob Maus in unterer Scroll-Zone  
+                else if (currentMouseY > windowHeight - scrollZoneSize) {
+                    const intensity = (currentMouseY - (windowHeight - scrollZoneSize)) / scrollZoneSize;
+                    window.scrollBy(0, scrollSpeed * intensity);
+                }
+            }, 16); // ~60fps
+        }
+
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+        }
+
+        // Globale Maus-Tracking für Auto-Scroll
+        document.addEventListener('dragover', function(e) {
+            if (isDragging) {
+                currentMouseY = e.clientY;
+                
+                // Starte Auto-Scroll wenn nahe am Rand
+                const scrollZoneSize = 100;
+                const windowHeight = window.innerHeight;
+                
+                if (currentMouseY < scrollZoneSize || currentMouseY > windowHeight - scrollZoneSize) {
+                    startAutoScroll();
+                } else {
+                    stopAutoScroll();
+                }
+            }
+        });
+
+        // Auto-Scroll bei globalem Drag-Ende stoppen
+        document.addEventListener('dragend', function(e) {
+            isDragging = false;
+            stopAutoScroll();
+            hideScrollZones();
+        });
+
         // === NEUE FUNKTIONEN FÜR ERWEITERTE FEATURES ===
 
         // 1. Funktion zum Sortieren der Kategorien (leere ans Ende)
@@ -2034,9 +2280,11 @@
         }
 
         function isCategoryInGridLayout(categoryElement) {
-            const wrapper = categoryElement.parentElement;
-            const computedStyle = window.getComputedStyle(wrapper);
-            return computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none';
+            const parent = categoryElement.parentElement;
+            // FIXED: Prüfe sowohl direkte Grid-Sections als auch Wrapper
+            const computedStyle = window.getComputedStyle(parent);
+            return (parent.classList.contains('categories-grid-section') || 
+                   (computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none'));
         }
 
         function removeAllDragOverClasses(element) {
@@ -2073,15 +2321,13 @@
         function showEmptyCategories() {
             if (isLinkDragActive) return; // Verhindere mehrfache Ausführung
             
-            // Entferne erst alle vorherigen temporären leeren Kategorien (Sicherheitsmaßnahme)
-            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
-                categoryElement.remove();
-            });
+            // FIXED: Bereinige erst alle vorherigen temporären Elemente
+            cleanupAllTemporaryElements();
             
             isLinkDragActive = true;
             tempEmptyCategories = [];
             
-            // Finde alle leeren Kategorien
+            // FIXED: Aktualisiere Liste der leeren Kategorien
             categoryOrder.forEach(categoryKey => {
                 const category = linkCategories[categoryKey];
                 if (category && category.links.length === 0) {
@@ -2098,19 +2344,17 @@
         function hideEmptyCategories() {
             if (!isLinkDragActive) return;
             
-            isLinkDragActive = false;
-            
-            // Entferne alle temporären leeren Kategorien
-            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
-                categoryElement.remove();
-            });
-            
-            tempEmptyCategories = [];
+            // FIXED: Verwende die verbesserte Cleanup-Funktion
+            cleanupAllTemporaryElements();
         }
 
         function addEmptyCategoriesToDom() {
             const categoriesWrapper = document.querySelector('.categories-wrapper');
             if (!categoriesWrapper) return;
+            
+            // FIXED: Erstelle immer eine separate Grid-Section für leere Kategorien am Ende
+            const emptyGridSection = document.createElement('div');
+            emptyGridSection.className = 'categories-grid-section empty-categories-section';
             
             // Für jede leere Kategorie ein temporäres DOM-Element erstellen
             tempEmptyCategories.forEach(categoryKey => {
@@ -2136,38 +2380,104 @@
                 // Drop-Funktionalität für Links hinzufügen
                 makeCategoryDroppable(categoryDiv, categoryKey);
                 
-                // Kategorie an der richtigen Position einfügen
-                insertCategoryAtCorrectPosition(categoryDiv, categoryKey, categoriesWrapper);
+                // In die separate Grid-Section einfügen
+                emptyGridSection.appendChild(categoryDiv);
             });
+            
+            // Leere Grid-Section am Ende hinzufügen
+            if (tempEmptyCategories.length > 0) {
+                categoriesWrapper.appendChild(emptyGridSection);
+            }
         }
 
         function insertCategoryAtCorrectPosition(categoryDiv, categoryKey, categoriesWrapper) {
             const categoryIndex = categoryOrder.indexOf(categoryKey);
             if (categoryIndex === -1) return;
             
-            // Finde die richtige Position zum Einfügen
-            const existingCategories = Array.from(categoriesWrapper.children);
-            let insertBeforeElement = null;
+            // FIXED: Leere Kategorien gehören immer in eine Grid-Section
+            // Finde die richtige Position basierend auf categoryOrder
             
-            // Durchsuche alle Kategorien nach der Position
-            for (let i = categoryIndex + 1; i < categoryOrder.length; i++) {
-                const nextCategoryKey = categoryOrder[i];
-                const nextCategoryElement = existingCategories.find(el => 
-                    el.getAttribute('data-category-key') === nextCategoryKey
-                );
+            let insertionPoint = null;
+            let targetContainer = null;
+            
+            // Durchsuche categoryOrder um die richtige Position zu finden
+            for (let i = 0; i < categoryOrder.length; i++) {
+                const currentCategoryKey = categoryOrder[i];
+                const currentCategory = linkCategories[currentCategoryKey];
                 
-                if (nextCategoryElement) {
-                    insertBeforeElement = nextCategoryElement;
-                    break;
+                if (!currentCategory || currentCategory.links.length === 0) continue;
+                
+                if (i > categoryIndex) {
+                    // Das ist die erste Kategorie nach unserer Position
+                    const existingElement = findCategoryElement(currentCategoryKey, categoriesWrapper);
+                    if (existingElement) {
+                        insertionPoint = existingElement;
+                        targetContainer = existingElement.parentElement;
+                        break;
+                    }
+                } else if (i === categoryIndex - 1) {
+                    // Das ist die Kategorie direkt vor unserer Position
+                    const existingElement = findCategoryElement(currentCategoryKey, categoriesWrapper);
+                    if (existingElement) {
+                        const isLargeCategory = currentCategory.links.length >= 4 && !currentCategory.collapsed;
+                        
+                        if (isLargeCategory) {
+                            // Nach einer großen Kategorie brauchen wir eine neue Grid-Section
+                            let nextGridSection = existingElement.nextElementSibling;
+                            if (!nextGridSection || !nextGridSection.classList.contains('categories-grid-section')) {
+                                nextGridSection = document.createElement('div');
+                                nextGridSection.className = 'categories-grid-section';
+                                existingElement.parentElement.insertBefore(nextGridSection, existingElement.nextSibling);
+                            }
+                            targetContainer = nextGridSection;
+                        } else {
+                            // Nach einer kleinen Kategorie können wir in dieselbe Grid-Section
+                            targetContainer = existingElement.parentElement;
+                            insertionPoint = existingElement.nextSibling;
+                        }
+                        break;
+                    }
                 }
             }
             
-            // Einfügen an der richtigen Position
-            if (insertBeforeElement) {
-                categoriesWrapper.insertBefore(categoryDiv, insertBeforeElement);
-            } else {
-                categoriesWrapper.appendChild(categoryDiv);
+            // Fallback: Wenn keine Position gefunden, erstelle neue Grid-Section am Ende
+            if (!targetContainer) {
+                let gridSection = categoriesWrapper.querySelector('.categories-grid-section:last-child');
+                if (!gridSection) {
+                    gridSection = document.createElement('div');
+                    gridSection.className = 'categories-grid-section';
+                    categoriesWrapper.appendChild(gridSection);
+                }
+                targetContainer = gridSection;
             }
+            
+            // Element einfügen
+            if (insertionPoint && targetContainer === insertionPoint.parentElement) {
+                targetContainer.insertBefore(categoryDiv, insertionPoint);
+            } else {
+                targetContainer.appendChild(categoryDiv);
+            }
+        }
+        
+        // NEUE HILFSFUNKTION: Findet ein Kategorie-Element in der DOM-Struktur
+        function findCategoryElement(categoryKey, container) {
+            // Suche in allen Grid-Sections und direkt im Container
+            const directChild = Array.from(container.children).find(el => 
+                el.classList.contains('category') && el.getAttribute('data-category-key') === categoryKey
+            );
+            
+            if (directChild) return directChild;
+            
+            // Suche in Grid-Sections
+            const gridSections = container.querySelectorAll('.categories-grid-section');
+            for (const gridSection of gridSections) {
+                const element = Array.from(gridSection.children).find(el => 
+                    el.classList.contains('category') && el.getAttribute('data-category-key') === categoryKey
+                );
+                if (element) return element;
+            }
+            
+            return null;
         }
 
         // Neue Funktionen für Link-Import/Export
@@ -2527,11 +2837,38 @@
             draggedCategoryKey = this.getAttribute('data-category-key');
             draggedElement.classList.add('dragging');
             
+            // FIXED: Auto-Scroll aktivieren
+            isDragging = true;
+            createScrollZones();
+            showScrollZones();
+            
             // Drag-Handle als aktiv markieren
             this.classList.add('active');
             
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', draggedElement.outerHTML);
+            
+            // FIXED: Gesamte Kategorie als Drag-Image verwenden, nicht nur das Handle
+            const categoryClone = draggedElement.cloneNode(true);
+            categoryClone.style.transform = 'rotate(5deg)';
+            categoryClone.style.opacity = '0.8';
+            categoryClone.style.pointerEvents = 'none';
+            categoryClone.style.position = 'absolute';
+            categoryClone.style.top = '-1000px';
+            categoryClone.style.left = '-1000px';
+            categoryClone.style.zIndex = '1000';
+            categoryClone.style.maxWidth = '300px';
+            document.body.appendChild(categoryClone);
+            
+            // Drag-Image auf das geklonte Element setzen
+            e.dataTransfer.setDragImage(categoryClone, 150, 50);
+            
+            // Clone nach kurzer Zeit wieder entfernen
+            setTimeout(() => {
+                if (document.body.contains(categoryClone)) {
+                    document.body.removeChild(categoryClone);
+                }
+            }, 100);
         }
 
         function handleCategoryDragEnd(e) {
@@ -2540,6 +2877,12 @@
             
             categoryElement.classList.remove('dragging');
             dragHandle.classList.remove('active');
+            
+            // FIXED: Auto-Scroll deaktivieren und Scroll-Zonen entfernen
+            isDragging = false;
+            stopAutoScroll();
+            hideScrollZones();
+            setTimeout(removeScrollZones, 300); // Nach Fade-out entfernen
             
             // Universelle Cleanup-Funktion verwenden
             cleanupDragAndDrop();
@@ -2766,7 +3109,7 @@
             categoryElement.removeEventListener('dragenter', handleCategoryLinkDragEnter);
             categoryElement.removeEventListener('dragleave', handleCategoryLinkDragLeave);
             
-            // Neue Event-Listener hinzufügen
+            // Normale Event-Listener hinzufügen
             categoryElement.addEventListener('dragover', handleCategoryLinkDragOver);
             categoryElement.addEventListener('drop', handleCategoryLinkDrop);
             categoryElement.addEventListener('dragenter', handleCategoryLinkDragEnter);
@@ -2793,9 +3136,36 @@
                 linkData: linkCategories[categoryKey].links[linkIndex]
             };
             
+            // FIXED: Auto-Scroll aktivieren
+            isDragging = true;
+            createScrollZones();
+            showScrollZones();
+            
             draggedLinkElement.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', draggedLinkElement.outerHTML);
+            
+            // FIXED: Gesamten Link als Drag-Image verwenden, nicht nur das Handle
+            const linkClone = draggedLinkElement.cloneNode(true);
+            linkClone.style.transform = 'rotate(5deg)';
+            linkClone.style.opacity = '0.8';
+            linkClone.style.pointerEvents = 'none';
+            linkClone.style.position = 'absolute';
+            linkClone.style.top = '-1000px';
+            linkClone.style.left = '-1000px';
+            linkClone.style.zIndex = '1000';
+            linkClone.style.maxWidth = '280px';
+            document.body.appendChild(linkClone);
+            
+            // Drag-Image auf das geklonte Element setzen
+            e.dataTransfer.setDragImage(linkClone, 140, 30);
+            
+            // Clone nach kurzer Zeit wieder entfernen
+            setTimeout(() => {
+                if (document.body.contains(linkClone)) {
+                    document.body.removeChild(linkClone);
+                }
+            }, 100);
             
             // NEUE FUNKTION: Leere Kategorien anzeigen
             showEmptyCategories();
@@ -2806,10 +3176,8 @@
 
         // Universelle Cleanup-Funktion für alle Drag-and-Drop-Operationen
         function cleanupDragAndDrop() {
-            // Entferne alle temporären leeren Kategorien
-            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
-                categoryElement.remove();
-            });
+            // FIXED: Verwende die verbesserte Cleanup-Funktion
+            cleanupAllTemporaryElements();
             
             // Entferne alle drag-over Klassen von Kategorien
             document.querySelectorAll('.category').forEach(cat => {
@@ -2822,10 +3190,6 @@
             document.querySelectorAll('.link-item').forEach(link => {
                 removeAllDragOverClasses(link);
             });
-            
-            // Reset der Drag-Variablen
-            isLinkDragActive = false;
-            tempEmptyCategories = [];
         }
 
         // MODIFIZIERTE FUNKTION: Link-Drag-End mit verbesserter Cleanup
@@ -2833,6 +3197,12 @@
             if (draggedLinkElement) {
                 draggedLinkElement.classList.remove('dragging');
             }
+            
+            // FIXED: Auto-Scroll deaktivieren und Scroll-Zonen entfernen
+            isDragging = false;
+            stopAutoScroll();
+            hideScrollZones();
+            setTimeout(removeScrollZones, 300); // Nach Fade-out entfernen
             
             // Universelle Cleanup-Funktion verwenden
             cleanupDragAndDrop();
@@ -3028,6 +3398,9 @@
                         category.links.splice(newIndex, 0, linkToMove);
                     }
                     
+                    // FIXED: Vollständiges Cleanup vor dem Re-render
+                    cleanupAllTemporaryElements();
+                    
                     // Konfiguration speichern und neu rendern
                     saveConfig(true);
                     renderCategories();
@@ -3124,25 +3497,44 @@
                 if (targetCategoryKey && targetCategoryKey !== draggedLinkData.categoryKey) {
                     // Inter-Kategorie: Link aus alter Kategorie entfernen und in neue einfügen
                     const sourceCategory = linkCategories[draggedLinkData.categoryKey];
+                    const sourceCategoryKey = draggedLinkData.categoryKey;
                     const linkToMove = sourceCategory.links.splice(draggedLinkData.linkIndex, 1)[0];
                     
                     // Link in neue Kategorie einfügen
                     linkCategories[targetCategoryKey].links.push(linkToMove);
                     
-                    // Automatisch leere Kategorien ans Ende verschieben
-                    sortCategoriesEmptyLast();
+                    // Cleanup vor der Überprüfung
+                    cleanupAllTemporaryElements();
+                    this.classList.remove('link-drag-over');
                     
-                    // Konfiguration speichern und neu rendern
-                    saveConfig(true);
-                    renderCategories();
-                    
-                    const sourceTitle = sourceCategory.title;
-                    const targetTitle = linkCategories[targetCategoryKey].title;
-                    showMessage(`Link "${linkToMove.title}" von "${sourceTitle}" zu "${targetTitle}" verschoben`, 'success');
+                    // Prüfen ob die Quellkategorie jetzt leer ist
+                    if (sourceCategory.links.length === 0) {
+                        // Schönes Modal für leere Kategorie anzeigen
+                        showEmptyCategoryModal({
+                            action: 'move',
+                            linkTitle: linkToMove.title,
+                            sourceTitle: sourceCategory.title,
+                            targetTitle: linkCategories[targetCategoryKey].title,
+                            sourceCategoryKey: sourceCategoryKey
+                        });
+                    } else {
+                        // Normale Verschiebung ohne leere Kategorie
+                        const sourceTitle = sourceCategory.title;
+                        const targetTitle = linkCategories[targetCategoryKey].title;
+                        showMessage(`Link "${linkToMove.title}" von "${sourceTitle}" zu "${targetTitle}" verschoben`, 'success');
+                        
+                        // Automatisch leere Kategorien ans Ende verschieben
+                        sortCategoriesEmptyLast();
+                        
+                        // Konfiguration speichern und neu rendern
+                        saveConfig(true);
+                        renderCategories();
+                    }
+                } else {
+                    // Cleanup: Kategorie-Highlighting entfernen
+                    this.classList.remove('link-drag-over');
                 }
                 
-                // Cleanup: Kategorie-Highlighting entfernen
-                this.classList.remove('link-drag-over');
                 return false;
             }
         }
@@ -3649,116 +4041,41 @@
             const container = document.getElementById('categoriesContainer');
             container.innerHTML = '';
 
-            // Wrapper für Kategorien-Grid erstellen
+            // FIXED: Cleanup aller temporären Elemente vor dem Neurendern
+            cleanupAllTemporaryElements();
+
+            // Wrapper für Kategorien erstellen
             const categoriesWrapper = document.createElement('div');
             categoriesWrapper.className = 'categories-wrapper';
 
-            // Kategorien in der gespeicherten Reihenfolge anzeigen
+            // FIXED: Kategorien in ursprünglicher Reihenfolge verarbeiten
+            let currentGridSection = null;
+            
             categoryOrder.forEach(categoryKey => {
                 const category = linkCategories[categoryKey];
                 
-                // Nur Kategorien mit Links rendern (leere Kategorien werden nur temporär beim Link-Drag gezeigt)
+                // Nur Kategorien mit Links rendern
                 if (category && category.links.length > 0) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'category';
+                    const isLargeCategory = category.links.length >= 4 && !category.collapsed;
                     
-                    // Collapsed-Klasse hinzufügen wenn zugeklappt
-                    if (category.collapsed) {
-                        categoryDiv.classList.add('collapsed');
+                    if (isLargeCategory) {
+                        // Große Kategorie: Schließe vorherige Grid-Section und erstelle Block-Element
+                        currentGridSection = null;
+                        
+                        const categoryDiv = createCategoryElement(categoryKey, category);
+                        categoriesWrapper.appendChild(categoryDiv);
+                        
+                    } else {
+                        // Kleine Kategorie: In Grid-Section einfügen
+                        if (!currentGridSection) {
+                            currentGridSection = document.createElement('div');
+                            currentGridSection.className = 'categories-grid-section';
+                            categoriesWrapper.appendChild(currentGridSection);
+                        }
+                        
+                        const categoryDiv = createCategoryElement(categoryKey, category);
+                        currentGridSection.appendChild(categoryDiv);
                     }
-                    
-                    // Spezielle Klasse für Kategorien mit vielen Links hinzufügen
-                    if (category.links.length >= 4) {
-                        categoryDiv.classList.add('has-many-items');
-                    }
-                    
-                    // Kategorie-Header mit Drag-Handle
-                    const categoryHeader = document.createElement('div');
-                    categoryHeader.className = 'category-header';
-                    
-                    const categoryTitle = document.createElement('h2');
-                    categoryTitle.className = 'category-title';
-                    categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
-                    
-                    // Klick-Event für Auf-/Zuklappen hinzufügen
-                    categoryTitle.addEventListener('click', () => {
-                        toggleCategoryCollapsed(categoryKey);
-                    });
-                    
-                    // Rechtsklick-Event für Kategorie-Kontextmenü hinzufügen
-                    categoryTitle.addEventListener('contextmenu', (e) => {
-                        showCategoryContextMenu(e, categoryKey);
-                    });
-                    
-                    const dragHandle = document.createElement('div');
-                    dragHandle.className = 'drag-handle';
-                    dragHandle.innerHTML = '⋮⋮';
-                    dragHandle.title = 'Kategorie verschieben';
-                    
-                    categoryHeader.appendChild(categoryTitle);
-                    categoryHeader.appendChild(dragHandle);
-                    
-                    const linkGrid = document.createElement('div');
-                    linkGrid.className = 'link-grid';
-                    
-                    // Spezielle Klasse für Link-Grid mit vielen Links hinzufügen
-                    if (category.links.length >= 4) {
-                        linkGrid.classList.add('many-items');
-                    }
-                    
-                    // Links nur anzeigen wenn Kategorie nicht zugeklappt ist
-                    if (!category.collapsed) {
-                        category.links.forEach((link, linkIndex) => {
-                            const linkElement = document.createElement('div');
-                            linkElement.className = 'link-item draggable';
-                            linkElement.innerHTML = `
-                                <div class="link-header">
-                                    <span class="link-icon">${link.icon}</span>
-                                    <div class="link-title">${link.title}</div>
-                                </div>
-                                <div class="link-description">${link.description}</div>
-                                <div class="link-drag-handle" title="Link verschieben">⋮⋮</div>
-                            `;
-                            
-                            // Rechtsklick-Event für Kontextmenü hinzufügen
-                            linkElement.addEventListener('contextmenu', (e) => {
-                                showContextMenu(e, categoryKey, linkIndex);
-                            });
-                            
-                            // Normale Klick-Funktion für URL-Öffnung
-                            linkElement.addEventListener('click', (e) => {
-                                // Nur öffnen wenn nicht auf dem Drag-Handle geklickt wurde
-                                if (!e.target.classList.contains('link-drag-handle')) {
-                                    window.open(link.url, '_blank');
-                                }
-                            });
-                            
-                            // Drag-Handle Click-Event verhindern
-                            const dragHandle = linkElement.querySelector('.link-drag-handle');
-                            dragHandle.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                            });
-                            
-                            linkGrid.appendChild(linkElement);
-                            
-                            // Drag and Drop für Links aktivieren
-                            makeLinkDraggable(linkElement, categoryKey, linkIndex);
-                            
-                            // Links als Drop-Targets aktivieren
-                            makeLinkDroppable(linkElement, categoryKey, linkIndex);
-                        });
-                    }
-                    
-                    categoryDiv.appendChild(categoryHeader);
-                    categoryDiv.appendChild(linkGrid);
-                    
-                    // Drag and Drop Funktionalität für Kategorien hinzufügen
-                    makeCategoryDraggable(categoryDiv, categoryKey);
-                    
-                    // Drop-Funktionalität für Links hinzufügen
-                    makeCategoryDroppable(categoryDiv, categoryKey);
-                    
-                    categoriesWrapper.appendChild(categoryDiv);
                 }
             });
 
@@ -3768,6 +4085,143 @@
             container.addEventListener('touchstart', handleTouchStart, { passive: false });
             container.addEventListener('touchmove', handleTouchMove, { passive: false });
             container.addEventListener('touchend', handleTouchEnd, { passive: false });
+        }
+
+        // NEUE FUNKTION: Bereinige alle temporären Elemente und Referenzen
+        function cleanupAllTemporaryElements() {
+            // Entferne alle temporären leeren Kategorien
+            document.querySelectorAll('.category.empty-category').forEach(categoryElement => {
+                categoryElement.remove();
+            });
+            
+            // Entferne alle leeren Grid-Sections
+            document.querySelectorAll('.empty-categories-section').forEach(section => {
+                section.remove();
+            });
+            
+            // Entferne alle Scroll-Zonen
+            document.querySelectorAll('.scroll-zone').forEach(zone => {
+                zone.remove();
+            });
+            
+            // Reset aller Drag-Variablen
+            isLinkDragActive = false;
+            tempEmptyCategories = [];
+            
+            // Stoppe alle laufenden Auto-Scroll-Timer
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+            
+            // Reset Drag-States
+            if (isDragging) {
+                isDragging = false;
+            }
+        }
+
+        // NEUE HILFSFUNKTION: Erstellt ein Kategorie-Element
+        function createCategoryElement(categoryKey, category) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category';
+            
+            // Collapsed-Klasse hinzufügen wenn zugeklappt
+            if (category.collapsed) {
+                categoryDiv.classList.add('collapsed');
+            }
+            
+            // Spezielle Klasse für Kategorien mit vielen Links hinzufügen
+            if (category.links.length >= 4) {
+                categoryDiv.classList.add('has-many-items');
+            }
+            
+            // Kategorie-Header mit Drag-Handle
+            const categoryHeader = document.createElement('div');
+            categoryHeader.className = 'category-header';
+            
+            const categoryTitle = document.createElement('h2');
+            categoryTitle.className = 'category-title';
+            categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
+            
+            // Klick-Event für Auf-/Zuklappen hinzufügen
+            categoryTitle.addEventListener('click', () => {
+                toggleCategoryCollapsed(categoryKey);
+            });
+            
+            // Rechtsklick-Event für Kategorie-Kontextmenü hinzufügen
+            categoryTitle.addEventListener('contextmenu', (e) => {
+                showCategoryContextMenu(e, categoryKey);
+            });
+            
+            const dragHandle = document.createElement('div');
+            dragHandle.className = 'drag-handle';
+            dragHandle.innerHTML = '⋮⋮';
+            dragHandle.title = 'Kategorie verschieben';
+            
+            categoryHeader.appendChild(categoryTitle);
+            categoryHeader.appendChild(dragHandle);
+            
+            const linkGrid = document.createElement('div');
+            linkGrid.className = 'link-grid';
+            
+            // Spezielle Klasse für Link-Grid mit vielen Links hinzufügen
+            if (category.links.length >= 4) {
+                linkGrid.classList.add('many-items');
+            }
+            
+            // Links nur anzeigen wenn Kategorie nicht zugeklappt ist
+            if (!category.collapsed) {
+                category.links.forEach((link, linkIndex) => {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = 'link-item draggable';
+                    linkElement.innerHTML = `
+                        <div class="link-header">
+                            <span class="link-icon">${link.icon}</span>
+                            <div class="link-title">${link.title}</div>
+                        </div>
+                        <div class="link-description">${link.description}</div>
+                        <div class="link-drag-handle" title="Link verschieben">⋮⋮</div>
+                    `;
+                    
+                    // Rechtsklick-Event für Kontextmenü hinzufügen
+                    linkElement.addEventListener('contextmenu', (e) => {
+                        showContextMenu(e, categoryKey, linkIndex);
+                    });
+                    
+                    // Normale Klick-Funktion für URL-Öffnung
+                    linkElement.addEventListener('click', (e) => {
+                        // Nur öffnen wenn nicht auf dem Drag-Handle geklickt wurde
+                        if (!e.target.classList.contains('link-drag-handle')) {
+                            window.open(link.url, '_blank');
+                        }
+                    });
+                    
+                    // Drag-Handle Click-Event verhindern
+                    const dragHandle = linkElement.querySelector('.link-drag-handle');
+                    dragHandle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                    
+                    linkGrid.appendChild(linkElement);
+                    
+                    // Drag and Drop für Links aktivieren
+                    makeLinkDraggable(linkElement, categoryKey, linkIndex);
+                    
+                    // Links als Drop-Targets aktivieren
+                    makeLinkDroppable(linkElement, categoryKey, linkIndex);
+                });
+            }
+            
+            categoryDiv.appendChild(categoryHeader);
+            categoryDiv.appendChild(linkGrid);
+            
+            // Drag and Drop Funktionalität für Kategorien hinzufügen
+            makeCategoryDraggable(categoryDiv, categoryKey);
+            
+            // Drop-Funktionalität für Links hinzufügen
+            makeCategoryDroppable(categoryDiv, categoryKey);
+            
+            return categoryDiv;
         }
 
         document.getElementById('linkForm').addEventListener('submit', function(e) {
@@ -3906,6 +4360,14 @@
                 closeCategorySelectModal();
                 closeMenu();
                 hideContextMenu();
+                
+                // FIXED: Auto-Scroll stoppen bei Escape
+                if (isDragging) {
+                    isDragging = false;
+                    stopAutoScroll();
+                    hideScrollZones();
+                    setTimeout(removeScrollZones, 300);
+                }
                 
                 // Auch Drag-and-Drop cleanup bei Escape
                 cleanupDragAndDrop();
