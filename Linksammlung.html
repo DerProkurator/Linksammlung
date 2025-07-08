@@ -29,9 +29,30 @@
                 <span class="search-icon">🔍</span>
             </div>
         </div>
+
+        <!-- Favoriten-Button -->
+        <div class="favorites-container">
+            <button class="favorites-toggle" id="favoritesToggle" onclick="toggleFavorites()">
+                <span class="favorites-icon">⭐</span>
+                <span class="favorites-text">Favoriten</span>
+                <span class="favorites-count" id="favoritesCount">0</span>
+                <span class="favorites-arrow" id="favoritesArrow">▼</span>
+            </button>
+            
+            <div class="favorites-list" id="favoritesList">
+                <div class="favorites-header">
+                    <span class="favorites-header-icon">⭐</span>
+                    <span class="favorites-header-text">Meine Favoriten</span>
+                </div>
+                <div class="favorites-content" id="favoritesContent">
+                    <!-- Favoriten werden hier dynamisch eingefügt -->
+                </div>
+            </div>
+        </div>
         
         <input type="file" id="fileInput" accept=".json" onchange="importConfig(event)">
         <input type="file" id="linkFileInput" accept=".json" onchange="importSingleLink(event)">
+        <input type="file" id="categoryFileInput" accept=".json" onchange="importSingleCategory(event)">
         
         <div id="categoriesContainer">
             <!-- Kategorien werden hier dynamisch eingefügt -->
@@ -41,11 +62,11 @@
         <div class="drag-info">
             💡 Tipp: 
             Kategorien und Links über ⋮⋮ verschieben • Kategorie-Titel zum Auf-/Zuklappen klicken und Rechtsklick für Bearbeitung. 
-            <strong>Suche mit STRG+K</strong>  
+            <strong>Suche mit STRG+K</strong> • <strong>⭐ für Favoriten</strong>
         </div>
 
         <div class="copyright">
-            © 2025 BS - Link-Sammlung v2.2
+            © 2025 BS - Link-Sammlung v2.3
         </div>
     </div>
 
@@ -119,10 +140,9 @@
             <div class="submenu-item" onclick="document.getElementById('linkFileInput').click()">
                 <span>📥</span> Link importieren
             </div>
-            <!-- =========================================
-                 HIER WIRD AUTOMATISCH HINZUGEFÜGT:
-                 📂 Konfiguration aus JSON laden
-                 ========================================= -->
+            <div class="submenu-item" onclick="document.getElementById('categoryFileInput').click()">
+                <span>📥</span> Kategorie importieren
+            </div>
             <div class="submenu-item" onclick="exportConfig()">
                 <span>💾</span> Konfiguration exportieren
             </div>
@@ -138,6 +158,9 @@
     <button class="add-link" id="mainMenuButton" onclick="toggleMenu()">+</button>
 
     <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="toggleLinkFavorite()">
+            <span id="favoriteToggleIcon">⭐</span> <span id="favoriteToggleText">Als Favorit setzen</span>
+        </div>
         <div class="context-menu-item" onclick="editLink()">
             <span>✏️</span> Bearbeiten
         </div>
@@ -155,6 +178,9 @@
         </div>
         <div class="context-menu-item toggle" onclick="toggleCategoryFromContext()">
             <span>👁️</span> Kategorie auf-/zuklappen
+        </div>
+        <div class="context-menu-item export" onclick="exportSingleCategory()">
+            <span>📤</span> Kategorie exportieren
         </div>
         <div class="context-menu-item delete" onclick="deleteCategory()">
             <span>🗑️</span> Kategorie löschen
@@ -200,6 +226,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="linkFavorite" style="width: auto; margin: 0;">
+                        <span>⭐ Als Favorit setzen</span>
+                    </label>
                 </div>
                 <div class="form-buttons">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
@@ -314,13 +346,16 @@
     </div>
 
     <!-- ========================================
-         SCRIPTS: ORIGINAL + WILLKOMMEN
+         SCRIPTS: KONFIGURATION + ORIGINAL + WILLKOMMEN
          ======================================== -->
     
-    <!-- Original Linksammlung (unverändert) -->
+    <!-- NEU: Standard-Konfiguration laden -->
+    <script src=".\Config\default-config.js"></script>
+    
+    <!-- Original Linksammlung (erweitert) -->
     <script src=".\JS\script.js"></script>
     
-    <!-- NEU: Willkommensdialog beim ersten Start -->
+    <!-- NEU: Willkommensdialog beim ersten Start (erweitert) -->
     <script src=".\JS\welcome-config-loader.js"></script>
 </body>
 </html>
