@@ -1,16 +1,19 @@
 /**
  * ========================================================================
- * ERWEITERTE WELCOME LOADER - MIT CONFIG-PRIORITÄTEN
+ * ERWEITERTE WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v2.4)
  * ========================================================================
  * 
  * Neue Prioritätsreihenfolge:
- * 1. Lokale Konfiguration im Browser (localStorage)
- * 2. Standard-Konfiguration aus Config/default-config.js
- * 3. Welcome-Dialog falls beide nicht verfügbar
+ * 1. Lokale Konfiguration im Browser (localStorage) → Direktes Laden
+ * 2. KEINE lokale Config → IMMER Welcome-Dialog anzeigen mit:
+ *    - Option: JSON-Datei laden
+ *    - Option: Standard-Config verwenden (falls verfügbar im Config-Verzeichnis)
+ *    - Fallback: Einfache Grundkonfiguration erstellen
  * 
  * Features:
- * - Intelligente Konfigurations-Erkennung
- * - Willkommensdialog nur bei echtem ersten Start
+ * - Welcome-Dialog bei jedem ersten Start ohne lokale Config
+ * - Intelligente Erkennung verfügbarer Standard-Konfigurationen
+ * - Dynamische Anpassung des Dialogs je nach verfügbaren Optionen
  * - Integration mit bestehenden Import-Funktionen
  * - Unterstützung für Favoriten-System
  * 
@@ -21,7 +24,6 @@ class ExtendedWelcomeLoader {
     constructor() {
         this.hasShownWelcome = false;
         this.configLoadAttempted = false;
-        console.log('🚀 ExtendedWelcomeLoader initialisiert (v2.3)');
     }
 
     /**
@@ -66,11 +68,9 @@ class ExtendedWelcomeLoader {
      * Bestimmt welche Konfiguration geladen werden soll
      */
     determineConfigSource() {
-        console.log('🔍 Bestimme Konfigurationsquelle...');
         
-        // 1. Priorität: Lokale Konfiguration
+        // 1. Priorität: Lokale Konfiguration - nur dann KEIN Welcome-Dialog
         if (this.hasLocalConfig()) {
-            console.log('✅ Lokale Konfiguration gefunden');
             return {
                 source: 'local',
                 message: 'Lokale Konfiguration wird verwendet',
@@ -78,22 +78,13 @@ class ExtendedWelcomeLoader {
             };
         }
         
-        // 2. Priorität: Standard-Konfiguration aus default-config.js
-        if (this.hasDefaultConfig()) {
-            console.log('✅ Standard-Konfiguration aus default-config.js gefunden');
-            return {
-                source: 'default-config',
-                message: 'Standard-Konfiguration aus Config-Datei geladen',
-                showWelcome: false
-            };
-        }
-        
-        // 3. Fallback: Welcome-Dialog anzeigen
-        console.log('ℹ️ Keine Konfiguration gefunden - Welcome-Dialog erforderlich');
+        // 2. Keine lokale Config → Welcome-Dialog anzeigen (egal ob Standard-Config verfügbar)
+        const hasDefaultConfig = this.hasDefaultConfig();        
         return {
-            source: 'welcome',
+            source: hasDefaultConfig ? 'welcome-with-default' : 'welcome-fallback-only',
             message: 'Willkommensdialog wird angezeigt',
-            showWelcome: true
+            showWelcome: true,
+            hasDefaultConfig: hasDefaultConfig
         };
     }
 
@@ -104,27 +95,64 @@ class ExtendedWelcomeLoader {
         if (this.hasShownWelcome) return;
         this.hasShownWelcome = true;
 
-        // Modal HTML erstellen mit erweiterten Informationen
+        const configStatus = this.determineConfigSource();
+        const hasDefaultConfig = configStatus.hasDefaultConfig;
+        
+        // Verschiedene Nachrichten je nach verfügbarer Standard-Config
+        const configInfoSection = hasDefaultConfig ? `
+            <div style="margin-bottom: 25px; padding: 20px; background: rgba(46, 204, 113, 0.1); border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.3);">
+                <div style="font-size: 1.1em; margin-bottom: 15px; color: #2ecc71;">
+                    <strong>✅ Standard-Konfiguration verfügbar</strong>
+                </div>
+                <div style="color: #d0d0d0; line-height: 1.5; font-size: 14px; margin-bottom: 15px;">
+                    Es wurde eine Standard-Konfiguration im Config-Verzeichnis gefunden. Sie haben folgende Optionen:
+                </div>
+                <div style="color: #2ecc71; font-size: 13px; line-height: 1.4;">
+                    <strong>💡 Empfehlung:</strong> Verwenden Sie die Standard-Konfiguration als Ausgangsbasis und passen Sie diese nach Ihren Wünschen an.
+                </div>
+            </div>
+        ` : `
+            <div style="margin-bottom: 25px; padding: 20px; background: rgba(255, 193, 7, 0.1); border-radius: 12px; border: 1px solid rgba(255, 193, 7, 0.3);">
+                <div style="font-size: 1.1em; margin-bottom: 15px; color: #ffc107;">
+                    <strong>⚠️ Keine Standard-Konfiguration gefunden</strong>
+                </div>
+                <div style="color: #d0d0d0; line-height: 1.5; font-size: 14px; margin-bottom: 15px;">
+                    Es wurde keine Standard-Konfiguration im Config-Verzeichnis gefunden. Sie haben folgende Optionen:
+                </div>
+                <div style="color: #ffc107; font-size: 13px; line-height: 1.4;">
+                    <strong>💡 Hinweis:</strong> Falls verfügbar, laden Sie eine vorhandene JSON-Konfiguration. Andernfalls wird eine einfache Grundkonfiguration erstellt.
+                </div>
+            </div>
+        `;
+
+        const defaultConfigButton = hasDefaultConfig ? `
+            <button type="button" class="btn btn-secondary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
+                <span>🌟</span> Standard-Konfiguration aus Config-Verzeichnis verwenden
+            </button>
+        ` : `
+            <button type="button" class="btn btn-secondary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
+                <span>🔧</span> Einfache Grundkonfiguration erstellen
+            </button>
+        `;
+
+        // Modal HTML erstellen mit dynamischen Inhalten
         const modalHTML = `
             <div class="modal" id="welcomeModal" style="display: block;">
-                <div class="modal-content" style="max-width: 550px;">
+                <div class="modal-content" style="max-width: 600px;">
                     <h2 style="text-align: center; margin-bottom: 25px; line-height: 1.4; color: #40e0d0; font-size: 1.8em;">
                         🚀 Willkommen zu Ihrer Linksammlung!
                     </h2>
                     
+                    ${configInfoSection}
+
                     <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
-                        <div style="font-size: 1.1em; margin-bottom: 15px; color: #f0f0f0;">
-                            <strong>🆕 Erste Einrichtung</strong>
-                        </div>
-                        <div style="color: #d0d0d0; line-height: 1.5; font-size: 14px; margin-bottom: 15px;">
-                            Es wurde keine gespeicherte Konfiguration gefunden. Sie haben folgende Optionen:
-                        </div>
                         <div style="color: #40e0d0; font-size: 13px; line-height: 1.4;">
-                            <strong>💡 Hinweise:</strong><br>
-                            • Die Linksammlung unterstützt jetzt <strong>Favoriten</strong> (⭐)<br>
-                            • <strong>Kategorien exportieren/importieren</strong> möglich<br>
-                            • <strong>Drag & Drop</strong> für Links und Kategorien<br>
-                            • <strong>Suchfunktion</strong> mit STRG+K
+                            <strong>🆕 Neue Features in dieser Version:</strong><br>
+                            • <strong>Favoriten-System</strong> - Markieren Sie wichtige Links mit ⭐<br>
+                            • <strong>Kategorie-Import/Export</strong> - Teilen Sie Kategorien als JSON-Dateien<br>
+                            • <strong>Erweiterte Suche</strong> - Durchsuchen Sie alle Links mit STRG+K<br>
+                            • <strong>Drag & Drop</strong> - Sortieren Sie Links und Kategorien per Maus<br>
+                            • <strong>Responsive Design</strong> - Optimiert für Desktop und Mobile
                         </div>
                     </div>
 
@@ -133,9 +161,7 @@ class ExtendedWelcomeLoader {
                             <span>📂</span> Bestehende Konfiguration aus JSON-Datei laden
                         </button>
                         
-                        <button type="button" class="btn btn-secondary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
-                            <span>🌟</span> Mit Beispiel-Konfiguration starten
-                        </button>
+                        ${defaultConfigButton}
                         
                         <div style="text-align: center; margin-top: 15px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 10px; border: 1px solid rgba(255, 193, 7, 0.3);">
                             <div style="color: #ffd54f; font-size: 14px; margin-bottom: 8px;">
@@ -143,7 +169,7 @@ class ExtendedWelcomeLoader {
                             </div>
                             <div style="color: rgba(255, 255, 255, 0.9); font-size: 12px; line-height: 1.4;">
                                 Ihre Konfiguration wird lokal in Ihrem Browser gespeichert.<br>
-                                Sie können jederzeit über das Menü (+ → Daten verwalten) Backups erstellen.
+                                Sie können jederzeit über das Menü (⚙️ → Daten verwalten) Backups erstellen.
                             </div>
                         </div>
                         
@@ -188,7 +214,7 @@ class ExtendedWelcomeLoader {
         };
         document.addEventListener('keydown', handleEscapeKey);
 
-        console.log('👋 Erweiterte Willkommensdialog angezeigt');
+        const configType = hasDefaultConfig ? 'mit Standard-Konfiguration' : 'mit Fallback-Konfiguration';
     }
 
     /**
@@ -208,7 +234,6 @@ class ExtendedWelcomeLoader {
         // Nutze das bereits vorhandene File-Input Element
         const existingFileInput = document.getElementById('fileInput');
         if (existingFileInput) {
-            console.log('📂 Verwende bereits vorhandenen Import-Dialog');
             existingFileInput.click();
         } else {
             console.warn('⚠️ Bestehendes File-Input nicht gefunden - zeige Fallback');
@@ -222,7 +247,7 @@ class ExtendedWelcomeLoader {
     showImportFallbackMessage() {
         this.showStatusMessage({
             title: '⚠️ Import-Dialog nicht verfügbar',
-            content: 'Bitte verwenden Sie das Menü (+ → Konfiguration laden) um eine JSON-Datei zu importieren.'
+            content: 'Bitte verwenden Sie das Menü (⚙️ → Konfiguration laden) um eine JSON-Datei zu importieren.'
         }, 'warning');
         
         // Fallback auf Standard-Konfiguration
@@ -232,25 +257,31 @@ class ExtendedWelcomeLoader {
     }
 
     /**
-     * Verwendet die Standard-Konfiguration
+     * Verwendet die Standard-Konfiguration oder Fallback
      */
     useDefaultConfig() {
-        console.log('🌟 Verwende Standard-Konfiguration');
+        const hasDefaultConfig = this.hasDefaultConfig();
         
         // Prüfen ob die Hauptfunktion verfügbar ist
         if (typeof window.loadConfig === 'function') {
             const configLoaded = window.loadConfig();
             
-            if (configLoaded) {
+            if (configLoaded && hasDefaultConfig) {
                 this.showStatusMessage({
                     title: '🌟 Standard-Konfiguration geladen',
-                    content: 'Die Linksammlung ist einsatzbereit! Erkunden Sie die neuen Features wie Favoriten (⭐) und Kategorie-Export.'
+                    content: 'Die vorkonfigurierte Standard-Konfiguration wurde erfolgreich geladen! Erkunden Sie die neuen Features wie Favoriten (⭐) und Kategorie-Export.'
                 }, 'success');
-            } else {
-                // Falls loadConfig false zurückgibt (keine Config gefunden)
+            } else if (!configLoaded && hasDefaultConfig) {
+                // Standard-Config ist da, aber loadConfig gab false zurück
                 this.showStatusMessage({
-                    title: '🔧 Fallback-Konfiguration geladen',
-                    content: 'Eine einfache Grundkonfiguration wurde erstellt. Sie können sie jederzeit anpassen.'
+                    title: '⚠️ Problem beim Laden der Standard-Konfiguration',
+                    content: 'Es gab ein Problem beim Laden der Standard-Konfiguration. Fallback wird verwendet.'
+                }, 'warning');
+            } else {
+                // Keine Standard-Config verfügbar → Fallback verwendet
+                this.showStatusMessage({
+                    title: '🔧 Grundkonfiguration erstellt',
+                    content: 'Eine einfache Grundkonfiguration wurde erstellt. Sie können jederzeit neue Kategorien und Links hinzufügen oder eine JSON-Konfiguration importieren.'
                 }, 'info');
             }
         } else {
@@ -260,19 +291,21 @@ class ExtendedWelcomeLoader {
     }
 
     /**
-     * Zeigt Konfigurationsstatus an
+     * Zeigt Konfigurationsstatus an (nur für lokale Konfigurationen)
      */
     showConfigStatus() {
         const status = this.determineConfigSource();
         
-        if (status.source !== 'welcome') {
+        // Nur Status zeigen wenn lokale Konfiguration geladen wurde
+        if (status.source === 'local') {
             setTimeout(() => {
                 this.showStatusMessage({
-                    title: '✅ Konfiguration erfolgreich geladen',
-                    content: `Quelle: ${status.source === 'local' ? 'Lokaler Browser-Speicher' : 'Standard Config-Datei'}. Alle Features sind verfügbar!`
+                    title: '✅ Lokale Konfiguration erfolgreich geladen',
+                    content: 'Ihre gespeicherte Konfiguration wurde aus dem Browser-Speicher geladen. Alle Features sind verfügbar!'
                 }, 'success');
             }, 1000);
         }
+        // Für alle anderen Fälle wird der Welcome-Dialog angezeigt
     }
 
     /**
@@ -280,7 +313,6 @@ class ExtendedWelcomeLoader {
      */
     initialize() {
         if (this.configLoadAttempted) {
-            console.log('⚠️ Konfiguration bereits initialisiert');
             return;
         }
         
@@ -294,8 +326,6 @@ class ExtendedWelcomeLoader {
                 typeof window.updateFavoritesCount === 'function' &&
                 document.getElementById('categoriesContainer')) {
                 
-                console.log('✅ Hauptanwendung erkannt');
-                
                 // Bestimme Konfigurationsquelle
                 const configStatus = this.determineConfigSource();
                 
@@ -303,7 +333,7 @@ class ExtendedWelcomeLoader {
                     // Zeige Welcome-Dialog
                     setTimeout(() => this.showWelcomeDialog(), 800);
                 } else {
-                    // Normale Initialisierung mit Status-Anzeige
+                    // Normale Initialisierung mit Status-Anzeige (nur für lokale Config)
                     this.showConfigStatus();
                 }
                 
@@ -321,10 +351,9 @@ class ExtendedWelcomeLoader {
         // Timeout als Sicherheitsnetz
         setTimeout(() => {
             if (!this.hasShownWelcome && this.determineConfigSource().showWelcome) {
-                console.log('⏰ Timeout erreicht - zeige Welcome-Dialog');
                 this.showWelcomeDialog();
             }
-        }, 10000);
+        }, 5000);
     }
 
     /**
@@ -362,7 +391,6 @@ window.getWelcomeLoaderDebug = () => window.extendedWelcomeLoader.getDebugInfo()
 
 // Nach DOM-Laden initialisieren
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 DOM geladen - starte Welcome Loader...');
     
     // Kurz warten damit andere Scripts laden können
     setTimeout(() => {
@@ -375,7 +403,6 @@ window.addEventListener('load', function() {
     // Nur initialisieren falls noch nicht geschehen
     setTimeout(() => {
         if (!window.extendedWelcomeLoader.configLoadAttempted) {
-            console.log('🔄 Fallback-Initialisierung gestartet');
             window.extendedWelcomeLoader.initialize();
         }
     }, 2000);
@@ -385,5 +412,3 @@ window.addEventListener('load', function() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ExtendedWelcomeLoader;
 }
-
-console.log('🚀 ExtendedWelcomeLoader Modul erfolgreich geladen (v2.3 - Favoriten + Kategorien)');

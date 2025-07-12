@@ -22,14 +22,14 @@ const DEFAULT_CONFIG = {
                     url: "https://www.google.com", 
                     description: "Die weltweit führende Suchmaschine", 
                     icon: "🔍",
-                    priority: false
+                    favorite: false
                 },
                 { 
                     title: "YouTube", 
                     url: "https://www.youtube.com", 
                     description: "Videos und Tutorials", 
                     icon: "📺",
-                    priority: false
+                    favorite: true
                 }
             ]
         },
@@ -43,21 +43,21 @@ const DEFAULT_CONFIG = {
                     url: "https://www.github.com", 
                     description: "Code-Repositories und Versionskontrolle", 
                     icon: "💻",
-                    priority: true
+                    favorite: true
                 },
                 { 
                     title: "Stack Overflow", 
                     url: "https://stackoverflow.com", 
                     description: "Entwickler-Community für Fragen und Antworten", 
                     icon: "❓",
-                    priority: false
+                    favorite: false
                 },
                 { 
                     title: "MDN Web Docs", 
                     url: "https://developer.mozilla.org", 
                     description: "Mozilla Developer Network - Web-Entwicklung Dokumentation", 
                     icon: "📚",
-                    priority: true
+                    favorite: false
                 }
             ]
         },
@@ -71,14 +71,14 @@ const DEFAULT_CONFIG = {
                     url: "https://example.com/admin", 
                     description: "Server-Verwaltungsoberfläche", 
                     icon: "⚙️",
-                    priority: false
+                    favorite: false
                 },
                 { 
                     title: "Monitoring", 
                     url: "https://example.com/monitoring", 
                     description: "Server-Überwachung und Metriken", 
                     icon: "📊",
-                    priority: true
+                    favorite: false
                 }
             ]
         },
@@ -92,14 +92,14 @@ const DEFAULT_CONFIG = {
                     url: "https://example.com/firewall", 
                     description: "Firewall-Einstellungen und Regeln", 
                     icon: "🔥",
-                    priority: false
+                    favorite: false
                 },
                 { 
                     title: "VPN Dashboard", 
                     url: "https://example.com/vpn", 
                     description: "VPN-Verwaltung und Konfiguration", 
                     icon: "🔒",
-                    priority: false
+                    favorite: false
                 }
             ]
         },
@@ -113,21 +113,21 @@ const DEFAULT_CONFIG = {
                     url: "https://www.spotify.com", 
                     description: "Musik-Streaming und Podcasts", 
                     icon: "🎵",
-                    priority: false
+                    favorite: true
                 },
                 { 
                     title: "Netflix", 
                     url: "https://www.netflix.com", 
                     description: "Video-Streaming-Dienst", 
                     icon: "🎬",
-                    priority: false
+                    favorite: false
                 },
                 { 
                     title: "Notion", 
                     url: "https://www.notion.so", 
                     description: "Notizen und Projekt-Management", 
                     icon: "📝",
-                    priority: true
+                    favorite: false
                 }
             ]
         }

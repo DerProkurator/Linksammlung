@@ -30,25 +30,12 @@
             </div>
         </div>
 
-        <!-- Favoriten-Button -->
-        <div class="favorites-container">
-            <button class="favorites-toggle" id="favoritesToggle" onclick="toggleFavorites()">
-                <span class="favorites-icon">⭐</span>
-                <span class="favorites-text">Favoriten</span>
-                <span class="favorites-count" id="favoritesCount">0</span>
-                <span class="favorites-arrow" id="favoritesArrow">▼</span>
-            </button>
-            
-            <div class="favorites-list" id="favoritesList">
-                <div class="favorites-header">
-                    <span class="favorites-header-icon">⭐</span>
-                    <span class="favorites-header-text">Meine Favoriten</span>
-                </div>
-                <div class="favorites-content" id="favoritesContent">
-                    <!-- Favoriten werden hier dynamisch eingefügt -->
-                </div>
-            </div>
-        </div>
+        <!-- Favoriten-Toggle Button (oben links fixed) -->
+        <button class="favorites-toggle-button" id="favoritesToggle" onclick="toggleFavorites()">
+            <span class="favorites-icon">⭐</span>
+            <span class="favorites-count" id="favoritesCount">0</span>
+        </button>
+
         
         <input type="file" id="fileInput" accept=".json" onchange="importConfig(event)">
         <input type="file" id="linkFileInput" accept=".json" onchange="importSingleLink(event)">
@@ -342,6 +329,21 @@
                     <span>🗑️</span> Kategorie löschen
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Favoriten-Seitenleiste -->
+    <div class="favorites-overlay" id="favoritesOverlay"></div>
+    <div class="favorites-sidebar" id="favoritesSidebar">
+        <div class="favorites-sidebar-header">
+            <div class="favorites-sidebar-title">
+                <span class="favorites-header-icon">⭐</span>
+                <span class="favorites-header-text">Meine Favoriten</span>
+            </div>
+            <button class="favorites-close-btn" onclick="toggleFavorites()">✕</button>
+        </div>
+        <div class="favorites-sidebar-content" id="favoritesContent">
+            <!-- Favoriten werden hier dynamisch eingefügt -->
         </div>
     </div>
 
