@@ -2169,3 +2169,222 @@ h1 {
 .scroll-zone.bottom::after {
     content: '↓ Zum Scrollen hier halten';
 }
+
+/* ===================================================================
+   FAVORITEN-CHECKBOX STYLES - ERGÄNZUNG FÜR STYLES.CSS
+   =================================================================== */
+
+/* Basis Favoriten-Checkbox Container */
+.favorites-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255, 193, 7, 0.08);
+    border: 1px solid rgba(255, 193, 7, 0.25);
+    border-radius: 15px;
+    padding: 18px 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover-Effekt mit Animation */
+.favorites-checkbox-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.favorites-checkbox-group:hover::before {
+    left: 100%;
+}
+
+.favorites-checkbox-group:hover {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+}
+
+.favorites-checkbox-group.checked {
+    background: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+}
+
+/* Custom Checkbox Design */
+.custom-checkbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 193, 7, 0.5);
+    border-radius: 8px;
+    background: rgba(35, 35, 55, 0.8);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.custom-checkbox::before {
+    content: '⭐';
+    font-size: 14px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.favorites-checkbox-group:hover .custom-checkbox {
+    border-color: rgba(255, 193, 7, 0.7);
+    background: rgba(40, 40, 60, 0.9);
+    transform: scale(1.05);
+}
+
+.favorites-checkbox-group.checked .custom-checkbox {
+    border-color: #ffd54f;
+    background: rgba(255, 193, 7, 0.3);
+}
+
+.favorites-checkbox-group.checked .custom-checkbox::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Versteckte Original-Checkbox */
+.hidden-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+/* Label Content */
+.favorites-label-content {
+    display: flex;
+    flex-direction: row !important;  /* Wichtig: Horizontal ausrichten */
+    align-items: center;
+    gap: 12px;
+    z-index: 1;
+    cursor: pointer;
+    flex: 1;
+}
+
+.favorites-icon {
+    font-size: 1.4em;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* Verhindert Schrumpfen */
+    display: inline-block; /* Bessere Kontrolle */
+}
+
+.favorites-text {
+    font-weight: 600;
+    color: #ffd54f;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    white-space: nowrap; /* Verhindert Zeilenumbruch */
+    flex-shrink: 0; /* Verhindert Schrumpfen */
+}
+
+.favorites-description {
+    font-size: 12px;
+    color: rgba(255, 193, 7, 0.7);
+    margin-top: 4px;
+    transition: all 0.3s ease;
+}
+
+/* Hover-Effekte für Text */
+.favorites-checkbox-group:hover .favorites-icon {
+    transform: scale(1.1);
+}
+
+.favorites-checkbox-group:hover .favorites-text {
+    color: #fff;
+}
+
+.favorites-checkbox-group:hover .favorites-description {
+    color: rgba(255, 193, 7, 0.9);
+}
+
+/* Animation für aktivierte Checkbox */
+.favorites-checkbox-group.checked .favorites-icon {
+    animation: starPulse 2s ease-in-out infinite;
+}
+
+@keyframes starPulse {
+    0%, 100% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.8;
+    }
+}
+
+/* Aktive States */
+.favorites-checkbox-group:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.favorites-checkbox-group.checked:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Mobile Responsive Anpassungen */
+@media (max-width: 480px) {
+    .favorites-checkbox-group {
+        padding: 16px 18px;
+        gap: 14px;
+    }
+    
+    .custom-checkbox {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .custom-checkbox::before {
+        font-size: 12px;
+    }
+    
+    .favorites-text {
+        font-size: 14px;
+    }
+    
+    .favorites-description {
+        font-size: 11px;
+    }
+}
+
+/* Alternative: Falls das nicht funktioniert, verwende diese Struktur */
+.favorites-label-content-alt {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 1;
+    cursor: pointer;
+    flex: 1;
+}
+
+/* Für bessere Kompatibilität - überschreibt eventuelle Konflikte */
+.favorites-checkbox-group .favorites-label-content {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+.favorites-checkbox-group .favorites-icon,
+.favorites-checkbox-group .favorites-text {
+    display: inline-block !important;
+    vertical-align: middle !important;
+}

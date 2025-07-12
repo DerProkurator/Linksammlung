@@ -446,6 +446,19 @@ function updateContextMenuFavoriteOption() {
     }
 }
 
+function updateFavoritesCheckboxUI() {
+    const checkbox = document.getElementById('linkFavorite');
+    const group = document.getElementById('favoritesGroup');
+    
+    if (checkbox && group) {
+        if (checkbox.checked) {
+            group.classList.add('checked');
+        } else {
+            group.classList.remove('checked');
+        }
+    }
+}
+
 // =============================================================================
 // KATEGORIE EXPORT/IMPORT FUNKTIONEN
 // =============================================================================
@@ -2932,7 +2945,13 @@ function editLink() {
     hideContextMenu();
     populateCategorySelect();
     document.getElementById('linkModal').style.display = 'block';
+    
+    // WICHTIG: UI nach dem Setzen der Werte aktualisieren
+    setTimeout(() => {
+        updateFavoritesCheckboxUI();
+    }, 50);
 }
+
 
 function deleteLink() {
     if (!currentContextLink) return;
@@ -3041,10 +3060,19 @@ function openModal() {
         
         document.getElementById('linkCategoryGroup').style.display = 'block';
         document.getElementById('linkCategory').setAttribute('required', 'required');
+        
+        // WICHTIG: Favoriten-Checkbox zurücksetzen
+        document.getElementById('linkFavorite').checked = false;
+        updateFavoritesCheckboxUI();
     }
     
     populateCategorySelect();
     document.getElementById('linkModal').style.display = 'block';
+    
+    // Nach dem Öffnen nochmal aktualisieren
+    setTimeout(() => {
+        updateFavoritesCheckboxUI();
+    }, 50);
 }
 
 function closeModal() {
@@ -3058,6 +3086,10 @@ function closeModal() {
     currentEditingLink = null;
     document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
     document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
+    
+    // WICHTIG: Favoriten-Checkbox zurücksetzen
+    document.getElementById('linkFavorite').checked = false;
+    updateFavoritesCheckboxUI();
 }
 
 function populateCategorySelect() {
@@ -3385,8 +3417,32 @@ document.addEventListener('keydown', function(event) {
 // Beim Laden der Seite die Konfiguration laden und Kategorien rendern
 // Fix nach dem Laden um Link-Drag-Probleme zu beheben
 document.addEventListener('DOMContentLoaded', function() {
-
-    // Warten auf default-config.js falls vorhanden
+    const checkbox = document.getElementById('linkFavorite');
+    const group = document.getElementById('favoritesGroup');
+    
+    if (checkbox && group) {
+        // Initial state setzen
+        updateFavoritesCheckboxUI();
+        
+        // Bei Änderungen UI aktualisieren
+        checkbox.addEventListener('change', function() {
+            updateFavoritesCheckboxUI();
+        });
+        
+        // Clicking auf die Gruppe togglet auch die Checkbox
+        group.addEventListener('click', function(e) {
+            // Verhindere Doppel-Klicks wenn direkt auf Label geklickt wird
+            if (e.target !== checkbox && !e.target.closest('label[for="linkFavorite"]')) {
+                checkbox.checked = !checkbox.checked;
+                updateFavoritesCheckboxUI();
+                
+                // Event für Form-Validierung triggern
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+    
+    // Rest deines bestehenden DOMContentLoaded Codes...
     setTimeout(() => {
         loadConfig();
         renderCategories();
@@ -3394,14 +3450,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateFavoritesCount();
     }, 100);
 
-    // Bereinigung da sonst Drag & Drop Probleme bestehen
     setTimeout(() => {
-        
         const allHandles = document.querySelectorAll('.link-drag-handle');
         
         allHandles.forEach((handle, index) => {
-            
-            // Direkt Event-Listener hinzufügen
             handle.addEventListener('dragstart', function(e) {
                 return handleLinkDragStart.call(this, e);
             });
@@ -3410,5 +3462,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 return handleLinkDragEnd.call(this, e);
             });
         });
-    }, 500); // 500ms warten
+    }, 500);
 });

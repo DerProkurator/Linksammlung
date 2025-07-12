@@ -215,10 +215,15 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="linkFavorite" style="width: auto; margin: 0;">
-                        <span>⭐ Als Favorit setzen</span>
-                    </label>
+                    <label style="margin-bottom: 12px;">Favoriten-Einstellung</label>
+                    <div class="favorites-checkbox-group" id="favoritesGroup">
+                        <input type="checkbox" id="linkFavorite" class="hidden-checkbox">
+                        <div class="custom-checkbox"></div>
+                        <label for="linkFavorite" class="favorites-label-content">
+                            <span class="favorites-icon">⭐</span>
+                            <div class="favorites-text">Als Favorit setzen</div>
+                        </label>
+                    </div>
                 </div>
                 <div class="form-buttons">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
