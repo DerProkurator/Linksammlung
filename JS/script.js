@@ -1,3 +1,115 @@
+// ========================================================================
+// LINKSAMMLUNG - STRUKTURIERTE SCRIPT.JS v2.4
+// ========================================================================
+// 
+// Struktur:
+// 1. Konfiguration & Globale Variablen
+// 2. Emoji-System
+// 3. Konfiguration laden/speichern
+// 4. Favoriten-System
+// 5. Suche & Navigation
+// 6. Kategorie-Management
+// 7. Link-Management
+// 8. Import/Export-System
+// 9. Modal-System
+// 10. Drag & Drop-System
+// 11. Kontext-Menüs
+// 12. User Interface & Rendering
+// 13. Event-Handler & Initialisierung
+// 
+// ========================================================================
+
+// ========================================================================
+// 1. KONFIGURATION & GLOBALE VARIABLEN
+// ========================================================================
+
+// Standard-Konfiguration (wird von default-config.js überschrieben falls vorhanden)
+const fallbackDefaultConfig = {
+    categories: {
+        'Websites': {
+            title: 'Websites',
+            icon: '🌐',
+            collapsed: false,
+            links: [
+                { title: "Google", url: "https://www.google.com", description: "Die weltweit führende Suchmaschine", icon: "🔍", favorite: false },
+                { title: "YouTube", url: "https://www.youtube.com", description: "Videos und Tutorials", icon: "📺", favorite: false }
+            ]
+        },
+        'Entwicklung': {
+            title: 'Entwicklung',
+            icon: '💻',
+            collapsed: false,
+            links: [
+                { title: "GitHub", url: "https://www.github.com", description: "Code-Repositories und Versionskontrolle", icon: "💻", favorite: false },
+                { title: "Stack Overflow", url: "https://stackoverflow.com", description: "Entwickler-Community", icon: "❓", favorite: false }
+            ]
+        }
+    },
+    categoryOrder: ['Websites', 'Entwicklung']
+};
+
+// Aktuelle Konfiguration
+let config = {};
+let linkCategories = {};
+let categoryOrder = [];
+
+// Variablen für Kontextmenü und Link-Bearbeitung
+let currentContextLink = null;
+let currentEditingLink = null;
+let isEditMode = false;
+
+// Variablen für Kategorie-Verwaltung
+let currentContextCategory = null;
+let currentEditingCategory = null;
+let isCategoryEditMode = false;
+
+// Such-Variablen
+let currentSearchQuery = '';
+let searchResults = [];
+let selectedSearchIndex = -1;
+let isSearchOpen = false;
+
+// Drag and Drop Variablen
+let draggedElement = null;
+let draggedCategoryKey = null;
+let draggedLinkData = null;
+let draggedLinkElement = null;
+let dragOverElement = null;
+let dropPosition = null;
+let currentDropIndicator = null;
+let dragStabilityTimeout = null;
+
+// Neue Variablen für temporäre leere Kategorien
+let tempEmptyCategories = [];
+let isLinkDragActive = false;
+
+// Auto-Scroll während Drag-and-Drop
+let autoScrollInterval = null;
+let isDragging = false;
+let currentMouseY = 0;
+
+// Touch-Events für mobile Geräte
+let touchStartY = 0;
+let touchStartX = 0;
+let isTouching = false;
+
+// Variablen für Link-Import
+let pendingLinkImport = null;
+let pendingOriginalCategoryTitle = null;
+
+// Variablen für Kategorie-Import
+let pendingCategoryImport = null;
+
+// Variablen für leere Kategorie-Behandlung
+let pendingEmptyCategoryData = null;
+
+// Favoriten-Variablen
+let favoritesOpen = false;
+
+// ========================================================================
+// 2. EMOJI-SYSTEM
+// ========================================================================
+
 // Emoji-Datenbank mit Kategorien
 const emojiDatabase = {
     'devices_hardware': {
@@ -172,88 +284,238 @@ const emojiDatabase = {
 let currentPickerTarget = null;
 let currentPickerElement = null;
 
-// Variables für Link-Import
-let pendingLinkImport = null;
-let pendingOriginalCategoryTitle = null;
+// ========================================================================
+// 3. KONFIGURATION LADEN/SPEICHERN
+// ========================================================================
 
-// Variables für Kategorie-Import
-let pendingCategoryImport = null;
-
-// Variables für leere Kategorie-Behandlung
-let pendingEmptyCategoryData = null;
-
-// Favoriten-Variablen
-let favoritesOpen = false;
-
-// Standard-Konfiguration (wird von default-config.js überschrieben falls vorhanden)
-const fallbackDefaultConfig = {
-    categories: {
-        'Websites': {
-            title: 'Websites',
-            icon: '🌐',
-            collapsed: false,
-            links: [
-                { title: "Google", url: "https://www.google.com", description: "Die weltweit führende Suchmaschine", icon: "🔍", favorite: false },
-                { title: "YouTube", url: "https://www.youtube.com", description: "Videos und Tutorials", icon: "📺", favorite: false }
-            ]
-        },
-        'Entwicklung': {
-            title: 'Entwicklung',
-            icon: '💻',
-            collapsed: false,
-            links: [
-                { title: "GitHub", url: "https://www.github.com", description: "Code-Repositories und Versionskontrolle", icon: "💻", favorite: false },
-                { title: "Stack Overflow", url: "https://stackoverflow.com", description: "Entwickler-Community", icon: "❓", favorite: false }
-            ]
+/**
+ * Konfiguration laden mit Rückwärtskompatibilität und neuer Priorität
+ */
+function loadConfigWithCollapsedSupport() {
+    // 1. Priorität: Lokale Konfiguration im Browser
+    try {
+        const saved = localStorage.getItem('linkConfig');
+        if (saved) {
+            config = JSON.parse(saved);
+            linkCategories = config.categories || {};
+            categoryOrder = config.categoryOrder || Object.keys(linkCategories);
+            
+            // Favoriten-Support hinzufügen falls nicht vorhanden
+            addFavoritesSupportToLinks();
+            
+            // Collapsed-Eigenschaft zu bestehenden Kategorien hinzufügen falls nicht vorhanden
+            Object.keys(linkCategories).forEach(categoryKey => {
+                if (linkCategories[categoryKey].collapsed === undefined) {
+                    linkCategories[categoryKey].collapsed = false;
+                }
+            });
+            
+            // Sicherstellen, dass categoryOrder alle Kategorien enthält
+            const existingKeys = Object.keys(linkCategories);
+            const missingKeys = existingKeys.filter(key => !categoryOrder.includes(key));
+            if (missingKeys.length > 0) {
+                categoryOrder = [...categoryOrder, ...missingKeys];
+            }
+            
+            // Entfernen von Kategorien aus der Order, die nicht mehr existieren
+            const originalOrderLength = categoryOrder.length;
+            categoryOrder = categoryOrder.filter(key => linkCategories[key]);
+            
+            // Leere Kategorien ans Ende sortieren
+            const orderChanged = sortCategoriesEmptyLast();
+            
+            if (missingKeys.length > 0 || categoryOrder.length !== originalOrderLength || orderChanged) {
+                saveConfig(true);
+            }
+            
+            return true;
         }
-    },
-    categoryOrder: ['Websites', 'Entwicklung']
-};
+    } catch (error) {
+        console.error('Fehler beim Laden der lokalen Konfiguration:', error);
+    }
+    
+    // 2. Priorität: Standard-Konfiguration aus default-config.js
+    if (window.DEFAULT_CONFIG) {
+        config = JSON.parse(JSON.stringify(window.DEFAULT_CONFIG));
+        linkCategories = config.categories;
+        categoryOrder = config.categoryOrder;
+        
+        // Favoriten-Support hinzufügen
+        addFavoritesSupportToLinks();
+        
+        return true;
+    }
+    
+    // 3. Fallback: Eingebaute Standard-Konfiguration
+    config = JSON.parse(JSON.stringify(fallbackDefaultConfig));
+    linkCategories = config.categories;
+    categoryOrder = config.categoryOrder;
+    
+    // Favoriten-Support hinzufügen
+    addFavoritesSupportToLinks();
+    
+    return false; // Indikiert, dass keine gespeicherte Konfiguration gefunden wurde
+}
 
-// Aktuelle Konfiguration
-let config = {};
-let linkCategories = {};
-let categoryOrder = [];
+/**
+ * Konfiguration laden (Wrapper-Funktion)
+ */
+function loadConfig() {
+    return loadConfigWithCollapsedSupport();
+}
 
-// Variablen für Kontextmenü und Link-Bearbeitung
-let currentContextLink = null;
-let currentEditingLink = null;
-let isEditMode = false;
+/**
+ * Konfiguration speichern
+ */
+function saveConfig() {
+    try {
+        config.categories = linkCategories;
+        config.categoryOrder = categoryOrder;
+        
+        localStorage.setItem('linkConfig', JSON.stringify(config));
+        
+        if (arguments.length === 0) {
+            showMessage('Konfiguration gespeichert', 'success');
+        }
+    } catch (error) {
+        console.error('Save config error:', error);
+        showMessage('Fehler beim Speichern der Konfiguration', 'error');
+    }
+}
 
-// Variablen für Kategorie-Verwaltung
-let currentContextCategory = null;
-let currentEditingCategory = null;
-let isCategoryEditMode = false;
+/**
+ * Favoriten-Support zu allen Links hinzufügen
+ */
+function addFavoritesSupportToLinks() {
+    Object.values(linkCategories).forEach(category => {
+        if (category.links) {
+            category.links.forEach(link => {
+                if (link.favorite === undefined) {
+                    link.favorite = false;
+                }
+            });
+        }
+    });
+}
 
-// Such-Variablen
-let currentSearchQuery = '';
-let searchResults = [];
-let selectedSearchIndex = -1;
-let isSearchOpen = false;
+/**
+ * Konfiguration validieren
+ */
+function validateConfig(config) {
+    if (typeof config !== 'object' || config === null) return false;
+    
+    let categories = config.categories || config;
+    
+    for (const [key, category] of Object.entries(categories)) {
+        if (!category?.title || !Array.isArray(category?.links)) return false;
+        
+        for (const link of category.links) {
+            if (!link?.title || !link?.url) return false;
+            
+            // Auto-Fix für fehlende Felder
+            if (!link.description) link.description = '';
+            if (!link.icon) link.icon = '🔗';
+            if (link.favorite === undefined) link.favorite = false;
+            
+            // Priority → Favorite Migration
+            if (link.priority !== undefined) {
+                link.favorite = link.priority;
+                delete link.priority;
+            }
+        }
+        
+        // Auto-Fix für Kategorie
+        if (!category.icon) category.icon = '📁';
+        if (category.collapsed === undefined) category.collapsed = false;
+    }
+    
+    return true;
+}
 
-// Drag and Drop Variablen
-let draggedElement = null;
-let draggedCategoryKey = null;
-let draggedLinkData = null;
-let draggedLinkElement = null;
-let dragOverElement = null;
-let dropPosition = null;
-let currentDropIndicator = null;
-let dragStabilityTimeout = null;
+/**
+ * Auf Standard zurücksetzen
+ */
+function resetToDefault() {
+    closeMenu();
+    if (confirm('Möchten Sie wirklich alle Änderungen verwerfen und zur Standard-Konfiguration zurückkehren?')) {
+        // Prüfen ob Standard-Konfiguration aus default-config.js verfügbar ist
+        const configToUse = window.DEFAULT_CONFIG || fallbackDefaultConfig;
+        config = JSON.parse(JSON.stringify(configToUse));
+        linkCategories = config.categories;
+        categoryOrder = config.categoryOrder;
+        
+        // Favoriten-Support hinzufügen
+        addFavoritesSupportToLinks();
+        
+        saveConfig(true);
+        renderCategories();
+        updateFavoritesCount();
+        showMessage('Auf Standard-Konfiguration zurückgesetzt', 'success');
+    }
+}
 
-// Neue Variablen für temporäre leere Kategorien
-let tempEmptyCategories = [];
-let isLinkDragActive = false;
+/**
+ * Funktionen zum Sortieren der Kategorien (leere ans Ende)
+ */
+function sortCategoriesEmptyLast() {
+    const filledCategories = [];
+    const emptyCategories = [];
+    
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (category && category.links.length > 0) {
+            filledCategories.push(categoryKey);
+        } else if (category) {
+            emptyCategories.push(categoryKey);
+        }
+    });
+    
+    const newOrder = [...filledCategories, ...emptyCategories];
+    
+    if (JSON.stringify(categoryOrder) !== JSON.stringify(newOrder)) {
+        categoryOrder = newOrder;
+        return true;
+    }
+    return false;
+}
 
-// Auto-Scroll während Drag-and-Drop
-let autoScrollInterval = null;
-let isDragging = false;
-let currentMouseY = 0;
+/**
+ * Hilfsfunktion: Zählt die Gesamtanzahl der Links
+ */
+function getTotalLinksCount() {
+    let count = 0;
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (category && category.links) {
+            count += category.links.length;
+        }
+    });
+    return count;
+}
 
-// =============================================================================
-// FAVORITEN-FUNKTIONEN
-// =============================================================================
+/**
+ * Hilfsfunktion: Zählt die Gesamtanzahl der Favoriten
+ */
+function getTotalFavoritesCount() {
+    let count = 0;
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (category && category.links) {
+            category.links.forEach(link => {
+                if (link.favorite) count++;
+            });
+        }
+    });
+    return count;
+}
 
+// ========================================================================
+// 4. FAVORITEN-SYSTEM
+// ========================================================================
+
+/**
+ * Favoriten-Seitenleiste ein-/ausblenden
+ */
 function toggleFavorites() {
     const favoritesOverlay = document.getElementById('favoritesOverlay');
     const favoritesSidebar = document.getElementById('favoritesSidebar');
@@ -285,6 +547,9 @@ function toggleFavorites() {
     }
 }
 
+/**
+ * Overlay-Click Handler
+ */
 function handleOverlayClick(event) {
     // Nur schließen wenn direkt auf das Overlay geklickt wird
     if (event.target === event.currentTarget) {
@@ -292,8 +557,10 @@ function handleOverlayClick(event) {
     }
 }
 
+/**
+ * Favoriten-Liste aktualisieren
+ */
 function updateFavoritesList() {
-    // Sidebar-Container verwenden (korrekte ID)
     const favoritesContent = document.querySelector('#favoritesSidebar .favorites-sidebar-content');
     const favoritesCount = document.getElementById('favoritesCount');
     
@@ -368,6 +635,9 @@ function updateFavoritesList() {
     });
 }
 
+/**
+ * Favoriten-Anzahl aktualisieren
+ */
 function updateFavoritesCount() {
     const favoritesCount = document.getElementById('favoritesCount');
     
@@ -394,6 +664,9 @@ function updateFavoritesCount() {
     }
 }
 
+/**
+ * Favorit entfernen
+ */
 function removeFavorite(categoryKey, linkIndex) {
     if (linkCategories[categoryKey] && linkCategories[categoryKey].links[linkIndex]) {
         const link = linkCategories[categoryKey].links[linkIndex];
@@ -407,6 +680,9 @@ function removeFavorite(categoryKey, linkIndex) {
     }
 }
 
+/**
+ * Link-Favoriten-Status umschalten
+ */
 function toggleLinkFavorite() {
     if (!currentContextLink) return;
     
@@ -426,6 +702,9 @@ function toggleLinkFavorite() {
     hideContextMenu();
 }
 
+/**
+ * Kontext-Menü Favoriten-Option aktualisieren
+ */
 function updateContextMenuFavoriteOption() {
     if (!currentContextLink) return;
     
@@ -446,6 +725,9 @@ function updateContextMenuFavoriteOption() {
     }
 }
 
+/**
+ * Favoriten-Checkbox UI aktualisieren
+ */
 function updateFavoritesCheckboxUI() {
     const checkbox = document.getElementById('linkFavorite');
     const group = document.getElementById('favoritesGroup');
@@ -459,827 +741,13 @@ function updateFavoritesCheckboxUI() {
     }
 }
 
-// =============================================================================
-// KATEGORIE EXPORT/IMPORT FUNKTIONEN
-// =============================================================================
+// ========================================================================
+// 5. SUCHE & NAVIGATION
+// ========================================================================
 
-function exportSingleCategory() {
-    if (!currentContextCategory) return;
-    
-    const category = linkCategories[currentContextCategory];
-    
-    const categoryData = {
-        type: 'single_category',
-        version: '1.0',
-        exportDate: new Date().toISOString(),
-        category: {
-            title: category.title,
-            icon: category.icon,
-            collapsed: category.collapsed,
-            links: category.links.map(link => ({
-                title: link.title,
-                url: link.url,
-                description: link.description,
-                icon: link.icon,
-                favorite: link.favorite || false
-            }))
-        },
-        originalCategoryKey: currentContextCategory
-    };
-    
-    try {
-        const dataStr = JSON.stringify(categoryData, null, 2);
-        const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        const url = URL.createObjectURL(dataBlob);
-        const link_el = document.createElement('a');
-        link_el.href = url;
-        
-        const cleanTitle = category.title.replace(/[^a-zA-Z0-9äöüÄÖÜß\s\-_]/g, '').replace(/\s+/g, '-');
-        link_el.download = `kategorie-${cleanTitle}.json`;
-        link_el.click();
-        URL.revokeObjectURL(url);
-        
-        showMessage(`Kategorie "${category.title}" erfolgreich exportiert`, 'success');
-    } catch (error) {
-        console.error('Export error:', error);
-        showMessage('Fehler beim Exportieren der Kategorie', 'error');
-    }
-    
-    hideContextMenu();
-}
-
-function importSingleCategory(event) {
-    closeMenu();
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const categoryData = JSON.parse(e.target.result);
-            
-            if (!validateSingleCategory(categoryData)) {
-                throw new Error('Ungültige Kategorie-Datei');
-            }
-
-            const category = categoryData.category;
-            const originalCategoryKey = categoryData.originalCategoryKey;
-            
-            // Prüfen ob eine Kategorie mit dem gleichen Namen bereits existiert
-            let existingCategoryKey = null;
-            let conflictingKey = null;
-            
-            // Nach Titel suchen
-            for (const [key, existingCategory] of Object.entries(linkCategories)) {
-                if (existingCategory.title === category.title) {
-                    existingCategoryKey = key;
-                    break;
-                }
-            }
-            
-            // Nach originalCategoryKey suchen falls Titel nicht gefunden
-            if (!existingCategoryKey && originalCategoryKey && linkCategories[originalCategoryKey]) {
-                conflictingKey = originalCategoryKey;
-            }
-            
-            if (existingCategoryKey || conflictingKey) {
-                // Konflikt-Dialog anzeigen
-                showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey);
-            } else {
-                // Kategorie direkt importieren
-                importCategoryDirectly(categoryData);
-            }
-            
-        } catch (error) {
-            console.error('Import error:', error);
-            showMessage('Fehler beim Importieren: Ungültige Kategorie-Datei', 'error');
-        }
-    };
-    reader.readAsText(file);
-    
-    event.target.value = '';
-}
-
-function showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey) {
-    pendingCategoryImport = categoryData;
-    
-    const category = categoryData.category;
-    const conflictType = existingCategoryKey ? 'title' : 'key';
-    const conflictingCategory = existingCategoryKey ? 
-        linkCategories[existingCategoryKey] : 
-        linkCategories[conflictingKey];
-    
-    let message = '';
-    if (conflictType === 'title') {
-        message = `Eine Kategorie mit dem Namen "${category.title}" existiert bereits.`;
-    } else {
-        message = `Eine Kategorie mit dem Schlüssel "${conflictingKey}" existiert bereits.`;
-    }
-    
-    if (confirm(`${message}\n\nWie möchten Sie fortfahren?\n\n` +
-                `OK = Links zur bestehenden Kategorie hinzufügen\n` +
-                `Abbrechen = Neue Kategorie mit anderem Namen erstellen`)) {
-        // Links zur bestehenden Kategorie hinzufügen
-        const targetCategoryKey = existingCategoryKey || conflictingKey;
-        category.links.forEach(link => {
-            // Sicherstellen, dass favorite-Eigenschaft existiert
-            if (link.favorite === undefined) {
-                link.favorite = false;
-            }
-            linkCategories[targetCategoryKey].links.push(link);
-        });
-        
-        sortCategoriesEmptyLast();
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
-        
-        showMessage(`${category.links.length} Links zur bestehenden Kategorie "${conflictingCategory.title}" hinzugefügt`, 'success');
-    } else {
-        // Neuen Namen eingeben
-        const newName = prompt(`Neuer Name für die Kategorie:`, category.title + ' (Importiert)');
-        if (newName && newName.trim()) {
-            category.title = newName.trim();
-            importCategoryDirectly(categoryData);
-        }
-    }
-    
-    pendingCategoryImport = null;
-}
-
-function importCategoryDirectly(categoryData) {
-    const category = categoryData.category;
-    const originalCategoryKey = categoryData.originalCategoryKey;
-    
-    // Neuen Kategorie-Schlüssel generieren
-    let newCategoryKey = category.title.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    
-    // Falls der Schlüssel bereits existiert, Nummer anhängen
-    let counter = 1;
-    const baseKey = newCategoryKey;
-    while (linkCategories[newCategoryKey]) {
-        newCategoryKey = `${baseKey}_${counter}`;
-        counter++;
-    }
-    
-    // Sicherstellen, dass alle Links die favorite-Eigenschaft haben
-    category.links.forEach(link => {
-        if (link.favorite === undefined) {
-            link.favorite = false;
-        }
-    });
-    
-    // Kategorie erstellen
-    linkCategories[newCategoryKey] = {
-        title: category.title,
-        icon: category.icon || '📁',
-        collapsed: category.collapsed || false,
-        links: category.links
-    };
-    
-    categoryOrder.push(newCategoryKey);
-    
-    sortCategoriesEmptyLast();
-    saveConfig(true);
-    renderCategories();
-    populateCategorySelect();
-    updateFavoritesCount();
-    
-    showMessage(`Kategorie "${category.title}" mit ${category.links.length} Links erfolgreich importiert`, 'success');
-}
-
-function validateSingleCategory(categoryData) {
-    if (typeof categoryData !== 'object' || categoryData === null) return false;
-    if (categoryData.type !== 'single_category') return false;
-    if (!categoryData.category || typeof categoryData.category !== 'object') return false;
-    
-    const category = categoryData.category;
-    
-    // Basis-Validierung
-    if (!category.title || !Array.isArray(category.links)) return false;
-    
-    // Auto-Fix für Kategorie
-    if (!category.icon) category.icon = '📁';
-    if (category.collapsed === undefined) category.collapsed = false;
-    
-    // Links reparieren
-    for (const link of category.links) {
-        if (!link.title || !link.url) return false;
-        
-        // Auto-Fix
-        if (!link.description) link.description = 'Keine Beschreibung';
-        if (!link.icon) link.icon = '🔗';
-        if (link.favorite === undefined) link.favorite = false;
-        
-        // Priority → Favorite Migration
-        if (link.priority !== undefined) {
-            link.favorite = link.priority;
-            delete link.priority;
-        }
-    }
-    
-    return true;
-}
-
-// =============================================================================
-// EMOJI-PICKER FUNKTIONEN
-// =============================================================================
-
-function toggleEmojiPicker(inputId) {
-    const input = document.getElementById(inputId);
-    const picker = document.getElementById(inputId + 'Picker');
-    const trigger = input.parentElement.querySelector('.emoji-trigger');
-    
-    // Alle anderen Picker schließen
-    document.querySelectorAll('.emoji-picker').forEach(p => {
-        if (p !== picker) {
-            p.classList.remove('active');
-        }
-    });
-    
-    document.querySelectorAll('.emoji-trigger').forEach(t => {
-        if (t !== trigger) {
-            t.classList.remove('active');
-        }
-    });
-    
-    if (picker.classList.contains('active')) {
-        picker.classList.remove('active');
-        trigger.classList.remove('active');
-        currentPickerTarget = null;
-        currentPickerElement = null;
-    } else {
-        picker.classList.add('active');
-        trigger.classList.add('active');
-        currentPickerTarget = inputId;
-        currentPickerElement = picker;
-        
-        // Emoji-Picker initialisieren
-        initEmojiPicker(inputId);
-    }
-}
-
-function initEmojiPicker(inputId) {
-    const picker = document.getElementById(inputId + 'Picker');
-    const categoriesContainer = document.getElementById(inputId + 'Categories');
-    const gridContainer = document.getElementById(inputId + 'Grid');
-    
-    // Kategorien erstellen
-    categoriesContainer.innerHTML = '';
-    const categoryKeys = Object.keys(emojiDatabase);
-    
-    categoryKeys.forEach((categoryKey, index) => {
-        const category = emojiDatabase[categoryKey];
-        const categoryBtn = document.createElement('div');
-        categoryBtn.className = 'emoji-category-btn';
-        categoryBtn.innerHTML = category.icon;
-        categoryBtn.title = category.name;
-        categoryBtn.onclick = () => showEmojiCategory(categoryKey, inputId);
-        
-        if (index === 0) {
-            categoryBtn.classList.add('active');
-        }
-        
-        categoriesContainer.appendChild(categoryBtn);
-    });
-    
-    // Erste Kategorie anzeigen
-    showEmojiCategory(categoryKeys[0], inputId);
-}
-
-function showEmojiCategory(categoryKey, inputId) {
-    const picker = document.getElementById(inputId + 'Picker');
-    const categoriesContainer = document.getElementById(inputId + 'Categories');
-    const gridContainer = document.getElementById(inputId + 'Grid');
-    
-    // Aktive Kategorie-Button aktualisieren
-    categoriesContainer.querySelectorAll('.emoji-category-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    const activeBtn = Array.from(categoriesContainer.children).find(btn => 
-        btn.innerHTML === emojiDatabase[categoryKey].icon
-    );
-    if (activeBtn) {
-        activeBtn.classList.add('active');
-    }
-    
-    // Emojis anzeigen
-    const category = emojiDatabase[categoryKey];
-    gridContainer.innerHTML = '';
-    
-    category.emojis.forEach(emojiData => {
-        const emojiItem = document.createElement('div');
-        emojiItem.className = 'emoji-item';
-        emojiItem.innerHTML = `
-            ${emojiData.emoji}
-            <div class="emoji-tooltip">${emojiData.name}</div>
-        `;
-        emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
-        gridContainer.appendChild(emojiItem);
-    });
-}
-
-function selectEmoji(emoji, inputId) {
-    const input = document.getElementById(inputId);
-    const picker = document.getElementById(inputId + 'Picker');
-    const trigger = input.parentElement.querySelector('.emoji-trigger');
-    
-    input.value = emoji;
-    picker.classList.remove('active');
-    trigger.classList.remove('active');
-    
-    currentPickerTarget = null;
-    currentPickerElement = null;
-    
-    // Input-Event auslösen für eventuelle Validierung
-    input.dispatchEvent(new Event('input'));
-}
-
-function searchEmojis(query, pickerId) {
-    const inputId = pickerId.replace('Picker', '');
-    const gridContainer = document.getElementById(inputId + 'Grid');
-    
-    if (!query.trim()) {
-        // Wenn keine Suche, erste Kategorie anzeigen
-        const firstCategory = Object.keys(emojiDatabase)[0];
-        showEmojiCategory(firstCategory, inputId);
-        return;
-    }
-    
-    // Alle Emojis durchsuchen
-    const results = [];
-    Object.values(emojiDatabase).forEach(category => {
-        category.emojis.forEach(emojiData => {
-            if (emojiData.name.toLowerCase().includes(query.toLowerCase()) ||
-                emojiData.emoji.includes(query)) {
-                results.push(emojiData);
-            }
-        });
-    });
-    
-    // Ergebnisse anzeigen
-    gridContainer.innerHTML = '';
-    
-    if (results.length === 0) {
-        const noResults = document.createElement('div');
-        noResults.className = 'emoji-no-results';
-        noResults.textContent = 'Keine Emojis gefunden';
-        gridContainer.appendChild(noResults);
-        return;
-    }
-    
-    results.forEach(emojiData => {
-        const emojiItem = document.createElement('div');
-        emojiItem.className = 'emoji-item';
-        emojiItem.innerHTML = `
-            ${emojiData.emoji}
-            <div class="emoji-tooltip">${emojiData.name}</div>
-        `;
-        emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
-        gridContainer.appendChild(emojiItem);
-    });
-}
-
-// Emoji-Picker schließen wenn außerhalb geklickt wird
-document.addEventListener('click', function(event) {
-    const picker = event.target.closest('.emoji-picker');
-    const trigger = event.target.closest('.emoji-trigger');
-    
-    if (!picker && !trigger && currentPickerElement) {
-        currentPickerElement.classList.remove('active');
-        const activeTrigger = document.querySelector('.emoji-trigger.active');
-        if (activeTrigger) {
-            activeTrigger.classList.remove('active');
-        }
-        currentPickerTarget = null;
-        currentPickerElement = null;
-    }
-});
-
-// =============================================================================
-// KONFIGURATION LADEN MIT ERWEITERTEN PRIORITÄTEN
-// =============================================================================
-
-// Konfiguration laden mit Rückwärtskompatibilität und neuer Priorität
-function loadConfigWithCollapsedSupport() {
-    
-    // 1. Priorität: Lokale Konfiguration im Browser
-    try {
-        const saved = localStorage.getItem('linkConfig');
-        if (saved) {
-            config = JSON.parse(saved);
-            linkCategories = config.categories || {};
-            categoryOrder = config.categoryOrder || Object.keys(linkCategories);
-            
-            // Favoriten-Support hinzufügen falls nicht vorhanden
-            addFavoritesSupportToLinks();
-            
-            // Collapsed-Eigenschaft zu bestehenden Kategorien hinzufügen falls nicht vorhanden
-            Object.keys(linkCategories).forEach(categoryKey => {
-                if (linkCategories[categoryKey].collapsed === undefined) {
-                    linkCategories[categoryKey].collapsed = false;
-                }
-            });
-            
-            // Sicherstellen, dass categoryOrder alle Kategorien enthält
-            const existingKeys = Object.keys(linkCategories);
-            const missingKeys = existingKeys.filter(key => !categoryOrder.includes(key));
-            if (missingKeys.length > 0) {
-                categoryOrder = [...categoryOrder, ...missingKeys];
-            }
-            
-            // Entfernen von Kategorien aus der Order, die nicht mehr existieren
-            const originalOrderLength = categoryOrder.length;
-            categoryOrder = categoryOrder.filter(key => linkCategories[key]);
-            
-            // Leere Kategorien ans Ende sortieren
-            const orderChanged = sortCategoriesEmptyLast();
-            
-            if (missingKeys.length > 0 || categoryOrder.length !== originalOrderLength || orderChanged) {
-                saveConfig(true);
-            }
-            
-            // showMessage('Konfiguration aus dem lokalen Speicher geladen', 'success');
-            return true;
-        }
-    } catch (error) {
-        console.error('Fehler beim Laden der lokalen Konfiguration:', error);
-    }
-    
-    // 2. Priorität: Standard-Konfiguration aus default-config.js
-    if (window.DEFAULT_CONFIG) {
-        config = JSON.parse(JSON.stringify(window.DEFAULT_CONFIG));
-        linkCategories = config.categories;
-        categoryOrder = config.categoryOrder;
-        
-        // Favoriten-Support hinzufügen
-        addFavoritesSupportToLinks();
-        
-        // showMessage('Standard-Konfiguration aus Config-Datei geladen', 'success');
-        return true;
-    }
-    
-    // 3. Fallback: Eingebaute Standard-Konfiguration
-    config = JSON.parse(JSON.stringify(fallbackDefaultConfig));
-    linkCategories = config.categories;
-    categoryOrder = config.categoryOrder;
-    
-    // Favoriten-Support hinzufügen
-    addFavoritesSupportToLinks();
-    
-    return false; // Indikiert, dass keine gespeicherte Konfiguration gefunden wurde
-}
-
-function addFavoritesSupportToLinks() {
-    // Alle Links durchgehen und favorite-Eigenschaft hinzufügen falls nicht vorhanden
-    Object.values(linkCategories).forEach(category => {
-        if (category.links) {
-            category.links.forEach(link => {
-                if (link.favorite === undefined) {
-                    link.favorite = false;
-                }
-            });
-        }
-    });
-}
-
-// =============================================================================
-// ALLE ANDEREN BESTEHENDEN FUNKTIONEN VOLLSTÄNDIG IMPLEMENTIERT
-// =============================================================================
-
-// Status-Nachricht anzeigen
-function showMessage(message, type) {
-    const messageEl = document.getElementById('statusMessage');
-    messageEl.className = `status-message status-${type}`;
-    
-    // Unterscheide zwischen einfachen und wichtigen Nachrichten
-    if (typeof message === 'object') {
-        messageEl.classList.add('important');
-        messageEl.innerHTML = `
-            <div class="status-title">${message.title}</div>
-            <div class="status-content">${message.content}</div>
-        `;
-    } else {
-        messageEl.textContent = message;
-    }
-    
-    // Toast anzeigen
-    setTimeout(() => {
-        messageEl.classList.add('show');
-    }, 100);
-    
-    // Toast nach längerer Zeit ausblenden wenn wichtig
-    const duration = messageEl.classList.contains('important') ? 6000 : 3000;
-    setTimeout(() => {
-        messageEl.classList.remove('show');
-    }, duration);
-}
-
-// Neue Funktionen für leere Kategorie-Modal
-function showEmptyCategoryModal(data) {
-    pendingEmptyCategoryData = data;
-    
-    const modal = document.getElementById('emptyCategoryModal');
-    const messageDiv = document.getElementById('emptyCategoryMessage');
-    
-    // Dynamische Nachricht mit besserer Dark Mode Formatierung
-    let message = '';
-    if (data.action === 'move') {
-        message = `
-            <div class="empty-category-section success">
-                <div class="empty-category-section-title">✅ Link erfolgreich verschoben</div>
-                <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde von "<strong>${data.sourceTitle}</strong>" zu "<strong>${data.targetTitle}</strong>" verschoben.</div>
-            </div>
-            <div class="empty-category-section warning">
-                <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
-                <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
-                <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
-            </div>
-        `;
-    } else if (data.action === 'delete') {
-        message = `
-            <div class="empty-category-section success">
-                <div class="empty-category-section-title">✅ Link erfolgreich gelöscht</div>
-                <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde gelöscht.</div>
-            </div>
-            <div class="empty-category-section warning">
-                <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
-                <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
-                <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
-            </div>
-        `;
-    }
-    
-    messageDiv.innerHTML = message;
-    modal.style.display = 'block';
-}
-
-function closeEmptyCategoryModal() {
-    document.getElementById('emptyCategoryModal').style.display = 'none';
-    pendingEmptyCategoryData = null;
-}
-
-function handleEmptyCategoryDecision(shouldDelete) {
-    if (!pendingEmptyCategoryData) return;
-    
-    const data = pendingEmptyCategoryData;
-    
-    if (shouldDelete) {
-        // Kategorie löschen
-        delete linkCategories[data.sourceCategoryKey];
-        categoryOrder = categoryOrder.filter(key => key !== data.sourceCategoryKey);
-        
-        let successMessage = '';
-        if (data.action === 'move') {
-            successMessage = `Link verschoben und leere Kategorie "${data.sourceTitle}" gelöscht`;
-        } else {
-            successMessage = `Link gelöscht und leere Kategorie "${data.sourceTitle}" entfernt`;
-        }
-        
-        showMessage(successMessage, 'success');
-    } else {
-        // Kategorie behalten mit schöner Warnung
-        sortCategoriesEmptyLast();
-        
-        let successMessage = '';
-        if (data.action === 'move') {
-            successMessage = `Link verschoben - leere Kategorie "${data.sourceTitle}" beibehalten`;
-        } else {
-            successMessage = `Link gelöscht - leere Kategorie "${data.sourceTitle}" beibehalten`;
-        }
-        
-        showMessage(successMessage, 'success');
-        
-        // Schöne Warnung als Toast
-        setTimeout(() => {
-            showMessage({
-                title: '💡 Hinweis zu leeren Kategorien',
-                content: `Die Kategorie "${data.sourceTitle}" ist leer und kann bei Drag & Drop zu visuellen Problemen führen. Sie können jederzeit neue Links hinzufügen oder die Kategorie über Rechtsklick löschen.`
-            }, 'warning');
-        }, 1000);
-    }
-    
-    // Konfiguration speichern und Interface aktualisieren
-    saveConfig(true);
-    renderCategories();
-    closeEmptyCategoryModal();
-}
-
-// Funktionen zum Sortieren der Kategorien (leere ans Ende)
-function sortCategoriesEmptyLast() {
-    const filledCategories = [];
-    const emptyCategories = [];
-    
-    categoryOrder.forEach(categoryKey => {
-        const category = linkCategories[categoryKey];
-        if (category && category.links.length > 0) {
-            filledCategories.push(categoryKey);
-        } else if (category) {
-            emptyCategories.push(categoryKey);
-        }
-    });
-    
-    const newOrder = [...filledCategories, ...emptyCategories];
-    
-    if (JSON.stringify(categoryOrder) !== JSON.stringify(newOrder)) {
-        categoryOrder = newOrder;
-        return true;
-    }
-    return false;
-}
-
-// Funktionen zum Auf-/Zuklappen einzelner Kategorien
-function toggleCategoryCollapsed(categoryKey) {
-    if (linkCategories[categoryKey]) {
-        linkCategories[categoryKey].collapsed = !linkCategories[categoryKey].collapsed;
-        saveConfig(true);
-        renderCategories();
-        
-        const category = linkCategories[categoryKey];
-        const status = category.collapsed ? 'zugeklappt' : 'aufgeklappt';
-        showMessage(`Kategorie "${category.title}" ${status}`, 'success');
-    }
-}
-
-function toggleCategoryFromContext() {
-    if (currentContextCategory) {
-        toggleCategoryCollapsed(currentContextCategory);
-    }
-    hideContextMenu();
-}
-
-// Funktionen zum Auf-/Zuklappen aller Kategorien
-function collapseAllCategories() {
-    closeMenu();
-    let changedCount = 0;
-    
-    categoryOrder.forEach(categoryKey => {
-        if (linkCategories[categoryKey] && !linkCategories[categoryKey].collapsed) {
-            linkCategories[categoryKey].collapsed = true;
-            changedCount++;
-        }
-    });
-    
-    if (changedCount > 0) {
-        saveConfig(true);
-        renderCategories();
-        showMessage(`Alle ${changedCount} Kategorien zugeklappt`, 'success');
-    } else {
-        showMessage('Alle Kategorien sind bereits zugeklappt', 'success');
-    }
-}
-
-function expandAllCategories() {
-    closeMenu();
-    let changedCount = 0;
-    
-    categoryOrder.forEach(categoryKey => {
-        if (linkCategories[categoryKey] && linkCategories[categoryKey].collapsed) {
-            linkCategories[categoryKey].collapsed = false;
-            changedCount++;
-        }
-    });
-    
-    if (changedCount > 0) {
-        saveConfig(true);
-        renderCategories();
-        showMessage(`Alle ${changedCount} Kategorien aufgeklappt`, 'success');
-    } else {
-        showMessage('Alle Kategorien sind bereits aufgeklappt', 'success');
-    }
-}
-
-// Konfiguration laden
-function loadConfig() {
-    return loadConfigWithCollapsedSupport();
-}
-
-// Konfiguration speichern
-function saveConfig() {
-    try {
-        config.categories = linkCategories;
-        config.categoryOrder = categoryOrder;
-        
-        localStorage.setItem('linkConfig', JSON.stringify(config));
-        
-        if (arguments.length === 0) {
-            showMessage('Konfiguration gespeichert', 'success');
-        }
-    } catch (error) {
-        console.error('Save config error:', error);
-        showMessage('Fehler beim Speichern der Konfiguration', 'error');
-    }
-}
-
-// Prüfen ob die Seite scrollbar ist
-function isPageScrollable() {
-    const documentHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
-    );
-    const windowHeight = window.innerHeight;
-    console.log(windowHeight)
-    console.log(documentHeight)
-    return documentHeight > windowHeight;
-}
-
-// Auto-Scroll Funktionen
-function createScrollZones() {
-    if (document.querySelector('.scroll-zone')) return;
-    
-    const topZone = document.createElement('div');
-    topZone.className = 'scroll-zone top';
-    topZone.id = 'scroll-zone-top';
-    document.body.appendChild(topZone);
-    
-    const bottomZone = document.createElement('div');
-    bottomZone.className = 'scroll-zone bottom';
-    bottomZone.id = 'scroll-zone-bottom';
-    document.body.appendChild(bottomZone);
-}
-
-function showScrollZones() {
-    const topZone = document.getElementById('scroll-zone-top');
-    const bottomZone = document.getElementById('scroll-zone-bottom');
-    
-    if (topZone) topZone.classList.add('active');
-    if (bottomZone) bottomZone.classList.add('active');
-}
-
-function showScrollZonesIfNeeded() {
-    if (isPageScrollable()) {
-        createScrollZones();
-        showScrollZones();
-    }
-}
-
-function hideScrollZones() {
-    const topZone = document.getElementById('scroll-zone-top');
-    const bottomZone = document.getElementById('scroll-zone-bottom');
-    
-    if (topZone) topZone.classList.remove('active');
-    if (bottomZone) bottomZone.classList.remove('active');
-}
-
-function removeScrollZones() {
-    const zones = document.querySelectorAll('.scroll-zone');
-    zones.forEach(zone => zone.remove());
-}
-
-function startAutoScroll() {
-    if (autoScrollInterval) return;
-    
-    autoScrollInterval = setInterval(() => {
-        if (!isDragging) {
-            stopAutoScroll();
-            return;
-        }
-        
-        const scrollZoneSize = 100;
-        const scrollSpeed = 15;
-        const windowHeight = window.innerHeight;
-        
-        if (currentMouseY < scrollZoneSize) {
-            const intensity = (scrollZoneSize - currentMouseY) / scrollZoneSize;
-            window.scrollBy(0, -scrollSpeed * intensity);
-        } else if (currentMouseY > windowHeight - scrollZoneSize) {
-            const intensity = (currentMouseY - (windowHeight - scrollZoneSize)) / scrollZoneSize;
-            window.scrollBy(0, scrollSpeed * intensity);
-        }
-    }, 16);
-}
-
-function stopAutoScroll() {
-    if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
-    }
-}
-
-// Globale Maus-Tracking für Auto-Scroll
-document.addEventListener('dragover', function(e) {
-    if (isDragging) {
-        currentMouseY = e.clientY;
-        
-        const scrollZoneSize = 100;
-        const windowHeight = window.innerHeight;
-        
-        if (currentMouseY < scrollZoneSize || currentMouseY > windowHeight - scrollZoneSize) {
-            startAutoScroll();
-        } else {
-            stopAutoScroll();
-        }
-    }
-});
-
-document.addEventListener('dragend', function(e) {
-    isDragging = false;
-    stopAutoScroll();
-    hideScrollZones();
-});
-
-// Suchfunktionen
+/**
+ * Suchfunktionalität initialisieren
+ */
 function initializeSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchModalInput = document.getElementById('searchModalInput');
@@ -1316,6 +784,9 @@ function initializeSearch() {
     });
 }
 
+/**
+ * Such-Input Handler
+ */
 function handleSearchInput(e) {
     const query = e.target.value;
     if (query.trim()) {
@@ -1325,6 +796,9 @@ function handleSearchInput(e) {
     }
 }
 
+/**
+ * Such-Keydown Handler
+ */
 function handleSearchKeydown(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -1332,12 +806,18 @@ function handleSearchKeydown(e) {
     }
 }
 
+/**
+ * Modal-Such-Input Handler
+ */
 function handleModalSearchInput(e) {
     const query = e.target.value;
     document.getElementById('searchInput').value = query;
     performSearch(query);
 }
 
+/**
+ * Modal-Such-Keydown Handler
+ */
 function handleModalSearchKeydown(e) {
     switch(e.key) {
         case 'ArrowDown':
@@ -1359,6 +839,9 @@ function handleModalSearchKeydown(e) {
     }
 }
 
+/**
+ * Such-Modal öffnen
+ */
 function openSearchModal() {
     const searchOverlay = document.getElementById('searchOverlay');
     const searchModalInput = document.getElementById('searchModalInput');
@@ -1377,6 +860,9 @@ function openSearchModal() {
     }, 100);
 }
 
+/**
+ * Such-Modal schließen
+ */
 function closeSearchModal() {
     const searchOverlay = document.getElementById('searchOverlay');
     
@@ -1390,6 +876,9 @@ function closeSearchModal() {
     currentSearchQuery = '';
 }
 
+/**
+ * Suche durchführen
+ */
 function performSearch(query) {
     currentSearchQuery = query.toLowerCase();
     searchResults = [];
@@ -1429,6 +918,9 @@ function performSearch(query) {
     renderSearchResults();
 }
 
+/**
+ * Relevanz-Score berechnen
+ */
 function calculateRelevanceScore(link, query) {
     let score = 0;
     const titleLower = link.title.toLowerCase();
@@ -1448,6 +940,9 @@ function calculateRelevanceScore(link, query) {
     return score;
 }
 
+/**
+ * Alle Links anzeigen (wenn keine Suche)
+ */
 function showAllLinks() {
     searchResults = [];
     
@@ -1470,6 +965,9 @@ function showAllLinks() {
     renderSearchResults();
 }
 
+/**
+ * Suchergebnisse rendern
+ */
 function renderSearchResults() {
     const resultsContainer = document.getElementById('searchResults');
     const statsContainer = document.getElementById('searchStats');
@@ -1526,6 +1024,9 @@ function renderSearchResults() {
     updateSearchSelection();
 }
 
+/**
+ * Suchbegriff hervorheben
+ */
 function highlightSearchTerm(text, query) {
     if (!query.trim()) return text;
     
@@ -1533,10 +1034,16 @@ function highlightSearchTerm(text, query) {
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
+/**
+ * RegExp escapen
+ */
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * In Suchergebnissen navigieren
+ */
 function navigateSearchResults(direction) {
     if (searchResults.length === 0) return;
     
@@ -1552,6 +1059,9 @@ function navigateSearchResults(direction) {
     scrollToSelectedResult();
 }
 
+/**
+ * Such-Auswahl aktualisieren
+ */
 function updateSearchSelection() {
     const resultElements = document.querySelectorAll('.search-result-item');
     
@@ -1564,6 +1074,9 @@ function updateSearchSelection() {
     });
 }
 
+/**
+ * Zu ausgewähltem Ergebnis scrollen
+ */
 function scrollToSelectedResult() {
     const selectedElement = document.querySelector('.search-result-item.selected');
     if (selectedElement) {
@@ -1574,6 +1087,9 @@ function scrollToSelectedResult() {
     }
 }
 
+/**
+ * Ausgewähltes Suchergebnis öffnen
+ */
 function openSelectedSearchResult() {
     if (selectedSearchIndex >= 0 && selectedSearchIndex < searchResults.length) {
         const selectedResult = searchResults[selectedSearchIndex];
@@ -1582,114 +1098,311 @@ function openSelectedSearchResult() {
     }
 }
 
+/**
+ * Link öffnen
+ */
 function openLink(url) {
     window.open(url, '_blank');
 }
 
-// Hilfsfunktionen für Layout-Erkennung
-function isElementInGridLayout(element) {
-    const parent = element.parentElement;
-    const computedStyle = window.getComputedStyle(parent);
-    return computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none';
-}
+// ========================================================================
+// 6. KATEGORIE-MANAGEMENT
+// ========================================================================
 
-function isCategoryInGridLayout(categoryElement) {
-    const parent = categoryElement.parentElement;
-    const computedStyle = window.getComputedStyle(parent);
-    return (parent.classList.contains('categories-grid-section') || 
-           (computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none'));
-}
-
-function removeAllDragOverClasses(element) {
-    element.classList.remove(
-        'drag-over', 'drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right',
-        'drag-over-top-left', 'drag-over-bottom-right', 'drag-over-top-right', 'drag-over-bottom-left',
-        'drag-over-center', 'drag-over-before', 'drag-over-after'
-    );
-}
-
-function createDropIndicator(element, position) {
-    const existingIndicator = element.querySelector('.drop-indicator-line');
-    if (existingIndicator) {
-        existingIndicator.remove();
-    }
-
-    const indicator = document.createElement('div');
-    indicator.className = `drop-indicator-line ${position} active`;
-    element.appendChild(indicator);
-    
-    return indicator;
-}
-
-function removeDropIndicator(element) {
-    const indicator = element.querySelector('.drop-indicator-line');
-    if (indicator) {
-        indicator.remove();
+/**
+ * Kategorie auf-/zuklappen
+ */
+function toggleCategoryCollapsed(categoryKey) {
+    if (linkCategories[categoryKey]) {
+        linkCategories[categoryKey].collapsed = !linkCategories[categoryKey].collapsed;
+        saveConfig(true);
+        renderCategories();
+        
+        const category = linkCategories[categoryKey];
+        const status = category.collapsed ? 'zugeklappt' : 'aufgeklappt';
+        showMessage(`Kategorie "${category.title}" ${status}`, 'success');
     }
 }
 
-// Temporäre leere Kategorien anzeigen/verstecken
-function showEmptyCategories() {
-    if (isLinkDragActive) return;
-    
-    cleanupAllTemporaryElements();
-    
-    isLinkDragActive = true;
-    tempEmptyCategories = [];
+/**
+ * Kategorie über Kontext-Menü umschalten
+ */
+function toggleCategoryFromContext() {
+    if (currentContextCategory) {
+        toggleCategoryCollapsed(currentContextCategory);
+    }
+    hideContextMenu();
+}
+
+/**
+ * Alle Kategorien zuklappen
+ */
+function collapseAllCategories() {
+    closeMenu();
+    let changedCount = 0;
     
     categoryOrder.forEach(categoryKey => {
-        const category = linkCategories[categoryKey];
-        if (category && category.links.length === 0) {
-            tempEmptyCategories.push(categoryKey);
+        if (linkCategories[categoryKey] && !linkCategories[categoryKey].collapsed) {
+            linkCategories[categoryKey].collapsed = true;
+            changedCount++;
         }
     });
     
-    if (tempEmptyCategories.length > 0) {
-        addEmptyCategoriesToDom();
+    if (changedCount > 0) {
+        saveConfig(true);
+        renderCategories();
+        showMessage(`Alle ${changedCount} Kategorien zugeklappt`, 'success');
+    } else {
+        showMessage('Alle Kategorien sind bereits zugeklappt', 'success');
     }
 }
 
-function hideEmptyCategories() {
-    if (!isLinkDragActive) return;
-    cleanupAllTemporaryElements();
-}
-
-function addEmptyCategoriesToDom() {
-    const categoriesWrapper = document.querySelector('.categories-wrapper');
-    if (!categoriesWrapper) return;
+/**
+ * Alle Kategorien aufklappen
+ */
+function expandAllCategories() {
+    closeMenu();
+    let changedCount = 0;
     
-    const emptyGridSection = document.createElement('div');
-    emptyGridSection.className = 'categories-grid-section empty-categories-section';
-    
-    tempEmptyCategories.forEach(categoryKey => {
-        const category = linkCategories[categoryKey];
-        if (!category) return;
-        
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category empty-category';
-        categoryDiv.setAttribute('data-category-key', categoryKey);
-        
-        const categoryHeader = document.createElement('div');
-        categoryHeader.className = 'category-header';
-        
-        const categoryTitle = document.createElement('h2');
-        categoryTitle.className = 'category-title';
-        categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
-        
-        categoryHeader.appendChild(categoryTitle);
-        categoryDiv.appendChild(categoryHeader);
-        
-        makeCategoryDroppable(categoryDiv, categoryKey);
-        
-        emptyGridSection.appendChild(categoryDiv);
+    categoryOrder.forEach(categoryKey => {
+        if (linkCategories[categoryKey] && linkCategories[categoryKey].collapsed) {
+            linkCategories[categoryKey].collapsed = false;
+            changedCount++;
+        }
     });
     
-    if (tempEmptyCategories.length > 0) {
-        categoriesWrapper.appendChild(emptyGridSection);
+    if (changedCount > 0) {
+        saveConfig(true);
+        renderCategories();
+        showMessage(`Alle ${changedCount} Kategorien aufgeklappt`, 'success');
+    } else {
+        showMessage('Alle Kategorien sind bereits aufgeklappt', 'success');
     }
 }
 
-// Link-Import/Export Funktionen
+/**
+ * Kategorie bearbeiten
+ */
+function editCategory() {
+    if (!currentContextCategory) return;
+    
+    const category = linkCategories[currentContextCategory];
+    
+    isCategoryEditMode = true;
+    currentEditingCategory = currentContextCategory;
+    
+    document.getElementById('categoryTitle').value = category.title;
+    document.getElementById('categoryIcon').value = category.icon;
+    
+    document.querySelector('#categoryModal h2').textContent = 'Kategorie bearbeiten';
+    document.querySelector('#categoryModal .btn-primary').textContent = 'Speichern';
+    
+    hideContextMenu();
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+/**
+ * Kategorie löschen
+ */
+function deleteCategory() {
+    if (!currentContextCategory) return;
+    
+    const category = linkCategories[currentContextCategory];
+    const linkCount = category.links.length;
+    
+    let confirmMessage = `Möchten Sie die Kategorie "${category.title}" wirklich löschen?`;
+    if (linkCount > 0) {
+        confirmMessage += `\n\nWichtig: Diese Kategorie enthält ${linkCount} Link${linkCount > 1 ? 's' : ''}. Diese werden ebenfalls gelöscht!`;
+    }
+    
+    if (confirm(confirmMessage)) {
+        delete linkCategories[currentContextCategory];
+        categoryOrder = categoryOrder.filter(key => key !== currentContextCategory);
+        
+        saveConfig(true);
+        renderCategories();
+        updateFavoritesCount();
+        showMessage('Kategorie erfolgreich gelöscht', 'success');
+    }
+    
+    hideContextMenu();
+}
+
+/**
+ * Kategorie-Modal öffnen
+ */
+function openCategoryModal() {
+    closeMenu();
+    
+    if (!isCategoryEditMode) {
+        document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
+        document.querySelector('#categoryModal .btn-primary').textContent = 'Erstellen';
+        document.getElementById('categoryForm').reset();
+        currentEditingCategory = null;
+    }
+    
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+/**
+ * Kategorie-Modal schließen
+ */
+function closeCategoryModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+    document.getElementById('categoryForm').reset();
+    
+    isCategoryEditMode = false;
+    currentEditingCategory = null;
+    document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
+    document.querySelector('#categoryModal .btn-primary').textContent = 'Erstellen';
+}
+
+/**
+ * Kategorie-Select für Link-Modal befüllen
+ */
+function populateCategorySelect() {
+    const select = document.getElementById('linkCategory');
+    select.innerHTML = '<option value="">Kategorie auswählen</option>';
+    
+    categoryOrder.forEach(categoryKey => {
+        if (linkCategories[categoryKey]) {
+            const category = linkCategories[categoryKey];
+            const option = document.createElement('option');
+            option.value = categoryKey;
+            option.textContent = category.title;
+            select.appendChild(option);
+        }
+    });
+}
+
+// ========================================================================
+// 7. LINK-MANAGEMENT
+// ========================================================================
+
+/**
+ * Link bearbeiten
+ */
+function editLink() {
+    if (!currentContextLink) return;
+    
+    const { categoryKey, linkIndex } = currentContextLink;
+    const link = linkCategories[categoryKey].links[linkIndex];
+    
+    isEditMode = true;
+    currentEditingLink = { categoryKey, linkIndex };
+    
+    document.getElementById('linkCategory').value = categoryKey;
+    document.getElementById('linkTitle').value = link.title;
+    document.getElementById('linkUrl').value = link.url;
+    document.getElementById('linkDescription').value = link.description;
+    document.getElementById('linkIcon').value = link.icon;
+    document.getElementById('linkFavorite').checked = link.favorite || false;
+    
+    document.querySelector('#linkModal h2').textContent = 'Link bearbeiten';
+    document.querySelector('#linkModal .btn-primary').textContent = 'Speichern';
+    
+    document.getElementById('linkCategoryGroup').style.display = 'none';
+    document.getElementById('linkCategory').removeAttribute('required');
+    
+    hideContextMenu();
+    populateCategorySelect();
+    document.getElementById('linkModal').style.display = 'block';
+    
+    // UI nach dem Setzen der Werte aktualisieren
+    setTimeout(() => {
+        updateFavoritesCheckboxUI();
+    }, 50);
+}
+
+/**
+ * Link löschen
+ */
+function deleteLink() {
+    if (!currentContextLink) return;
+    
+    const { categoryKey, linkIndex } = currentContextLink;
+    const link = linkCategories[categoryKey].links[linkIndex];
+    const category = linkCategories[categoryKey];
+    
+    if (confirm(`Möchten Sie den Link "${link.title}" wirklich löschen?`)) {
+        linkCategories[categoryKey].links.splice(linkIndex, 1);
+        
+        if (category.links.length === 0) {
+            showEmptyCategoryModal({
+                action: 'delete',
+                linkTitle: link.title,
+                sourceTitle: category.title,
+                sourceCategoryKey: categoryKey
+            });
+        } else {
+            sortCategoriesEmptyLast();
+            showMessage('Link erfolgreich gelöscht', 'success');
+            
+            saveConfig(true);
+            renderCategories();
+            updateFavoritesCount();
+        }
+    }
+    
+    hideContextMenu();
+}
+
+/**
+ * Link-Modal öffnen
+ */
+function openModal() {
+    closeMenu();
+    
+    if (!isEditMode) {
+        document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
+        document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
+        document.getElementById('linkForm').reset();
+        currentEditingLink = null;
+        
+        document.getElementById('linkCategoryGroup').style.display = 'block';
+        document.getElementById('linkCategory').setAttribute('required', 'required');
+        
+        // Favoriten-Checkbox zurücksetzen
+        document.getElementById('linkFavorite').checked = false;
+        updateFavoritesCheckboxUI();
+    }
+    
+    populateCategorySelect();
+    document.getElementById('linkModal').style.display = 'block';
+    
+    // Nach dem Öffnen nochmal aktualisieren
+    setTimeout(() => {
+        updateFavoritesCheckboxUI();
+    }, 50);
+}
+
+/**
+ * Link-Modal schließen
+ */
+function closeModal() {
+    document.getElementById('linkModal').style.display = 'none';
+    document.getElementById('linkForm').reset();
+    
+    document.getElementById('linkCategoryGroup').style.display = 'block';
+    document.getElementById('linkCategory').setAttribute('required', 'required');
+    
+    isEditMode = false;
+    currentEditingLink = null;
+    document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
+    document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
+    
+    // Favoriten-Checkbox zurücksetzen
+    document.getElementById('linkFavorite').checked = false;
+    updateFavoritesCheckboxUI();
+}
+
+// ========================================================================
+// 8. IMPORT/EXPORT-SYSTEM
+// ========================================================================
+
+/**
+ * Einzelnen Link exportieren
+ */
 function exportSingleLink() {
     if (!currentContextLink) return;
     
@@ -1733,6 +1446,9 @@ function exportSingleLink() {
     hideContextMenu();
 }
 
+/**
+ * Einzelnen Link importieren
+ */
 function importSingleLink(event) {
     closeMenu();
     const file = event.target.files[0];
@@ -1795,6 +1511,9 @@ function importSingleLink(event) {
     event.target.value = '';
 }
 
+/**
+ * Einzelnen Link validieren
+ */
 function validateSingleLink(linkData) {
     if (typeof linkData !== 'object' || linkData === null) return false;
     if (linkData.type !== 'single_link') return false;
@@ -1819,6 +1538,9 @@ function validateSingleLink(linkData) {
     return true;
 }
 
+/**
+ * Kategorie-Auswahl-Modal anzeigen
+ */
 function showCategorySelectionModal(link, originalCategoryTitle) {
     pendingLinkImport = link;
     pendingOriginalCategoryTitle = originalCategoryTitle;
@@ -1861,6 +1583,9 @@ function showCategorySelectionModal(link, originalCategoryTitle) {
     document.getElementById('categorySelectModal').style.display = 'block';
 }
 
+/**
+ * Neue Kategorie-Felder ein-/ausblenden
+ */
 function toggleNewCategoryFields() {
     const select = document.getElementById('importLinkCategory');
     const newCategoryFields = document.getElementById('newCategoryFields');
@@ -1879,6 +1604,9 @@ function toggleNewCategoryFields() {
     }
 }
 
+/**
+ * Kategorie-Auswahl-Modal schließen
+ */
 function closeCategorySelectModal() {
     document.getElementById('categorySelectModal').style.display = 'none';
     
@@ -1891,6 +1619,9 @@ function closeCategorySelectModal() {
     pendingOriginalCategoryTitle = null;
 }
 
+/**
+ * Link-Import bestätigen
+ */
 function confirmLinkImport() {
     if (!pendingLinkImport) return;
     
@@ -1976,7 +1707,242 @@ function confirmLinkImport() {
     closeCategorySelectModal();
 }
 
-// Konfiguration als JSON exportieren
+/**
+ * Einzelne Kategorie exportieren
+ */
+function exportSingleCategory() {
+    if (!currentContextCategory) return;
+    
+    const category = linkCategories[currentContextCategory];
+    
+    const categoryData = {
+        type: 'single_category',
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        category: {
+            title: category.title,
+            icon: category.icon,
+            collapsed: category.collapsed,
+            links: category.links.map(link => ({
+                title: link.title,
+                url: link.url,
+                description: link.description,
+                icon: link.icon,
+                favorite: link.favorite || false
+            }))
+        },
+        originalCategoryKey: currentContextCategory
+    };
+    
+    try {
+        const dataStr = JSON.stringify(categoryData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link_el = document.createElement('a');
+        link_el.href = url;
+        
+        const cleanTitle = category.title.replace(/[^a-zA-Z0-9äöüÄÖÜß\s\-_]/g, '').replace(/\s+/g, '-');
+        link_el.download = `kategorie-${cleanTitle}.json`;
+        link_el.click();
+        URL.revokeObjectURL(url);
+        
+        showMessage(`Kategorie "${category.title}" erfolgreich exportiert`, 'success');
+    } catch (error) {
+        console.error('Export error:', error);
+        showMessage('Fehler beim Exportieren der Kategorie', 'error');
+    }
+    
+    hideContextMenu();
+}
+
+/**
+ * Einzelne Kategorie importieren
+ */
+function importSingleCategory(event) {
+    closeMenu();
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const categoryData = JSON.parse(e.target.result);
+            
+            if (!validateSingleCategory(categoryData)) {
+                throw new Error('Ungültige Kategorie-Datei');
+            }
+
+            const category = categoryData.category;
+            const originalCategoryKey = categoryData.originalCategoryKey;
+            
+            // Prüfen ob eine Kategorie mit dem gleichen Namen bereits existiert
+            let existingCategoryKey = null;
+            let conflictingKey = null;
+            
+            // Nach Titel suchen
+            for (const [key, existingCategory] of Object.entries(linkCategories)) {
+                if (existingCategory.title === category.title) {
+                    existingCategoryKey = key;
+                    break;
+                }
+            }
+            
+            // Nach originalCategoryKey suchen falls Titel nicht gefunden
+            if (!existingCategoryKey && originalCategoryKey && linkCategories[originalCategoryKey]) {
+                conflictingKey = originalCategoryKey;
+            }
+            
+            if (existingCategoryKey || conflictingKey) {
+                // Konflikt-Dialog anzeigen
+                showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey);
+            } else {
+                // Kategorie direkt importieren
+                importCategoryDirectly(categoryData);
+            }
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            showMessage('Fehler beim Importieren: Ungültige Kategorie-Datei', 'error');
+        }
+    };
+    reader.readAsText(file);
+    
+    event.target.value = '';
+}
+
+/**
+ * Kategorie-Import-Konflikt-Dialog anzeigen
+ */
+function showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey) {
+    pendingCategoryImport = categoryData;
+    
+    const category = categoryData.category;
+    const conflictType = existingCategoryKey ? 'title' : 'key';
+    const conflictingCategory = existingCategoryKey ? 
+        linkCategories[existingCategoryKey] : 
+        linkCategories[conflictingKey];
+    
+    let message = '';
+    if (conflictType === 'title') {
+        message = `Eine Kategorie mit dem Namen "${category.title}" existiert bereits.`;
+    } else {
+        message = `Eine Kategorie mit dem Schlüssel "${conflictingKey}" existiert bereits.`;
+    }
+    
+    if (confirm(`${message}\n\nWie möchten Sie fortfahren?\n\n` +
+                `OK = Links zur bestehenden Kategorie hinzufügen\n` +
+                `Abbrechen = Neue Kategorie mit anderem Namen erstellen`)) {
+        // Links zur bestehenden Kategorie hinzufügen
+        const targetCategoryKey = existingCategoryKey || conflictingKey;
+        category.links.forEach(link => {
+            // Sicherstellen, dass favorite-Eigenschaft existiert
+            if (link.favorite === undefined) {
+                link.favorite = false;
+            }
+            linkCategories[targetCategoryKey].links.push(link);
+        });
+        
+        sortCategoriesEmptyLast();
+        saveConfig(true);
+        renderCategories();
+        updateFavoritesCount();
+        
+        showMessage(`${category.links.length} Links zur bestehenden Kategorie "${conflictingCategory.title}" hinzugefügt`, 'success');
+    } else {
+        // Neuen Namen eingeben
+        const newName = prompt(`Neuer Name für die Kategorie:`, category.title + ' (Importiert)');
+        if (newName && newName.trim()) {
+            category.title = newName.trim();
+            importCategoryDirectly(categoryData);
+        }
+    }
+    
+    pendingCategoryImport = null;
+}
+
+/**
+ * Kategorie direkt importieren
+ */
+function importCategoryDirectly(categoryData) {
+    const category = categoryData.category;
+    const originalCategoryKey = categoryData.originalCategoryKey;
+    
+    // Neuen Kategorie-Schlüssel generieren
+    let newCategoryKey = category.title.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    
+    // Falls der Schlüssel bereits existiert, Nummer anhängen
+    let counter = 1;
+    const baseKey = newCategoryKey;
+    while (linkCategories[newCategoryKey]) {
+        newCategoryKey = `${baseKey}_${counter}`;
+        counter++;
+    }
+    
+    // Sicherstellen, dass alle Links die favorite-Eigenschaft haben
+    category.links.forEach(link => {
+        if (link.favorite === undefined) {
+            link.favorite = false;
+        }
+    });
+    
+    // Kategorie erstellen
+    linkCategories[newCategoryKey] = {
+        title: category.title,
+        icon: category.icon || '📁',
+        collapsed: category.collapsed || false,
+        links: category.links
+    };
+    
+    categoryOrder.push(newCategoryKey);
+    
+    sortCategoriesEmptyLast();
+    saveConfig(true);
+    renderCategories();
+    populateCategorySelect();
+    updateFavoritesCount();
+    
+    showMessage(`Kategorie "${category.title}" mit ${category.links.length} Links erfolgreich importiert`, 'success');
+}
+
+/**
+ * Einzelne Kategorie validieren
+ */
+function validateSingleCategory(categoryData) {
+    if (typeof categoryData !== 'object' || categoryData === null) return false;
+    if (categoryData.type !== 'single_category') return false;
+    if (!categoryData.category || typeof categoryData.category !== 'object') return false;
+    
+    const category = categoryData.category;
+    
+    // Basis-Validierung
+    if (!category.title || !Array.isArray(category.links)) return false;
+    
+    // Auto-Fix für Kategorie
+    if (!category.icon) category.icon = '📁';
+    if (category.collapsed === undefined) category.collapsed = false;
+    
+    // Links reparieren
+    for (const link of category.links) {
+        if (!link.title || !link.url) return false;
+        
+        // Auto-Fix
+        if (!link.description) link.description = 'Keine Beschreibung';
+        if (!link.icon) link.icon = '🔗';
+        if (link.favorite === undefined) link.favorite = false;
+        
+        // Priority → Favorite Migration
+        if (link.priority !== undefined) {
+            link.favorite = link.priority;
+            delete link.priority;
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Konfiguration als JSON exportieren
+ */
 function exportConfig() {
     closeMenu();
     try {
@@ -1994,7 +1960,9 @@ function exportConfig() {
     }
 }
 
-// Konfiguration aus JSON importieren
+/**
+ * Konfiguration aus JSON importieren
+ */
 function importConfig(event) {
     closeMenu();
     const file = event.target.files[0];
@@ -2054,63 +2022,491 @@ function importConfig(event) {
     event.target.value = '';
 }
 
-// Konfiguration validieren
-function validateConfig(config) {
-    if (typeof config !== 'object' || config === null) return false;
+/**
+ * Standard-Konfiguration als default-config.js exportieren
+ */
+function exportAsDefaultConfig() {
+    closeMenu();
     
-    let categories = config.categories || config;
-    
-    for (const [key, category] of Object.entries(categories)) {
-        if (!category?.title || !Array.isArray(category?.links)) return false;
+    try {
+        // Aktuelle Konfiguration in das DEFAULT_CONFIG Format konvertieren
+        const defaultConfigContent = generateDefaultConfigJS();
         
-        for (const link of category.links) {
-            if (!link?.title || !link?.url) return false;
+        // Blob erstellen für Download
+        const dataBlob = new Blob([defaultConfigContent], {type: 'text/javascript'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'default-config.js';
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        showMessage({
+            title: '🌟 Default-Config erfolgreich exportiert',
+            content: 'Die aktuelle Konfiguration wurde als default-config.js exportiert. Sie können diese Datei im Config-Verzeichnis ersetzen, um sie als neue Standard-Konfiguration zu verwenden.'
+        }, 'success');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        showMessage('Fehler beim Exportieren der Default-Konfiguration', 'error');
+    }
+}
+
+/**
+ * JavaScript-Code für die default-config.js Datei generieren
+ */
+function generateDefaultConfigJS() {
+    // Aktuelle Konfiguration bereinigen und formatieren
+    const cleanedConfig = {
+        categories: {},
+        categoryOrder: [...categoryOrder]
+    };
+    
+    // Kategorien durchgehen und bereinigen
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (!category) return;
+        
+        cleanedConfig.categories[categoryKey] = {
+            title: category.title,
+            icon: category.icon || '📁',
+            collapsed: category.collapsed || false,
+            links: category.links.map(link => ({
+                title: link.title,
+                url: link.url,
+                description: link.description || '',
+                icon: link.icon || '🔗',
+                favorite: link.favorite || false
+            }))
+        };
+    });
+    
+    // JavaScript-Code generieren
+    const configJS = `/**
+ * ========================================================================
+ * STANDARD-KONFIGURATION FÜR LINKSAMMLUNG
+ * ========================================================================
+ * 
+ * Diese Datei enthält die Standard-Konfiguration, die geladen wird,
+ * wenn keine lokale Konfiguration im Browser gespeichert ist.
+ * 
+ * Generiert am: ${new Date().toLocaleString('de-DE')}
+ * Kategorien: ${categoryOrder.length}
+ * Links gesamt: ${getTotalLinksCount()}
+ * Favoriten: ${getTotalFavoritesCount()}
+ * 
+ * ========================================================================
+ */
+
+// Standard-Konfiguration
+const DEFAULT_CONFIG = ${JSON.stringify(cleanedConfig, null, 4)};
+
+// Funktion zum Abrufen der Standard-Konfiguration
+function getDefaultConfig() {
+    return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+}
+
+// Für Kompatibilität mit älteren Versionen
+window.DEFAULT_CONFIG = DEFAULT_CONFIG;
+window.getDefaultConfig = getDefaultConfig;
+
+console.log('✅ Standard-Konfiguration geladen');`;
+
+    return configJS;
+}
+
+/**
+ * Default-Config Export Vorschau anzeigen
+ */
+function previewDefaultConfig() {
+    closeMenu();
+    
+    const totalLinks = getTotalLinksCount();
+    const totalFavorites = getTotalFavoritesCount();
+    const totalCategories = categoryOrder.length;
+    
+    // Kategorien-Übersicht erstellen
+    let categoriesPreview = '';
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (category) {
+            const linkCount = category.links.length;
+            const favoriteCount = category.links.filter(link => link.favorite).length;
+            const favoriteInfo = favoriteCount > 0 ? ` (${favoriteCount} ⭐)` : '';
             
-            // Auto-Fix für fehlende Felder
-            if (!link.description) link.description = '';
-            if (!link.icon) link.icon = '🔗';
-            if (link.favorite === undefined) link.favorite = false;
-            
-            // Priority → Favorite Migration
-            if (link.priority !== undefined) {
-                link.favorite = link.priority;
-                delete link.priority;
-            }
+            categoriesPreview += `<div style="margin: 8px 0; padding: 8px 12px; background: rgba(64, 224, 208, 0.1); border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2em;">${category.icon}</span>
+                <span style="flex-grow: 1; font-weight: 500;">${category.title}</span>
+                <span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9em;">${linkCount} Links${favoriteInfo}</span>
+            </div>`;
+        }
+    });
+    
+    const previewHTML = `
+        <div class="modal" id="defaultConfigPreviewModal" style="display: block;">
+            <div class="modal-content" style="max-width: 650px;">
+                <h2 style="text-align: center; margin-bottom: 25px;">
+                    <span class="modal-emoji">🌟</span> Default-Config Export Vorschau
+                </h2>
+                
+                <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
+                    <div style="font-size: 1.1em; margin-bottom: 15px; color: #40e0d0;">
+                        <strong>📊 Konfigurationsübersicht</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div style="text-align: center; padding: 10px; background: rgba(35, 35, 55, 0.6); border-radius: 8px;">
+                            <div style="font-size: 1.5em; color: #40e0d0; font-weight: bold;">${totalCategories}</div>
+                            <div style="font-size: 0.9em; color: #b0b0b0;">Kategorien</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: rgba(35, 35, 55, 0.6); border-radius: 8px;">
+                            <div style="font-size: 1.5em; color: #40e0d0; font-weight: bold;">${totalLinks}</div>
+                            <div style="font-size: 0.9em; color: #b0b0b0;">Links gesamt</div>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background: rgba(35, 35, 55, 0.6); border-radius: 8px;">
+                            <div style="font-size: 1.5em; color: #ffd54f; font-weight: bold;">${totalFavorites}</div>
+                            <div style="font-size: 0.9em; color: #b0b0b0;">Favoriten ⭐</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <div style="font-size: 1.1em; margin-bottom: 15px; color: #40e0d0;">
+                        <strong>📁 Kategorien-Details</strong>
+                    </div>
+                    <div class="modal-scrollable">
+                        ${categoriesPreview}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 10px; border: 1px solid rgba(255, 193, 7, 0.3);">
+                    <div style="color: #ffd54f; font-size: 14px; margin-bottom: 8px;">
+                        <strong>💡 Was passiert beim Export?</strong>
+                    </div>
+                    <div style="color: rgba(255, 255, 255, 0.9); font-size: 13px; line-height: 1.4;">
+                        • Eine neue <code>default-config.js</code> Datei wird heruntergeladen<br>
+                        • Diese enthält Ihre aktuelle Konfiguration im Standard-Format<br>
+                        • Sie können diese Datei im Config-Verzeichnis ersetzen<br>
+                        • Neue Benutzer erhalten dann Ihre Konfiguration als Standard
+                    </div>
+                </div>
+                
+                <div class="form-buttons" style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeDefaultConfigPreview()">
+                        Abbrechen
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="confirmDefaultConfigExport()">
+                        <span>💾</span> Default-Config exportieren
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', previewHTML);
+}
+
+/**
+ * Default-Config Vorschau schließen
+ */
+function closeDefaultConfigPreview() {
+    const modal = document.getElementById('defaultConfigPreviewModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Default-Config Export bestätigen
+ */
+function confirmDefaultConfigExport() {
+    closeDefaultConfigPreview();
+    exportAsDefaultConfig();
+}
+
+// ========================================================================
+// 9. MODAL-SYSTEM
+// ========================================================================
+
+/**
+ * Leere Kategorie Modal anzeigen
+ */
+function showEmptyCategoryModal(data) {
+    pendingEmptyCategoryData = data;
+    
+    const modal = document.getElementById('emptyCategoryModal');
+    const messageDiv = document.getElementById('emptyCategoryMessage');
+    
+    // Dynamische Nachricht mit besserer Dark Mode Formatierung
+    let message = '';
+    if (data.action === 'move') {
+        message = `
+            <div class="empty-category-section success">
+                <div class="empty-category-section-title">✅ Link erfolgreich verschoben</div>
+                <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde von "<strong>${data.sourceTitle}</strong>" zu "<strong>${data.targetTitle}</strong>" verschoben.</div>
+            </div>
+            <div class="empty-category-section warning">
+                <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
+                <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
+                <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
+            </div>
+        `;
+    } else if (data.action === 'delete') {
+        message = `
+            <div class="empty-category-section success">
+                <div class="empty-category-section-title">✅ Link erfolgreich gelöscht</div>
+                <div class="empty-category-section-content">Der Link "<strong>${data.linkTitle}</strong>" wurde gelöscht.</div>
+            </div>
+            <div class="empty-category-section warning">
+                <div class="empty-category-section-title">⚠️ Leere Kategorie</div>
+                <div class="empty-category-section-content">Die Kategorie "<strong>${data.sourceTitle}</strong>" ist jetzt leer.</div>
+                <div class="empty-category-section-note">Möchten Sie die leere Kategorie löschen oder behalten?</div>
+            </div>
+        `;
+    }
+    
+    messageDiv.innerHTML = message;
+    modal.style.display = 'block';
+}
+
+/**
+ * Leere Kategorie Modal schließen
+ */
+function closeEmptyCategoryModal() {
+    document.getElementById('emptyCategoryModal').style.display = 'none';
+    pendingEmptyCategoryData = null;
+}
+
+/**
+ * Leere Kategorie-Entscheidung verarbeiten
+ */
+function handleEmptyCategoryDecision(shouldDelete) {
+    if (!pendingEmptyCategoryData) return;
+    
+    const data = pendingEmptyCategoryData;
+    
+    if (shouldDelete) {
+        // Kategorie löschen
+        delete linkCategories[data.sourceCategoryKey];
+        categoryOrder = categoryOrder.filter(key => key !== data.sourceCategoryKey);
+        
+        let successMessage = '';
+        if (data.action === 'move') {
+            successMessage = `Link verschoben und leere Kategorie "${data.sourceTitle}" gelöscht`;
+        } else {
+            successMessage = `Link gelöscht und leere Kategorie "${data.sourceTitle}" entfernt`;
         }
         
-        // Auto-Fix für Kategorie
-        if (!category.icon) category.icon = '📁';
-        if (category.collapsed === undefined) category.collapsed = false;
+        showMessage(successMessage, 'success');
+    } else {
+        // Kategorie behalten mit schöner Warnung
+        sortCategoriesEmptyLast();
+        
+        let successMessage = '';
+        if (data.action === 'move') {
+            successMessage = `Link verschoben - leere Kategorie "${data.sourceTitle}" beibehalten`;
+        } else {
+            successMessage = `Link gelöscht - leere Kategorie "${data.sourceTitle}" beibehalten`;
+        }
+        
+        showMessage(successMessage, 'success');
+        
+        // Schöne Warnung als Toast
+        setTimeout(() => {
+            showMessage({
+                title: '💡 Hinweis zu leeren Kategorien',
+                content: `Die Kategorie "${data.sourceTitle}" ist leer und kann bei Drag & Drop zu visuellen Problemen führen. Sie können jederzeit neue Links hinzufügen oder die Kategorie über Rechtsklick löschen.`
+            }, 'warning');
+        }, 1000);
     }
     
-    return true;
+    // Konfiguration speichern und Interface aktualisieren
+    saveConfig(true);
+    renderCategories();
+    closeEmptyCategoryModal();
 }
 
-// Auf Standard zurücksetzen
-function resetToDefault() {
-    closeMenu();
-    if (confirm('Möchten Sie wirklich alle Änderungen verwerfen und zur Standard-Konfiguration zurückkehren?')) {
-        // Prüfen ob Standard-Konfiguration aus default-config.js verfügbar ist
-        const configToUse = window.DEFAULT_CONFIG || fallbackDefaultConfig;
-        config = JSON.parse(JSON.stringify(configToUse));
-        linkCategories = config.categories;
-        categoryOrder = config.categoryOrder;
+// ========================================================================
+// 10. EMOJI-PICKER-SYSTEM
+// ========================================================================
+
+/**
+ * Emoji-Picker ein-/ausblenden
+ */
+function toggleEmojiPicker(inputId) {
+    const input = document.getElementById(inputId);
+    const picker = document.getElementById(inputId + 'Picker');
+    const trigger = input.parentElement.querySelector('.emoji-trigger');
+    
+    // Alle anderen Picker schließen
+    document.querySelectorAll('.emoji-picker').forEach(p => {
+        if (p !== picker) {
+            p.classList.remove('active');
+        }
+    });
+    
+    document.querySelectorAll('.emoji-trigger').forEach(t => {
+        if (t !== trigger) {
+            t.classList.remove('active');
+        }
+    });
+    
+    if (picker.classList.contains('active')) {
+        picker.classList.remove('active');
+        trigger.classList.remove('active');
+        currentPickerTarget = null;
+        currentPickerElement = null;
+    } else {
+        picker.classList.add('active');
+        trigger.classList.add('active');
+        currentPickerTarget = inputId;
+        currentPickerElement = picker;
         
-        // Favoriten-Support hinzufügen
-        addFavoritesSupportToLinks();
-        
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
-        showMessage('Auf Standard-Konfiguration zurückgesetzt', 'success');
+        // Emoji-Picker initialisieren
+        initEmojiPicker(inputId);
     }
 }
 
-// =============================================================================
-// VOLLSTÄNDIGE DRAG AND DROP FUNKTIONALITÄT
-// =============================================================================
+/**
+ * Emoji-Picker initialisieren
+ */
+function initEmojiPicker(inputId) {
+    const picker = document.getElementById(inputId + 'Picker');
+    const categoriesContainer = document.getElementById(inputId + 'Categories');
+    const gridContainer = document.getElementById(inputId + 'Grid');
+    
+    // Kategorien erstellen
+    categoriesContainer.innerHTML = '';
+    const categoryKeys = Object.keys(emojiDatabase);
+    
+    categoryKeys.forEach((categoryKey, index) => {
+        const category = emojiDatabase[categoryKey];
+        const categoryBtn = document.createElement('div');
+        categoryBtn.className = 'emoji-category-btn';
+        categoryBtn.innerHTML = category.icon;
+        categoryBtn.title = category.name;
+        categoryBtn.onclick = () => showEmojiCategory(categoryKey, inputId);
+        
+        if (index === 0) {
+            categoryBtn.classList.add('active');
+        }
+        
+        categoriesContainer.appendChild(categoryBtn);
+    });
+    
+    // Erste Kategorie anzeigen
+    showEmojiCategory(categoryKeys[0], inputId);
+}
 
-// Drag and Drop Funktionalität für Kategorien
+/**
+ * Emoji-Kategorie anzeigen
+ */
+function showEmojiCategory(categoryKey, inputId) {
+    const picker = document.getElementById(inputId + 'Picker');
+    const categoriesContainer = document.getElementById(inputId + 'Categories');
+    const gridContainer = document.getElementById(inputId + 'Grid');
+    
+    // Aktive Kategorie-Button aktualisieren
+    categoriesContainer.querySelectorAll('.emoji-category-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeBtn = Array.from(categoriesContainer.children).find(btn => 
+        btn.innerHTML === emojiDatabase[categoryKey].icon
+    );
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Emojis anzeigen
+    const category = emojiDatabase[categoryKey];
+    gridContainer.innerHTML = '';
+    
+    category.emojis.forEach(emojiData => {
+        const emojiItem = document.createElement('div');
+        emojiItem.className = 'emoji-item';
+        emojiItem.innerHTML = `
+            ${emojiData.emoji}
+            <div class="emoji-tooltip">${emojiData.name}</div>
+        `;
+        emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
+        gridContainer.appendChild(emojiItem);
+    });
+}
+
+/**
+ * Emoji auswählen
+ */
+function selectEmoji(emoji, inputId) {
+    const input = document.getElementById(inputId);
+    const picker = document.getElementById(inputId + 'Picker');
+    const trigger = input.parentElement.querySelector('.emoji-trigger');
+    
+    input.value = emoji;
+    picker.classList.remove('active');
+    trigger.classList.remove('active');
+    
+    currentPickerTarget = null;
+    currentPickerElement = null;
+    
+    // Input-Event auslösen für eventuelle Validierung
+    input.dispatchEvent(new Event('input'));
+}
+
+/**
+ * Emojis suchen
+ */
+function searchEmojis(query, pickerId) {
+    const inputId = pickerId.replace('Picker', '');
+    const gridContainer = document.getElementById(inputId + 'Grid');
+    
+    if (!query.trim()) {
+        // Wenn keine Suche, erste Kategorie anzeigen
+        const firstCategory = Object.keys(emojiDatabase)[0];
+        showEmojiCategory(firstCategory, inputId);
+        return;
+    }
+    
+    // Alle Emojis durchsuchen
+    const results = [];
+    Object.values(emojiDatabase).forEach(category => {
+        category.emojis.forEach(emojiData => {
+            if (emojiData.name.toLowerCase().includes(query.toLowerCase()) ||
+                emojiData.emoji.includes(query)) {
+                results.push(emojiData);
+            }
+        });
+    });
+    
+    // Ergebnisse anzeigen
+    gridContainer.innerHTML = '';
+    
+    if (results.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'emoji-no-results';
+        noResults.textContent = 'Keine Emojis gefunden';
+        gridContainer.appendChild(noResults);
+        return;
+    }
+    
+    results.forEach(emojiData => {
+        const emojiItem = document.createElement('div');
+        emojiItem.className = 'emoji-item';
+        emojiItem.innerHTML = `
+            ${emojiData.emoji}
+            <div class="emoji-tooltip">${emojiData.name}</div>
+        `;
+        emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
+        gridContainer.appendChild(emojiItem);
+    });
+}
+
+// ========================================================================
+// 11. DRAG & DROP-SYSTEM
+// ========================================================================
+
+/**
+ * Kategorie für Drag & Drop vorbereiten
+ */
 function makeCategoryDraggable(categoryElement, categoryKey) {
     const dragHandle = categoryElement.querySelector('.drag-handle');
     
@@ -2127,6 +2523,9 @@ function makeCategoryDraggable(categoryElement, categoryKey) {
     dragHandle.setAttribute('data-category-key', categoryKey);
 }
 
+/**
+ * Kategorie Drag Start Handler
+ */
 function handleCategoryDragStart(e) {
     draggedElement = this.closest('.category');
     draggedCategoryKey = this.getAttribute('data-category-key');
@@ -2160,6 +2559,9 @@ function handleCategoryDragStart(e) {
     }, 100);
 }
 
+/**
+ * Kategorie Drag End Handler
+ */
 function handleCategoryDragEnd(e) {
     const categoryElement = this.closest('.category');
     const dragHandle = this;
@@ -2186,6 +2588,9 @@ function handleCategoryDragEnd(e) {
     currentDropIndicator = null;
 }
 
+/**
+ * Kategorie Drag Over Handler
+ */
 function handleCategoryDragOver(e) {
     if (draggedCategoryKey && !draggedLinkData) {
         e.preventDefault();
@@ -2245,6 +2650,9 @@ function handleCategoryDragOver(e) {
     }
 }
 
+/**
+ * Kategorie Drag Enter Handler
+ */
 function handleCategoryDragEnter(e) {
     if (draggedCategoryKey && !draggedLinkData && this !== draggedElement) {
         e.preventDefault();
@@ -2269,6 +2677,9 @@ function handleCategoryDragEnter(e) {
     }
 }
 
+/**
+ * Kategorie Drag Leave Handler
+ */
 function handleCategoryDragLeave(e) {
     if (draggedCategoryKey && !draggedLinkData) {
         const rect = this.getBoundingClientRect();
@@ -2296,6 +2707,9 @@ function handleCategoryDragLeave(e) {
     }
 }
 
+/**
+ * Kategorie Drop Handler
+ */
 function handleCategoryDrop(e) {
     if (draggedCategoryKey && !draggedLinkData) {
         e.preventDefault();
@@ -2337,7 +2751,9 @@ function handleCategoryDrop(e) {
     }
 }
 
-// Drag and Drop Funktionalität für Links
+/**
+ * Link für Drag & Drop vorbereiten
+ */
 function makeLinkDraggable(linkElement, categoryKey, linkIndex) {
     const linkDragHandle = linkElement.querySelector('.link-drag-handle');
     
@@ -2351,6 +2767,9 @@ function makeLinkDraggable(linkElement, categoryKey, linkIndex) {
     linkDragHandle.setAttribute('data-link-index', linkIndex);
 }
 
+/**
+ * Link als Drop-Target vorbereiten
+ */
 function makeLinkDroppable(linkElement, categoryKey, linkIndex) {
     linkElement.addEventListener('dragover', handleLinkDragOver);
     linkElement.addEventListener('drop', handleLinkDrop);
@@ -2361,6 +2780,9 @@ function makeLinkDroppable(linkElement, categoryKey, linkIndex) {
     linkElement.setAttribute('data-link-index', linkIndex);
 }
 
+/**
+ * Kategorie als Link-Drop-Target vorbereiten
+ */
 function makeCategoryDroppable(categoryElement, categoryKey) {
     categoryElement.removeEventListener('dragover', handleCategoryLinkDragOver);
     categoryElement.removeEventListener('drop', handleCategoryLinkDrop);
@@ -2373,6 +2795,9 @@ function makeCategoryDroppable(categoryElement, categoryKey) {
     categoryElement.addEventListener('dragleave', handleCategoryLinkDragLeave);
 }
 
+/**
+ * Link Drag Start Handler
+ */
 function handleLinkDragStart(e) {
     const categoryKey = this.getAttribute('data-category-key');
     const linkIndex = parseInt(this.getAttribute('data-link-index'));
@@ -2422,20 +2847,9 @@ function handleLinkDragStart(e) {
     e.stopPropagation();
 }
 
-function cleanupDragAndDrop() {
-    cleanupAllTemporaryElements();
-    
-    document.querySelectorAll('.category').forEach(cat => {
-        cat.classList.remove('link-drag-over');
-        removeAllDragOverClasses(cat);
-        removeDropIndicator(cat);
-    });
-    
-    document.querySelectorAll('.link-item').forEach(link => {
-        removeAllDragOverClasses(link);
-    });
-}
-
+/**
+ * Link Drag End Handler
+ */
 function handleLinkDragEnd(e) {
     if (draggedLinkElement) {
         draggedLinkElement.classList.remove('dragging');
@@ -2454,6 +2868,9 @@ function handleLinkDragEnd(e) {
     dropPosition = null;
 }
 
+/**
+ * Link Drag Over Handler
+ */
 function handleLinkDragOver(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const targetCategoryKey = this.getAttribute('data-category-key');
@@ -2542,6 +2959,9 @@ function handleLinkDragOver(e) {
     }
 }
 
+/**
+ * Link Drag Enter Handler
+ */
 function handleLinkDragEnter(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const targetCategoryKey = this.getAttribute('data-category-key');
@@ -2566,6 +2986,9 @@ function handleLinkDragEnter(e) {
     }
 }
 
+/**
+ * Link Drag Leave Handler
+ */
 function handleLinkDragLeave(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const targetCategoryKey = this.getAttribute('data-category-key');
@@ -2583,6 +3006,9 @@ function handleLinkDragLeave(e) {
     }
 }
 
+/**
+ * Link Drop Handler
+ */
 function handleLinkDrop(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const targetCategoryKey = this.getAttribute('data-category-key');
@@ -2628,6 +3054,9 @@ function handleLinkDrop(e) {
     }
 }
 
+/**
+ * Kategorie Link Drag Over Handler
+ */
 function handleCategoryLinkDragOver(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const targetCategoryKey = this.getAttribute('data-category-key');
@@ -2650,6 +3079,9 @@ function handleCategoryLinkDragOver(e) {
     }
 }
 
+/**
+ * Kategorie Link Drag Enter Handler
+ */
 function handleCategoryLinkDragEnter(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         e.preventDefault();
@@ -2668,6 +3100,9 @@ function handleCategoryLinkDragEnter(e) {
     }
 }
 
+/**
+ * Kategorie Link Drag Leave Handler
+ */
 function handleCategoryLinkDragLeave(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         const rect = this.getBoundingClientRect();
@@ -2688,6 +3123,9 @@ function handleCategoryLinkDragLeave(e) {
     }
 }
 
+/**
+ * Kategorie Link Drop Handler
+ */
 function handleCategoryLinkDrop(e) {
     if (draggedLinkData && draggedLinkData.linkData) {
         e.preventDefault();
@@ -2731,10 +3169,131 @@ function handleCategoryLinkDrop(e) {
     }
 }
 
+/**
+ * Hilfsfunktionen für Drag & Drop
+ */
 function areElementsInSameRow(element1, element2) {
     const rect1 = element1.getBoundingClientRect();
     const rect2 = element2.getBoundingClientRect();
     return Math.abs(rect1.top - rect2.top) < 10;
+}
+
+function isElementInGridLayout(element) {
+    const parent = element.parentElement;
+    const computedStyle = window.getComputedStyle(parent);
+    return computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none';
+}
+
+function isCategoryInGridLayout(categoryElement) {
+    const parent = categoryElement.parentElement;
+    const computedStyle = window.getComputedStyle(parent);
+    return (parent.classList.contains('categories-grid-section') || 
+           (computedStyle.display === 'grid' && computedStyle.gridTemplateColumns !== 'none'));
+}
+
+function removeAllDragOverClasses(element) {
+    element.classList.remove(
+        'drag-over', 'drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right',
+        'drag-over-top-left', 'drag-over-bottom-right', 'drag-over-top-right', 'drag-over-bottom-left',
+        'drag-over-center', 'drag-over-before', 'drag-over-after'
+    );
+}
+
+function createDropIndicator(element, position) {
+    const existingIndicator = element.querySelector('.drop-indicator-line');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+
+    const indicator = document.createElement('div');
+    indicator.className = `drop-indicator-line ${position} active`;
+    element.appendChild(indicator);
+    
+    return indicator;
+}
+
+function removeDropIndicator(element) {
+    const indicator = element.querySelector('.drop-indicator-line');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+/**
+ * Temporäre leere Kategorien verwalten
+ */
+function showEmptyCategories() {
+    if (isLinkDragActive) return;
+    
+    cleanupAllTemporaryElements();
+    
+    isLinkDragActive = true;
+    tempEmptyCategories = [];
+    
+    categoryOrder.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (category && category.links.length === 0) {
+            tempEmptyCategories.push(categoryKey);
+        }
+    });
+    
+    if (tempEmptyCategories.length > 0) {
+        addEmptyCategoriesToDom();
+    }
+}
+
+function hideEmptyCategories() {
+    if (!isLinkDragActive) return;
+    cleanupAllTemporaryElements();
+}
+
+function addEmptyCategoriesToDom() {
+    const categoriesWrapper = document.querySelector('.categories-wrapper');
+    if (!categoriesWrapper) return;
+    
+    const emptyGridSection = document.createElement('div');
+    emptyGridSection.className = 'categories-grid-section empty-categories-section';
+    
+    tempEmptyCategories.forEach(categoryKey => {
+        const category = linkCategories[categoryKey];
+        if (!category) return;
+        
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category empty-category';
+        categoryDiv.setAttribute('data-category-key', categoryKey);
+        
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'category-header';
+        
+        const categoryTitle = document.createElement('h2');
+        categoryTitle.className = 'category-title';
+        categoryTitle.innerHTML = `<span class="category-icon">${category.icon}</span> ${category.title}`;
+        
+        categoryHeader.appendChild(categoryTitle);
+        categoryDiv.appendChild(categoryHeader);
+        
+        makeCategoryDroppable(categoryDiv, categoryKey);
+        
+        emptyGridSection.appendChild(categoryDiv);
+    });
+    
+    if (tempEmptyCategories.length > 0) {
+        categoriesWrapper.appendChild(emptyGridSection);
+    }
+}
+
+function cleanupDragAndDrop() {
+    cleanupAllTemporaryElements();
+    
+    document.querySelectorAll('.category').forEach(cat => {
+        cat.classList.remove('link-drag-over');
+        removeAllDragOverClasses(cat);
+        removeDropIndicator(cat);
+    });
+    
+    document.querySelectorAll('.link-item').forEach(link => {
+        removeAllDragOverClasses(link);
+    });
 }
 
 function cleanupAllTemporaryElements() {
@@ -2763,11 +3322,93 @@ function cleanupAllTemporaryElements() {
     }
 }
 
-// Touch-Events für mobile Geräte
-let touchStartY = 0;
-let touchStartX = 0;
-let isTouching = false;
+/**
+ * Auto-Scroll-Funktionen
+ */
+function isPageScrollable() {
+    const documentHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+    );
+    const windowHeight = window.innerHeight;
+    return documentHeight > windowHeight;
+}
 
+function createScrollZones() {
+    if (document.querySelector('.scroll-zone')) return;
+    
+    const topZone = document.createElement('div');
+    topZone.className = 'scroll-zone top';
+    topZone.id = 'scroll-zone-top';
+    document.body.appendChild(topZone);
+    
+    const bottomZone = document.createElement('div');
+    bottomZone.className = 'scroll-zone bottom';
+    bottomZone.id = 'scroll-zone-bottom';
+    document.body.appendChild(bottomZone);
+}
+
+function showScrollZones() {
+    const topZone = document.getElementById('scroll-zone-top');
+    const bottomZone = document.getElementById('scroll-zone-bottom');
+    
+    if (topZone) topZone.classList.add('active');
+    if (bottomZone) bottomZone.classList.add('active');
+}
+
+function showScrollZonesIfNeeded() {
+    if (isPageScrollable()) {
+        createScrollZones();
+        showScrollZones();
+    }
+}
+
+function hideScrollZones() {
+    const topZone = document.getElementById('scroll-zone-top');
+    const bottomZone = document.getElementById('scroll-zone-bottom');
+    
+    if (topZone) topZone.classList.remove('active');
+    if (bottomZone) bottomZone.classList.remove('active');
+}
+
+function removeScrollZones() {
+    const zones = document.querySelectorAll('.scroll-zone');
+    zones.forEach(zone => zone.remove());
+}
+
+function startAutoScroll() {
+    if (autoScrollInterval) return;
+    
+    autoScrollInterval = setInterval(() => {
+        if (!isDragging) {
+            stopAutoScroll();
+            return;
+        }
+        
+        const scrollZoneSize = 100;
+        const scrollSpeed = 15;
+        const windowHeight = window.innerHeight;
+        
+        if (currentMouseY < scrollZoneSize) {
+            const intensity = (scrollZoneSize - currentMouseY) / scrollZoneSize;
+            window.scrollBy(0, -scrollSpeed * intensity);
+        } else if (currentMouseY > windowHeight - scrollZoneSize) {
+            const intensity = (currentMouseY - (windowHeight - scrollZoneSize)) / scrollZoneSize;
+            window.scrollBy(0, scrollSpeed * intensity);
+        }
+    }, 16);
+}
+
+function stopAutoScroll() {
+    if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+    }
+}
+
+/**
+ * Touch-Events für mobile Geräte
+ */
 function handleTouchStart(e) {
     if (e.target.classList.contains('drag-handle')) {
         isTouching = true;
@@ -2837,28 +3478,13 @@ function handleTouchEnd(e) {
     draggedCategoryKey = null;
 }
 
-// Menü-Funktionalität
-function toggleMenu() {
-    const submenu = document.getElementById('menuSubmenu');
-    const menuButton = document.getElementById('mainMenuButton');
-    
-    if (submenu.classList.contains('active')) {
-        submenu.classList.remove('active');
-        menuButton.classList.remove('active');
-    } else {
-        submenu.classList.add('active');
-        menuButton.classList.add('active');
-    }
-}
+// ========================================================================
+// 12. KONTEXT-MENÜS
+// ========================================================================
 
-function closeMenu() {
-    const submenu = document.getElementById('menuSubmenu');
-    const menuButton = document.getElementById('mainMenuButton');
-    submenu.classList.remove('active');
-    menuButton.classList.remove('active');
-}
-
-// Kontextmenü-Funktionen
+/**
+ * Link-Kontextmenü anzeigen
+ */
 function showContextMenu(event, categoryKey, linkIndex) {
     event.preventDefault();
     event.stopPropagation();
@@ -2887,6 +3513,9 @@ function showContextMenu(event, categoryKey, linkIndex) {
     return false;
 }
 
+/**
+ * Kategorie-Kontextmenü anzeigen
+ */
 function showCategoryContextMenu(event, categoryKey) {
     event.preventDefault();
     event.stopPropagation();
@@ -2911,6 +3540,9 @@ function showCategoryContextMenu(event, categoryKey) {
     return false;
 }
 
+/**
+ * Kontextmenüs verstecken
+ */
 function hideContextMenu() {
     const contextMenu = document.getElementById('contextMenu');
     const categoryContextMenu = document.getElementById('categoryContextMenu');
@@ -2920,200 +3552,13 @@ function hideContextMenu() {
     currentContextCategory = null;
 }
 
-function editLink() {
-    if (!currentContextLink) return;
-    
-    const { categoryKey, linkIndex } = currentContextLink;
-    const link = linkCategories[categoryKey].links[linkIndex];
-    
-    isEditMode = true;
-    currentEditingLink = { categoryKey, linkIndex };
-    
-    document.getElementById('linkCategory').value = categoryKey;
-    document.getElementById('linkTitle').value = link.title;
-    document.getElementById('linkUrl').value = link.url;
-    document.getElementById('linkDescription').value = link.description;
-    document.getElementById('linkIcon').value = link.icon;
-    document.getElementById('linkFavorite').checked = link.favorite || false;
-    
-    document.querySelector('#linkModal h2').textContent = 'Link bearbeiten';
-    document.querySelector('#linkModal .btn-primary').textContent = 'Speichern';
-    
-    document.getElementById('linkCategoryGroup').style.display = 'none';
-    document.getElementById('linkCategory').removeAttribute('required');
-    
-    hideContextMenu();
-    populateCategorySelect();
-    document.getElementById('linkModal').style.display = 'block';
-    
-    // WICHTIG: UI nach dem Setzen der Werte aktualisieren
-    setTimeout(() => {
-        updateFavoritesCheckboxUI();
-    }, 50);
-}
+// ========================================================================
+// 13. USER INTERFACE & RENDERING
+// ========================================================================
 
-
-function deleteLink() {
-    if (!currentContextLink) return;
-    
-    const { categoryKey, linkIndex } = currentContextLink;
-    const link = linkCategories[categoryKey].links[linkIndex];
-    const category = linkCategories[categoryKey];
-    
-    if (confirm(`Möchten Sie den Link "${link.title}" wirklich löschen?`)) {
-        linkCategories[categoryKey].links.splice(linkIndex, 1);
-        
-        if (category.links.length === 0) {
-            showEmptyCategoryModal({
-                action: 'delete',
-                linkTitle: link.title,
-                sourceTitle: category.title,
-                sourceCategoryKey: categoryKey
-            });
-        } else {
-            sortCategoriesEmptyLast();
-            showMessage('Link erfolgreich gelöscht', 'success');
-            
-            saveConfig(true);
-            renderCategories();
-            updateFavoritesCount();
-        }
-    }
-    
-    hideContextMenu();
-}
-
-// Kategorie-Verwaltung
-function editCategory() {
-    if (!currentContextCategory) return;
-    
-    const category = linkCategories[currentContextCategory];
-    
-    isCategoryEditMode = true;
-    currentEditingCategory = currentContextCategory;
-    
-    document.getElementById('categoryTitle').value = category.title;
-    document.getElementById('categoryIcon').value = category.icon;
-    
-    document.querySelector('#categoryModal h2').textContent = 'Kategorie bearbeiten';
-    document.querySelector('#categoryModal .btn-primary').textContent = 'Speichern';
-    
-    hideContextMenu();
-    document.getElementById('categoryModal').style.display = 'block';
-}
-
-function deleteCategory() {
-    if (!currentContextCategory) return;
-    
-    const category = linkCategories[currentContextCategory];
-    const linkCount = category.links.length;
-    
-    let confirmMessage = `Möchten Sie die Kategorie "${category.title}" wirklich löschen?`;
-    if (linkCount > 0) {
-        confirmMessage += `\n\nWichtig: Diese Kategorie enthält ${linkCount} Link${linkCount > 1 ? 's' : ''}. Diese werden ebenfalls gelöscht!`;
-    }
-    
-    if (confirm(confirmMessage)) {
-        delete linkCategories[currentContextCategory];
-        categoryOrder = categoryOrder.filter(key => key !== currentContextCategory);
-        
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
-        showMessage('Kategorie erfolgreich gelöscht', 'success');
-    }
-    
-    hideContextMenu();
-}
-
-function openCategoryModal() {
-    closeMenu();
-    
-    if (!isCategoryEditMode) {
-        document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
-        document.querySelector('#categoryModal .btn-primary').textContent = 'Erstellen';
-        document.getElementById('categoryForm').reset();
-        currentEditingCategory = null;
-    }
-    
-    document.getElementById('categoryModal').style.display = 'block';
-}
-
-function closeCategoryModal() {
-    document.getElementById('categoryModal').style.display = 'none';
-    document.getElementById('categoryForm').reset();
-    
-    isCategoryEditMode = false;
-    currentEditingCategory = null;
-    document.querySelector('#categoryModal h2').textContent = 'Neue Kategorie erstellen';
-    document.querySelector('#categoryModal .btn-primary').textContent = 'Erstellen';
-}
-
-function openModal() {
-    closeMenu();
-    
-    if (!isEditMode) {
-        document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
-        document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
-        document.getElementById('linkForm').reset();
-        currentEditingLink = null;
-        
-        document.getElementById('linkCategoryGroup').style.display = 'block';
-        document.getElementById('linkCategory').setAttribute('required', 'required');
-        
-        // WICHTIG: Favoriten-Checkbox zurücksetzen
-        document.getElementById('linkFavorite').checked = false;
-        updateFavoritesCheckboxUI();
-    }
-    
-    populateCategorySelect();
-    document.getElementById('linkModal').style.display = 'block';
-    
-    // Nach dem Öffnen nochmal aktualisieren
-    setTimeout(() => {
-        updateFavoritesCheckboxUI();
-    }, 50);
-}
-
-function closeModal() {
-    document.getElementById('linkModal').style.display = 'none';
-    document.getElementById('linkForm').reset();
-    
-    document.getElementById('linkCategoryGroup').style.display = 'block';
-    document.getElementById('linkCategory').setAttribute('required', 'required');
-    
-    isEditMode = false;
-    currentEditingLink = null;
-    document.querySelector('#linkModal h2').textContent = 'Neuen Link hinzufügen';
-    document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
-    
-    // WICHTIG: Favoriten-Checkbox zurücksetzen
-    document.getElementById('linkFavorite').checked = false;
-    updateFavoritesCheckboxUI();
-}
-
-function populateCategorySelect() {
-    const select = document.getElementById('linkCategory');
-    select.innerHTML = '<option value="">Kategorie auswählen</option>';
-    
-    categoryOrder.forEach(categoryKey => {
-        if (linkCategories[categoryKey]) {
-            const category = linkCategories[categoryKey];
-            const option = document.createElement('option');
-            option.value = categoryKey;
-            option.textContent = category.title;
-            select.appendChild(option);
-        }
-    });
-}
-
-function cleanupEventListeners() {
-    document.querySelectorAll('.link-drag-handle').forEach(handle => {
-        handle.removeEventListener('dragstart', handleLinkDragStart);
-        handle.removeEventListener('dragend', handleLinkDragEnd);
-    });
-}
-
+/**
+ * Kategorien rendern
+ */
 function renderCategories() {
     cleanupEventListeners(); // Aufräumen
 
@@ -3159,6 +3604,9 @@ function renderCategories() {
     container.addEventListener('touchend', handleTouchEnd, { passive: false });
 }
 
+/**
+ * Kategorie-Element erstellen
+ */
 function createCategoryElement(categoryKey, category) {
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'category';
@@ -3250,173 +3698,301 @@ function createCategoryElement(categoryKey, category) {
     return categoryDiv;
 }
 
-// Form Event Handlers
-document.getElementById('linkForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const title = document.getElementById('linkTitle').value;
-    const url = document.getElementById('linkUrl').value;
-    const description = document.getElementById('linkDescription').value;
-    const icon = document.getElementById('linkIcon').value.trim() || '🔗';
-    const favorite = document.getElementById('linkFavorite').checked;
-    
-    if (isEditMode && currentEditingLink) {
-        const { categoryKey, linkIndex } = currentEditingLink;
-        linkCategories[categoryKey].links[linkIndex] = { title, url, description, icon, favorite };
-        saveConfig(true);
-        showMessage('Link erfolgreich bearbeitet', 'success');
-        renderCategories();
-        updateFavoritesCount();
-        closeModal();
-    } else {
-        const category = document.getElementById('linkCategory').value;
-        
-        if (!category) {
-            alert('Bitte wähle eine Kategorie aus!');
-            return;
-        }
-        
-        linkCategories[category].links.push({ title, url, description, icon, favorite });
-        
-        sortCategoriesEmptyLast();
-        
-        saveConfig(true);
-        showMessage('Link erfolgreich hinzugefügt', 'success');
-        renderCategories();
-        updateFavoritesCount();
-        closeModal();
-    }
-});
+/**
+ * Event-Listener für Links aufräumen
+ */
+function cleanupEventListeners() {
+    document.querySelectorAll('.link-drag-handle').forEach(handle => {
+        handle.removeEventListener('dragstart', handleLinkDragStart);
+        handle.removeEventListener('dragend', handleLinkDragEnd);
+    });
+}
 
-document.getElementById('categoryForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const title = document.getElementById('categoryTitle').value;
-    const icon = document.getElementById('categoryIcon').value.trim() || '📁';
-    
-    if (isCategoryEditMode && currentEditingCategory) {
-        linkCategories[currentEditingCategory].title = title;
-        linkCategories[currentEditingCategory].icon = icon;
-        saveConfig(true);
-        showMessage('Kategorie erfolgreich bearbeitet', 'success');
-    } else {
-        const categoryKey = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        
-        if (linkCategories[categoryKey]) {
-            alert('Eine Kategorie mit diesem Namen existiert bereits!');
-            return;
-        }
-        
-        linkCategories[categoryKey] = {
-            title: title,
-            icon: icon,
-            collapsed: false,
-            links: []
-        };
-        
-        categoryOrder.push(categoryKey);
-        
-        sortCategoriesEmptyLast();
-        
-        saveConfig(true);
-        showMessage('Kategorie erfolgreich erstellt', 'success');
-    }
-    
-    renderCategories();
-    populateCategorySelect();
-    updateFavoritesCount();
-    closeCategoryModal();
-});
+// ========================================================================
+// 14. MENÜ-SYSTEM & NAVIGATION
+// ========================================================================
 
-// Modal und Menü schließen beim Klick außerhalb
-window.onclick = function(event) {
-    const modal = document.getElementById('linkModal');
-    const categoryModal = document.getElementById('categoryModal');
-    const categorySelectModal = document.getElementById('categorySelectModal');
-    const emptyCategoryModal = document.getElementById('emptyCategoryModal');
+/**
+ * Hauptmenü ein-/ausblenden
+ */
+function toggleMenu() {
     const submenu = document.getElementById('menuSubmenu');
     const menuButton = document.getElementById('mainMenuButton');
-    const contextMenu = document.getElementById('contextMenu');
-    const categoryContextMenu = document.getElementById('categoryContextMenu');
-    const favoritesList = document.getElementById('favoritesList');
-    const favoritesToggle = document.getElementById('favoritesToggle');
     
-    if (event.target === modal) {
-        closeModal();
-    }
-    
-    if (event.target === categoryModal) {
-        closeCategoryModal();
-    }
-    
-    if (event.target === categorySelectModal) {
-        closeCategorySelectModal();
-    }
-    
-    if (event.target === emptyCategoryModal) {
-        closeEmptyCategoryModal();
-    }
-    
-    if (!submenu.contains(event.target) && !menuButton.contains(event.target)) {
-        closeMenu();
-    }
-    
-    if (!contextMenu.contains(event.target) && !categoryContextMenu.contains(event.target)) {
-        hideContextMenu();
-    }
-    
-    // Favoriten schließen wenn außerhalb geklickt
-    if (!favoritesList.contains(event.target) && !favoritesToggle.contains(event.target)) {
-        if (favoritesOpen) {
-            toggleFavorites();
-        }
+    if (submenu.classList.contains('active')) {
+        submenu.classList.remove('active');
+        menuButton.classList.remove('active');
+    } else {
+        submenu.classList.add('active');
+        menuButton.classList.add('active');
     }
 }
 
-// Sicherheits-Cleanup beim Klicken außerhalb von Drag-Bereichen
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.drag-handle') && 
-        !event.target.closest('.link-drag-handle') && 
-        !event.target.closest('.category.empty-category')) {
+/**
+ * Menü schließen
+ */
+function closeMenu() {
+    const submenu = document.getElementById('menuSubmenu');
+    const menuButton = document.getElementById('mainMenuButton');
+    submenu.classList.remove('active');
+    menuButton.classList.remove('active');
+}
+
+// ========================================================================
+// 15. STATUS-NACHRICHTEN
+// ========================================================================
+
+/**
+ * Status-Nachricht anzeigen
+ */
+function showMessage(message, type) {
+    const messageEl = document.getElementById('statusMessage');
+    messageEl.className = `status-message status-${type}`;
+    
+    // Unterscheide zwischen einfachen und wichtigen Nachrichten
+    if (typeof message === 'object') {
+        messageEl.classList.add('important');
+        messageEl.innerHTML = `
+            <div class="status-title">${message.title}</div>
+            <div class="status-content">${message.content}</div>
+        `;
+    } else {
+        messageEl.textContent = message;
+    }
+    
+    // Toast anzeigen
+    setTimeout(() => {
+        messageEl.classList.add('show');
+    }, 100);
+    
+    // Toast nach längerer Zeit ausblenden wenn wichtig
+    const duration = messageEl.classList.contains('important') ? 6000 : 3000;
+    setTimeout(() => {
+        messageEl.classList.remove('show');
+    }, duration);
+}
+
+// ========================================================================
+// 16. EVENT-HANDLER & INITIALISIERUNG
+// ========================================================================
+
+/**
+ * Form Event Handlers
+ */
+function setupFormHandlers() {
+    // Link-Form Handler
+    document.getElementById('linkForm').addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        if (document.querySelectorAll('.category.empty-category').length > 0) {
+        const title = document.getElementById('linkTitle').value;
+        const url = document.getElementById('linkUrl').value;
+        const description = document.getElementById('linkDescription').value;
+        const icon = document.getElementById('linkIcon').value.trim() || '🔗';
+        const favorite = document.getElementById('linkFavorite').checked;
+        
+        if (isEditMode && currentEditingLink) {
+            const { categoryKey, linkIndex } = currentEditingLink;
+            linkCategories[categoryKey].links[linkIndex] = { title, url, description, icon, favorite };
+            saveConfig(true);
+            showMessage('Link erfolgreich bearbeitet', 'success');
+            renderCategories();
+            updateFavoritesCount();
+            closeModal();
+        } else {
+            const category = document.getElementById('linkCategory').value;
+            
+            if (!category) {
+                alert('Bitte wähle eine Kategorie aus!');
+                return;
+            }
+            
+            linkCategories[category].links.push({ title, url, description, icon, favorite });
+            
+            sortCategoriesEmptyLast();
+            
+            saveConfig(true);
+            showMessage('Link erfolgreich hinzugefügt', 'success');
+            renderCategories();
+            updateFavoritesCount();
+            closeModal();
+        }
+    });
+
+    // Kategorie-Form Handler
+    document.getElementById('categoryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('categoryTitle').value;
+        const icon = document.getElementById('categoryIcon').value.trim() || '📁';
+        
+        if (isCategoryEditMode && currentEditingCategory) {
+            linkCategories[currentEditingCategory].title = title;
+            linkCategories[currentEditingCategory].icon = icon;
+            saveConfig(true);
+            showMessage('Kategorie erfolgreich bearbeitet', 'success');
+        } else {
+            const categoryKey = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            
+            if (linkCategories[categoryKey]) {
+                alert('Eine Kategorie mit diesem Namen existiert bereits!');
+                return;
+            }
+            
+            linkCategories[categoryKey] = {
+                title: title,
+                icon: icon,
+                collapsed: false,
+                links: []
+            };
+            
+            categoryOrder.push(categoryKey);
+            
+            sortCategoriesEmptyLast();
+            
+            saveConfig(true);
+            showMessage('Kategorie erfolgreich erstellt', 'success');
+        }
+        
+        renderCategories();
+        populateCategorySelect();
+        updateFavoritesCount();
+        closeCategoryModal();
+    });
+}
+
+/**
+ * Globale Event-Listener einrichten
+ */
+function setupGlobalEventListeners() {
+    // Modal und Menü schließen beim Klick außerhalb
+    window.onclick = function(event) {
+        const modal = document.getElementById('linkModal');
+        const categoryModal = document.getElementById('categoryModal');
+        const categorySelectModal = document.getElementById('categorySelectModal');
+        const emptyCategoryModal = document.getElementById('emptyCategoryModal');
+        const submenu = document.getElementById('menuSubmenu');
+        const menuButton = document.getElementById('mainMenuButton');
+        const contextMenu = document.getElementById('contextMenu');
+        const categoryContextMenu = document.getElementById('categoryContextMenu');
+        const favoritesList = document.getElementById('favoritesList');
+        const favoritesToggle = document.getElementById('favoritesToggle');
+        
+        if (event.target === modal) {
+            closeModal();
+        }
+        
+        if (event.target === categoryModal) {
+            closeCategoryModal();
+        }
+        
+        if (event.target === categorySelectModal) {
+            closeCategorySelectModal();
+        }
+        
+        if (event.target === emptyCategoryModal) {
+            closeEmptyCategoryModal();
+        }
+        
+        if (!submenu.contains(event.target) && !menuButton.contains(event.target)) {
+            closeMenu();
+        }
+        
+        if (!contextMenu.contains(event.target) && !categoryContextMenu.contains(event.target)) {
+            hideContextMenu();
+        }
+        
+        // Favoriten schließen wenn außerhalb geklickt
+        if (!favoritesList.contains(event.target) && !favoritesToggle.contains(event.target)) {
+            if (favoritesOpen) {
+                toggleFavorites();
+            }
+        }
+    }
+
+    // Sicherheits-Cleanup beim Klicken außerhalb von Drag-Bereichen
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.drag-handle') && 
+            !event.target.closest('.link-drag-handle') && 
+            !event.target.closest('.category.empty-category')) {
+            
+            if (document.querySelectorAll('.category.empty-category').length > 0) {
+                cleanupAllTemporaryElements();
+            }
+        }
+    });
+
+    // Escape-Taste zum Schließen
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeCategoryModal();
+            closeCategorySelectModal();
+            closeEmptyCategoryModal();
+            closeMenu();
+            hideContextMenu();
+            
+            if (isSearchOpen) {
+                closeSearchModal();
+            }
+            
+            if (favoritesOpen) {
+                toggleFavorites();
+            }
+            
+            if (isDragging) {
+                isDragging = false;
+                stopAutoScroll();
+                hideScrollZones();
+                setTimeout(removeScrollZones, 300);
+            }
+            
             cleanupAllTemporaryElements();
         }
-    }
-});
+    }); 
 
-// Escape-Taste zum Schließen
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeModal();
-        closeCategoryModal();
-        closeCategorySelectModal();
-        closeEmptyCategoryModal();
-        closeMenu();
-        hideContextMenu();
-        
-        if (isSearchOpen) {
-            closeSearchModal();
-        }
-        
-        if (favoritesOpen) {
-            toggleFavorites();
-        }
-        
+    // Globale Maus-Tracking für Auto-Scroll
+    document.addEventListener('dragover', function(e) {
         if (isDragging) {
-            isDragging = false;
-            stopAutoScroll();
-            hideScrollZones();
-            setTimeout(removeScrollZones, 300);
+            currentMouseY = e.clientY;
+            
+            const scrollZoneSize = 100;
+            const windowHeight = window.innerHeight;
+            
+            if (currentMouseY < scrollZoneSize || currentMouseY > windowHeight - scrollZoneSize) {
+                startAutoScroll();
+            } else {
+                stopAutoScroll();
+            }
         }
-        
-        cleanupAllTemporaryElements();
-    }
-}); 
+    });
 
-// Beim Laden der Seite die Konfiguration laden und Kategorien rendern
-// Fix nach dem Laden um Link-Drag-Probleme zu beheben
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('dragend', function(e) {
+        isDragging = false;
+        stopAutoScroll();
+        hideScrollZones();
+    });
+
+    // Emoji-Picker schließen wenn außerhalb geklickt wird
+    document.addEventListener('click', function(event) {
+        const picker = event.target.closest('.emoji-picker');
+        const trigger = event.target.closest('.emoji-trigger');
+        
+        if (!picker && !trigger && currentPickerElement) {
+            currentPickerElement.classList.remove('active');
+            const activeTrigger = document.querySelector('.emoji-trigger.active');
+            if (activeTrigger) {
+                activeTrigger.classList.remove('active');
+            }
+            currentPickerTarget = null;
+            currentPickerElement = null;
+        }
+    });
+}
+
+/**
+ * Favoriten-Checkbox UI einrichten
+ */
+function setupFavoritesCheckbox() {
     const checkbox = document.getElementById('linkFavorite');
     const group = document.getElementById('favoritesGroup');
     
@@ -3441,15 +4017,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+}
+
+/**
+ * Hauptinitialisierung beim Laden der Seite
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Favoriten-Checkbox UI einrichten
+    setupFavoritesCheckbox();
     
-    // Rest deines bestehenden DOMContentLoaded Codes...
+    // Warten auf andere Scripts
     setTimeout(() => {
         loadConfig();
         renderCategories();
         initializeSearch();
         updateFavoritesCount();
+        setupFormHandlers();
+        setupGlobalEventListeners();
     }, 100);
 
+    // Link-Drag-Handler nach kurzer Verzögerung einrichten
     setTimeout(() => {
         const allHandles = document.querySelectorAll('.link-drag-handle');
         
@@ -3464,3 +4051,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 500);
 });
+
+// ========================================================================
+// ENDE DER STRUKTURIERTEN SCRIPT.JS
+// ========================================================================

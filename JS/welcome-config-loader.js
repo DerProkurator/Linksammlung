@@ -140,7 +140,7 @@ class ExtendedWelcomeLoader {
             <div class="modal" id="welcomeModal" style="display: block;">
                 <div class="modal-content" style="max-width: 600px;">
                     <h2 style="text-align: center; margin-bottom: 25px; line-height: 1.4; color: #40e0d0; font-size: 1.8em;">
-                        🚀 Willkommen zu Ihrer Linksammlung!
+                        <span class="modal-emoji">🚀</span> Willkommen zu Ihrer Linksammlung!
                     </h2>
                     
                     ${configInfoSection}
