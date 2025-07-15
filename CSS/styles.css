@@ -1,5 +1,5 @@
 /* ========================================================================
-   LINKSAMMLUNG - STRUKTURIERTE STYLES v2.4
+   LINKSAMMLUNG - STRUKTURIERTE STYLES v2.5
    ========================================================================
    
    Struktur:
@@ -866,6 +866,12 @@ h1 {
     z-index: 1;
     cursor: pointer;
     flex: 1;
+}
+
+.favorites-label-content .favorites-icon,
+.favorites-label-content .favorites-text {
+    display: inline-block !important;
+    vertical-align: middle !important;
 }
 
 .favorites-icon {
@@ -1916,12 +1922,14 @@ h1 {
     aspect-ratio: 1;
     position: relative;
     min-height: 28px;
+    z-index: 1;
 }
 
 .emoji-item:hover {
     background: rgba(64, 224, 208, 0.15);
     border-color: rgba(64, 224, 208, 0.5);
     transform: scale(1.05);
+    z-index: 1300; 
 }
 
 .emoji-item:active {
@@ -1930,7 +1938,7 @@ h1 {
 
 .emoji-tooltip {
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.95);
@@ -1942,8 +1950,8 @@ h1 {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
-    z-index: 1003;
-    margin-bottom: 2px;
+    z-index: 1400;
+    margin-top: 2px;
 }
 
 .emoji-item:hover .emoji-tooltip {
@@ -1956,6 +1964,7 @@ h1 {
     color: rgba(240, 240, 240, 0.6);
     font-size: 12px;
 }
+
 
 /* ========================================================================
    10. CONTEXT-MENÜS

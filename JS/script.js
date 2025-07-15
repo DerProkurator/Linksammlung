@@ -111,174 +111,7 @@ let favoritesOpen = false;
 // ========================================================================
 
 // Emoji-Datenbank mit Kategorien
-const emojiDatabase = {
-    'devices_hardware': {
-        name: 'Geräte & Hardware',
-        icon: '💻',
-        emojis: [
-            { emoji: '💻', name: 'Laptop' },
-            { emoji: '🖥️', name: 'Desktop-PC' },
-            { emoji: '🖨️', name: 'Drucker' },
-            { emoji: '⌨️', name: 'Tastatur' },
-            { emoji: '🖱️', name: 'Maus' },
-            { emoji: '🖲️', name: 'Trackball' },
-            { emoji: '📱', name: 'Smartphone' },
-            { emoji: '📲', name: 'Handy mit Pfeil' },
-            { emoji: '📞', name: 'Telefon' },
-            { emoji: '📟', name: 'Pager' },
-            { emoji: '💾', name: 'Diskette' },
-            { emoji: '💿', name: 'CD' },
-            { emoji: '📀', name: 'DVD' },
-            { emoji: '🔋', name: 'Akku' },
-            { emoji: '🔌', name: 'Stecker' },
-            { emoji: '📡', name: 'Satellitenschüssel' },
-            { emoji: '🛰️', name: 'Satellit' }
-        ]
-    },
-    'development': {
-        name: 'Entwicklung & Tools',
-        icon: '🧑‍💻',
-        emojis: [
-            { emoji: '👨‍💻', name: 'Entwickler (männlich)' },
-            { emoji: '👩‍💻', name: 'Entwicklerin (weiblich)' },
-            { emoji: '🧑‍💻', name: 'Programmierer' },
-            { emoji: '🪲', name: 'Bug' },
-            { emoji: '🔧', name: 'Schraubenschlüssel' },
-            { emoji: '🔨', name: 'Hammer' },
-            { emoji: '⚙️', name: 'Zahnrad' },
-            { emoji: '🧰', name: 'Werkzeugkasten' },
-            { emoji: '🪛', name: 'Schraubenzieher' },
-            { emoji: '🔬', name: 'Mikroskop (Analyse)' },
-            { emoji: '🧪', name: 'Test (Labor)' },
-            { emoji: '📋', name: 'Zwischenablage' },
-            { emoji: '📑', name: 'Registerkarte' },
-            { emoji: '🗃️', name: 'Ablage' },
-            { emoji: '🗄️', name: 'Aktenschrank' }
-        ]
-    },
-    'internet_communication': {
-        name: 'Internet & Kommunikation',
-        icon: '🌐',
-        emojis: [
-            { emoji: '🌐', name: 'Internet' },
-            { emoji: '🔗', name: 'Link' },
-            { emoji: '🔖', name: 'Lesezeichen' },
-            { emoji: '📎', name: 'Büroklammer' },
-            { emoji: '📧', name: 'E-Mail' },
-            { emoji: '📨', name: 'E-Mail eingehend' },
-            { emoji: '📩', name: 'E-Mail ausgehend' },
-            { emoji: '📤', name: 'Upload' },
-            { emoji: '📥', name: 'Download' },
-            { emoji: '🆙', name: 'Hochladen' },
-            { emoji: '📶', name: 'WLAN/Signal' },
-            { emoji: '🗨️', name: 'Sprechblase' },
-            { emoji: '💬', name: 'Chat' },
-            { emoji: '📲', name: 'Mobiler Zugriff' },
-            { emoji: '🛜', name: 'Netzwerkanschluss' }
-        ]
-    },
-    'security': {
-        name: 'Sicherheit & Verschlüsselung',
-        icon: '🔒',
-        emojis: [
-            { emoji: '🔒', name: 'Schloss geschlossen' },
-            { emoji: '🔓', name: 'Schloss offen' },
-            { emoji: '🔐', name: 'Schloss mit Schlüssel' },
-            { emoji: '🗝️', name: 'Schlüssel' },
-            { emoji: '🛡️', name: 'Schild' },
-            { emoji: '🚨', name: 'Alarm' },
-            { emoji: '🧱', name: 'Firewall' },
-            { emoji: '🪪', name: 'Zugangskarte' }
-        ]
-    },
-    'files_media': {
-        name: 'Dateien & Medien',
-        icon: '📁',
-        emojis: [
-            { emoji: '📝', name: 'Notiz' },
-            { emoji: '📄', name: 'Dokument' },
-            { emoji: '📃', name: 'Papierrolle' },
-            { emoji: '📜', name: 'Pergament' },
-            { emoji: '📊', name: 'Balkendiagramm' },
-            { emoji: '📈', name: 'Aufwärtstrend' },
-            { emoji: '📉', name: 'Abwärtstrend' },
-            { emoji: '📂', name: 'Ordner offen' },
-            { emoji: '📁', name: 'Ordner geschlossen' },
-            { emoji: '🗑️', name: 'Papierkorb' },
-            { emoji: '💡', name: 'Idee' },
-            { emoji: '🎥', name: 'Video' },
-            { emoji: '🎧', name: 'Audio' },
-            { emoji: '🎤', name: 'Mikrofon' },
-            { emoji: '📷', name: 'Kamera' }
-        ]
-    },
-    'admin_infrastructure': {
-        name: 'Administration & Infrastruktur',
-        icon: '🖧',
-        emojis: [
-            { emoji: '🖧', name: 'Netzwerk' },
-            { emoji: '🗼', name: 'Funkmast' },
-            { emoji: '☁️', name: 'Cloud' },
-            { emoji: '🔄', name: 'Synchronisierung' },
-            { emoji: '🔃', name: 'Rotation / Refresh' },
-            { emoji: '🪟', name: 'Fenster / VM' },
-            { emoji: '📊', name: 'Monitoring' },
-            { emoji: '🪄', name: 'Automatisierung / Magic' }
-        ]
-    },
-    'alerts_status': {
-        name: 'Warnungen & Status',
-        icon: '⚠️',
-        emojis: [
-            { emoji: '⚠️', name: 'Warnung' },
-            { emoji: '❗', name: 'Wichtig' },
-            { emoji: '❓', name: 'Frage' },
-            { emoji: '🔥', name: 'Kritisch / Brand' },
-            { emoji: '🚫', name: 'Verboten / Blockiert' },
-            { emoji: '🆘', name: 'Notfall / Hilfe' },
-            { emoji: '💣', name: 'Crash' },
-            { emoji: '💥', name: 'Explosion / Fehler' },
-            { emoji: '♻️', name: 'Wiederherstellung / Recycling' }
-        ]
-    },
-    'ui_ux': {
-        name: 'UI & Interaktion',
-        icon: '🖱️',
-        emojis: [
-            { emoji: '🖱️', name: 'Maus' },
-            { emoji: '🔘', name: 'Radio Button' },
-            { emoji: '🗳️', name: 'Auswahlfeld' },
-            { emoji: '🎛️', name: 'Regler' },
-            { emoji: '🎚️', name: 'Schieberegler' },
-            { emoji: '⏺️', name: 'Aufnahme' },
-            { emoji: '▶', name: 'Play' },
-            { emoji: '⏸️', name: 'Pause' },
-            { emoji: '⏹️', name: 'Stop' },
-            { emoji: '⏭️', name: 'Nächster' },
-            { emoji: '⏮️', name: 'Vorheriger' }
-        ]
-    },
-    'crypto_finance': {
-        name: 'Krypto & Finanzen',
-        icon: '💰',
-        emojis: [
-            { emoji: '💰', name: 'Geldsack' },
-            { emoji: '💸', name: 'Fliegendes Geld' },
-            { emoji: '💳', name: 'Kreditkarte' },
-            { emoji: '💲', name: 'Dollar-Zeichen' },
-            { emoji: '💱', name: 'Währungsumtausch' },
-            { emoji: '💹', name: 'Aktiengewinn' },
-            { emoji: '🪙', name: 'Münze' },
-            { emoji: '🏦', name: 'Bank' },
-            { emoji: '📈', name: 'Kursanstieg' },
-            { emoji: '📉', name: 'Kursabfall' },
-            { emoji: '🔗', name: 'Blockchain-Link' },
-            { emoji: '🪙', name: 'Kryptowährung (Symbolisch)' },
-            { emoji: '🧾', name: 'Quittung / Abrechnung' },
-            { emoji: '💼', name: 'Aktenkoffer / Finanzen' }
-        ]
-    }
-};
+// Wurde erweitert und ausgelagert in eine eigene Datei (emoji-database.js)
 
 // Aktuelle Picker-Instanz
 let currentPickerTarget = null;
@@ -2376,10 +2209,10 @@ function initEmojiPicker(inputId) {
     
     // Kategorien erstellen
     categoriesContainer.innerHTML = '';
-    const categoryKeys = Object.keys(emojiDatabase);
+    const categoryKeys = Object.keys(EMOJI_DATABASE);
     
     categoryKeys.forEach((categoryKey, index) => {
-        const category = emojiDatabase[categoryKey];
+        const category = EMOJI_DATABASE[categoryKey];
         const categoryBtn = document.createElement('div');
         categoryBtn.className = 'emoji-category-btn';
         categoryBtn.innerHTML = category.icon;
@@ -2411,14 +2244,14 @@ function showEmojiCategory(categoryKey, inputId) {
     });
     
     const activeBtn = Array.from(categoriesContainer.children).find(btn => 
-        btn.innerHTML === emojiDatabase[categoryKey].icon
+        btn.innerHTML === EMOJI_DATABASE[categoryKey].icon
     );
     if (activeBtn) {
         activeBtn.classList.add('active');
     }
     
     // Emojis anzeigen
-    const category = emojiDatabase[categoryKey];
+    const category = EMOJI_DATABASE[categoryKey];
     gridContainer.innerHTML = '';
     
     category.emojis.forEach(emojiData => {
@@ -2458,24 +2291,71 @@ function selectEmoji(emoji, inputId) {
 function searchEmojis(query, pickerId) {
     const inputId = pickerId.replace('Picker', '');
     const gridContainer = document.getElementById(inputId + 'Grid');
+    const categoriesContainer = document.getElementById(inputId + 'Categories');
     
-    if (!query.trim()) {
-        // Wenn keine Suche, erste Kategorie anzeigen
-        const firstCategory = Object.keys(emojiDatabase)[0];
-        showEmojiCategory(firstCategory, inputId);
+    if (!gridContainer) {
+        console.error('Grid container nicht gefunden:', inputId + 'Grid');
         return;
+    }
+    
+    // Prüfen ob EMOJI_DATABASE existiert
+    if (typeof EMOJI_DATABASE === 'undefined' || !EMOJI_DATABASE) {
+        console.error('EMOJI_DATABASE nicht verfügbar');
+        gridContainer.innerHTML = '<div class="emoji-no-results">Emoji-Datenbank nicht verfügbar</div>';
+        return;
+    }
+    
+    // Wenn keine Suche, erste Kategorie anzeigen
+    if (!query || !query.trim()) {
+        const firstCategory = Object.keys(EMOJI_DATABASE)[0];
+        if (firstCategory) {
+            showEmojiCategory(firstCategory, inputId);
+        }
+        return;
+    }
+    
+    // Alle Kategorie-Buttons deaktivieren
+    if (categoriesContainer) {
+        categoriesContainer.querySelectorAll('.emoji-category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
     }
     
     // Alle Emojis durchsuchen
     const results = [];
-    Object.values(emojiDatabase).forEach(category => {
-        category.emojis.forEach(emojiData => {
-            if (emojiData.name.toLowerCase().includes(query.toLowerCase()) ||
-                emojiData.emoji.includes(query)) {
-                results.push(emojiData);
+    const queryLower = query.toLowerCase();
+    
+    try {
+        Object.values(EMOJI_DATABASE).forEach(category => {
+            if (category && category.emojis && Array.isArray(category.emojis)) {
+                category.emojis.forEach(emojiData => {
+                    // Vollständige Null-Checks für alle Eigenschaften
+                    if (emojiData && 
+                        typeof emojiData === 'object' && 
+                        emojiData.name && 
+                        typeof emojiData.name === 'string' && 
+                        emojiData.emoji && 
+                        typeof emojiData.emoji === 'string') {
+                        
+                        try {
+                            const nameMatch = emojiData.name.toLowerCase().includes(queryLower);
+                            const emojiMatch = emojiData.emoji.includes(query);
+                            
+                            if (nameMatch || emojiMatch) {
+                                results.push(emojiData);
+                            }
+                        } catch (error) {
+                            console.warn('Fehler beim Verarbeiten von Emoji-Daten:', emojiData, error);
+                        }
+                    }
+                });
             }
         });
-    });
+    } catch (error) {
+        console.error('Fehler beim Durchsuchen der Emoji-Datenbank:', error);
+        gridContainer.innerHTML = '<div class="emoji-no-results">Fehler beim Durchsuchen der Emojis</div>';
+        return;
+    }
     
     // Ergebnisse anzeigen
     gridContainer.innerHTML = '';
@@ -2488,15 +2368,43 @@ function searchEmojis(query, pickerId) {
         return;
     }
     
+    // Ergebnisse nach Relevanz sortieren (exakte Treffer zuerst)
+    try {
+        results.sort((a, b) => {
+            // Sicherheitschecks für Sortierung
+            if (!a.name || !b.name) return 0;
+            
+            const aNameLower = a.name.toLowerCase();
+            const bNameLower = b.name.toLowerCase();
+            
+            const aNameExact = aNameLower === queryLower;
+            const bNameExact = bNameLower === queryLower;
+            const aNameStart = aNameLower.startsWith(queryLower);
+            const bNameStart = bNameLower.startsWith(queryLower);
+            
+            if (aNameExact && !bNameExact) return -1;
+            if (!aNameExact && bNameExact) return 1;
+            if (aNameStart && !bNameStart) return -1;
+            if (!aNameStart && bNameStart) return 1;
+            
+            return a.name.localeCompare(b.name);
+        });
+    } catch (error) {
+        console.warn('Fehler beim Sortieren der Emoji-Ergebnisse:', error);
+    }
+    
+    // Ergebnisse rendern
     results.forEach(emojiData => {
-        const emojiItem = document.createElement('div');
-        emojiItem.className = 'emoji-item';
-        emojiItem.innerHTML = `
-            ${emojiData.emoji}
-            <div class="emoji-tooltip">${emojiData.name}</div>
-        `;
-        emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
-        gridContainer.appendChild(emojiItem);
+        if (emojiData && emojiData.emoji && emojiData.name) {
+            const emojiItem = document.createElement('div');
+            emojiItem.className = 'emoji-item';
+            emojiItem.innerHTML = `
+                ${emojiData.emoji}
+                <div class="emoji-tooltip">${emojiData.name}</div>
+            `;
+            emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
+            gridContainer.appendChild(emojiItem);
+        }
     });
 }
 
@@ -3874,7 +3782,7 @@ function setupGlobalEventListeners() {
         const menuButton = document.getElementById('mainMenuButton');
         const contextMenu = document.getElementById('contextMenu');
         const categoryContextMenu = document.getElementById('categoryContextMenu');
-        const favoritesList = document.getElementById('favoritesList');
+        const favoritesSidebar = document.getElementById('favoritesSidebar'); // KORRIGIERT: war favoritesList
         const favoritesToggle = document.getElementById('favoritesToggle');
         
         if (event.target === modal) {
@@ -3901,10 +3809,12 @@ function setupGlobalEventListeners() {
             hideContextMenu();
         }
         
-        // Favoriten schließen wenn außerhalb geklickt
-        if (!favoritesList.contains(event.target) && !favoritesToggle.contains(event.target)) {
-            if (favoritesOpen) {
-                toggleFavorites();
+        // Favoriten schließen wenn außerhalb geklickt - MIT NULL-CHECKS
+        if (favoritesSidebar && favoritesToggle) {
+            if (!favoritesSidebar.contains(event.target) && !favoritesToggle.contains(event.target)) {
+                if (favoritesOpen) {
+                    toggleFavorites();
+                }
             }
         }
     }
