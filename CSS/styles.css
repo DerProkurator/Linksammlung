@@ -1884,8 +1884,9 @@ h1 {
     grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
     gap: 4px;
     overflow-y: auto;
+    overflow-x: hidden;
     flex: 1;
-    max-height: 160px;
+    max-height: 120px;
     scrollbar-width: thin;
     scrollbar-color: rgba(64, 224, 208, 0.4) rgba(35, 35, 55, 0.6);
 }
