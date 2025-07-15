@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - STRUKTURIERTE SCRIPT.JS v2.4
+// LINKSAMMLUNG - STRUKTURIERTE SCRIPT.JS v2.6
 // ========================================================================
 // 
 // Struktur:
@@ -2321,8 +2321,9 @@ function searchEmojis(query, pickerId) {
         });
     }
     
-    // Alle Emojis durchsuchen
+    // Alle Emojis durchsuchen und Duplikate vermeiden
     const results = [];
+    const seenEmojis = new Set(); // Set um bereits gesehene Emojis zu tracken
     const queryLower = query.toLowerCase();
     
     try {
@@ -2342,7 +2343,11 @@ function searchEmojis(query, pickerId) {
                             const emojiMatch = emojiData.emoji.includes(query);
                             
                             if (nameMatch || emojiMatch) {
-                                results.push(emojiData);
+                                // Nur hinzufügen wenn das Emoji noch nicht gesehen wurde
+                                if (!seenEmojis.has(emojiData.emoji)) {
+                                    seenEmojis.add(emojiData.emoji);
+                                    results.push(emojiData);
+                                }
                             }
                         } catch (error) {
                             console.warn('Fehler beim Verarbeiten von Emoji-Daten:', emojiData, error);

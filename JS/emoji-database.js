@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * EMOJI-DATENBANK FÜR LINKSAMMLUNG v2.4
+ * EMOJI-DATENBANK FÜR LINKSAMMLUNG v2.6
  * ========================================================================
  * 
  * Zentrale Emoji-Sammlung für Icon-Picker
@@ -2163,6 +2163,81 @@ const EMOJI_DATABASE = {
             { emoji: '🏴', name: 'Schwarze Flagge' },
             { emoji: '💀', name: 'Totenkopf' },
             { emoji: '☠️', name: 'Totenkopf mit Knochen' }
+        ]
+    },
+    'letters_numbers': {
+        name: 'Buchstaben & Zahlen',
+        icon: '🔤',
+        emojis: [
+            // Zahlen
+            { emoji: '0️⃣', name: 'Null' },
+            { emoji: '1️⃣', name: 'Eins' },
+            { emoji: '2️⃣', name: 'Zwei' },
+            { emoji: '3️⃣', name: 'Drei' },
+            { emoji: '4️⃣', name: 'Vier' },
+            { emoji: '5️⃣', name: 'Fünf' },
+            { emoji: '6️⃣', name: 'Sechs' },
+            { emoji: '7️⃣', name: 'Sieben' },
+            { emoji: '8️⃣', name: 'Acht' },
+            { emoji: '9️⃣', name: 'Neun' },
+            { emoji: '🔟', name: 'Zehn' },
+            
+            // Buchstaben A-Z
+            { emoji: '🅰️', name: 'A' },
+            { emoji: '🅱️', name: 'B' },
+            { emoji: '🅲️', name: 'C' },
+            { emoji: '🅳️', name: 'D' },
+            { emoji: '🅴️', name: 'E' },
+            { emoji: '🅵️', name: 'F' },
+            { emoji: '🅶️', name: 'G' },
+            { emoji: '🅷️', name: 'H' },
+            { emoji: '🅸️', name: 'I' },
+            { emoji: '🅹️', name: 'J' },
+            { emoji: '🅺️', name: 'K' },
+            { emoji: '🅻️', name: 'L' },
+            { emoji: '🅼️', name: 'M' },
+            { emoji: '🅽️', name: 'N' },
+            { emoji: '🅾️', name: 'O' },
+            { emoji: '🅿️', name: 'P' },
+            { emoji: '🆀', name: 'Q' },
+            { emoji: '🆁', name: 'R' },
+            { emoji: '🆂', name: 'S' },
+            { emoji: '🆃', name: 'T' },
+            { emoji: '🆄', name: 'U' },
+            { emoji: '🆅', name: 'V' },
+            { emoji: '🆆', name: 'W' },
+            { emoji: '🆇', name: 'X' },
+            { emoji: '🆈', name: 'Y' },
+            { emoji: '🆉', name: 'Z' },
+            
+            // Spezielle Buchstaben & Eingabe
+            { emoji: '🔤', name: 'Lateinische Buchstaben' },
+            { emoji: '🔡', name: 'Kleinbuchstaben' },
+            { emoji: '🔠', name: 'Großbuchstaben' },
+            { emoji: '🔢', name: 'Zahlen' },
+            { emoji: '🔣', name: 'Symbole' },
+            { emoji: '#️⃣', name: 'Hashtag' },
+            { emoji: '*️⃣', name: 'Stern' },
+            
+            // Mathematische Symbole
+            { emoji: '➕', name: 'Plus' },
+            { emoji: '➖', name: 'Minus' },
+            { emoji: '✖️', name: 'Multiplikation' },
+            { emoji: '➗', name: 'Division' },
+            { emoji: '🟰', name: 'Gleichheitszeichen' },
+            { emoji: '💯', name: 'Hundert' },
+            { emoji: '♾️', name: 'Unendlichkeit' },
+            
+            // Kreise mit Buchstaben (alternative Darstellung)
+            { emoji: 'Ⓜ️', name: 'Eingekreistes M' },
+            { emoji: '🆔', name: 'ID' },
+            { emoji: 'ℹ️', name: 'Information' },
+            
+            // Blutgruppen (als Buchstaben-Varianten)
+            { emoji: '🅰️', name: 'A-Taste (Blutgruppe)' },
+            { emoji: '🅱️', name: 'B-Taste (Blutgruppe)' },
+            { emoji: '🆎', name: 'AB-Taste (Blutgruppe)' },
+            { emoji: '🅾️', name: 'O-Taste (Blutgruppe)' }
         ]
     }
 };
