@@ -68,8 +68,7 @@
 
 /* Picker in Formular-Modals: im Dokumentfluss unter dem Eingabefeld,
    damit das Modal mitwächst statt den Picker abzuschneiden.
-   Feste Raster-Höhe (skaliert mit der Bildschirmhöhe), damit der Picker
-   beim Kategorie-Wechsel nicht springt. */
+   Raster passt sich dem Inhalt an, maximal abhängig von der Bildschirmhöhe. */
 .form-group > .emoji-picker {
     position: static;
     max-height: none;
@@ -79,9 +78,7 @@
 
 .form-group > .emoji-picker .emoji-grid {
     flex: none;
-    height: clamp(150px, 50vh, 520px);
-    max-height: none;
-    align-content: start;
+    max-height: clamp(150px, 50vh, 520px);
 }
 
 .emoji-picker-header {

@@ -32,7 +32,6 @@ function toggleEmojiPicker(inputId) {
         currentPickerTarget  = inputId;
         currentPickerElement = picker;
         initEmojiPicker(inputId);
-        picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 }
 
@@ -90,6 +89,12 @@ function showEmojiCategory(categoryKey, inputId) {
         emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
         gridContainer.appendChild(emojiItem);
     });
+
+    // Picker kann durch größere Kategorie wachsen → wieder ganz sichtbar machen
+    const picker = document.getElementById(inputId + 'Picker');
+    if (picker && picker.closest('.form-group')) {
+        picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
 }
 
 /**
