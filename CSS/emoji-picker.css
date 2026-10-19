@@ -66,6 +66,24 @@
     flex-direction: column;
 }
 
+/* Picker in Formular-Modals: im Dokumentfluss unter dem Eingabefeld,
+   damit das Modal mitwächst statt den Picker abzuschneiden.
+   Feste Raster-Höhe (skaliert mit der Bildschirmhöhe), damit der Picker
+   beim Kategorie-Wechsel nicht springt. */
+.form-group > .emoji-picker {
+    position: static;
+    max-height: none;
+    margin-top: 8px;
+    scroll-margin-bottom: 20px; /* Abstand nach scrollIntoView() inkl. Slide-In-Animation */
+}
+
+.form-group > .emoji-picker .emoji-grid {
+    flex: none;
+    height: clamp(150px, 50vh, 520px);
+    max-height: none;
+    align-content: start;
+}
+
 .emoji-picker-header {
     padding: 12px 16px 8px;
     border-bottom: 1px solid rgba(64, 224, 208, 0.3);

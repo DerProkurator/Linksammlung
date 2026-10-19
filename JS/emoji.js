@@ -32,6 +32,7 @@ function toggleEmojiPicker(inputId) {
         currentPickerTarget  = inputId;
         currentPickerElement = picker;
         initEmojiPicker(inputId);
+        picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 }
 
