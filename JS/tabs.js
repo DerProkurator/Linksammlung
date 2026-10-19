@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - TABS.JS v3.3
+// LINKSAMMLUNG - TABS.JS v3.4
 // ========================================================================
 // Tab-System: Storage, Tab-UI, Switching, Favoriten-Tab
 // Abhängig von: config.js
@@ -277,9 +277,7 @@ function toggleTabVisibilityFromContext() {
 
     // DYNAMIC_CONFIGS synchronisieren, damit Export den aktuellen Wert hat
     const dynCfgs = window.DYNAMIC_CONFIGS || {};
-    const dynKey  = Object.keys(dynCfgs).find(
-        label => toKey(label) === tabId
-    );
+    const dynKey  = findDynamicConfigLabel(tabId);
     if (dynKey) dynCfgs[dynKey].hidden = tab.hidden;
 
     // Falls der ausgeblendete Tab aktiv war → zum ersten sichtbaren wechseln
@@ -330,8 +328,8 @@ function deleteTabFromContext() {
 
     setTimeout(() => {
         showMessage({
-            title:   '💡 Hinweis: HTML & Default-Config anpassen',
-            content: `Den <script>-Tag für "Default_config-${tab.label}.js" aus Linksammlung.html entfernen, damit der Tab nach einem Reset nicht wiedererscheint.`
+            title:   '💡 Hinweis: Config/tabs.js anpassen',
+            content: `Den Eintrag für "${tab.label}" aus Config/tabs.js entfernen, damit der Tab nach einem Reset nicht wiedererscheint.`
         }, 'warning');
     }, 3500);
 }
@@ -488,7 +486,7 @@ function confirmAddTab() {
     setTimeout(() => {
         showMessage({
             title:   '💡 Hinweis: Tab dauerhaft speichern',
-            content: `Damit "${label}" nach einem Reset erhalten bleibt: Menü → "Default-Config exportieren" → Datei in Config/ ablegen + &lt;script&gt;-Tag in Linksammlung.html eintragen.`
+            content: `Damit "${label}" nach einem Reset erhalten bleibt: Menü → "Default-Config exportieren" → Datei in Config/ ablegen + Dateinamen in Config/tabs.js eintragen.`
         }, 'warning');
     }, 3500);
 }

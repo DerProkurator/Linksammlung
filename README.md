@@ -22,7 +22,7 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 
 Die Konfiguration wird im `localStorage` des Browsers gespeichert. Eigene Links, Kategorien und Tabs lassen sich direkt in der App hinzufügen — nichts muss im Code geändert werden.
 
-Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration (Factory-Reset-Basis). `Config/Demo_config-*.js` sind zusätzliche Beispiel-Tabs, die beim Erststart geladen werden. Neue Tabs werden durch Anlegen einer weiteren Config-Datei nach dem gleichen Schema sowie einen zusätzlichen `<script>`-Tag in `Linksammlung.html` ergänzt.
+Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration (Factory-Reset-Basis). `Config/Demo_config-*.js` sind zusätzliche Beispiel-Tabs, die beim Erststart geladen werden. Welche Config-Dateien geladen werden, steht in `Config/tabs.js` (Reihenfolge = Tab-Reihenfolge). Neue Tabs: Config-Datei nach dem gleichen Schema in `Config/` ablegen und den Dateinamen in `Config/tabs.js` eintragen — `Linksammlung.html` muss dafür nicht geändert werden. Der Export „Alle Default-Configs“ liefert eine fertige `tabs.js` gleich mit.
 
 ## Lizenz
 

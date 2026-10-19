@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - IMPORT-EXPORT.JS v3.3
+// LINKSAMMLUNG - IMPORT-EXPORT.JS v3.4
 // ========================================================================
 // Import/Export-System: Einzellink, Kategorie, Vollständige Config
 // Abhängig von: config.js, categories.js
@@ -611,9 +611,9 @@ function previewDefaultConfig() {
                 <div style="margin-bottom:25px;padding:15px;background:rgba(255,193,7,0.1);border-radius:10px;border:1px solid rgba(255,193,7,0.3);">
                     <div style="color:#ffd54f;font-size:14px;margin-bottom:8px;"><strong>💡 Was passiert beim Export?</strong></div>
                     <div style="color:rgba(255,255,255,0.9);font-size:13px;line-height:1.4;">
-                        • Eine <code>Default_config-${esc(tabsList.find(t => t.id === activeTabId)?.label || activeTabId)}.js</code> Datei wird heruntergeladen<br>
+                        • Eine <code>${esc(_defaultConfigFilenameForTab(activeTabId))}</code> Datei wird heruntergeladen<br>
                         • Diese enthält die aktuelle Konfiguration im Self-Registrierungs-Format<br>
-                        • Datei in <code>Config/</code> ablegen + &lt;script&gt;-Tag in HTML → Tab erscheint automatisch
+                        • Datei in <code>Config/</code> ablegen — neuer Tab: zusätzlich Dateinamen in <code>Config/tabs.js</code> eintragen
                     </div>
                 </div>
                 <div class="form-buttons" style="display:flex;gap:12px;justify-content:flex-end;">
@@ -651,9 +651,7 @@ function exportAsDefaultConfig() {
 
     try {
         const defaultConfigContent = generateDefaultConfigJS();
-        const currentTab = tabsList.find(t => t.id === activeTabId);
-        const tabLabel   = currentTab ? currentTab.label : 'Config';
-        const filename   = 'Default_config-' + sanitizeFilename(tabLabel) + '.js';
+        const filename   = _defaultConfigFilenameForTab(activeTabId);
 
         const dataBlob = new Blob([defaultConfigContent], { type: 'text/javascript' });
         const url  = URL.createObjectURL(dataBlob);
@@ -671,38 +669,49 @@ function exportAsDefaultConfig() {
 }
 
 /**
- * Nach Export: HTML-Snippet-Hinweis anzeigen
+ * Nach Export: Hinweis anzeigen, was mit der/den Datei(en) zu tun ist
  * @param {string|string[]} filenames – eine Datei oder Array von Dateinamen
- * @param {boolean} multiMode        – true = "Alle exportieren"-Modus mit erweitertem Hinweis
+ * @param {boolean} multiMode        – true = ZIP-Export inkl. tabs.js
  */
 function _showSnippetHint(filenames, multiMode) {
     const modal   = document.getElementById('snippetHintModal');
+    const titleEl = document.getElementById('snippetHintTitle');
     const codeEl  = document.getElementById('snippetHintCode');
+    const boxEl   = document.getElementById('snippetHintBox');
     const descEl  = document.getElementById('snippetHintDesc');
-    if (!modal || !codeEl) return;
+    if (!modal || !codeEl || !descEl) return;
 
-    const files   = Array.isArray(filenames) ? filenames : [filenames];
-    const snippet = files.map(f => `<script src="Config/${f}"><\/script>`).join('\n');
-    codeEl.textContent = snippet;
+    const files      = Array.isArray(filenames) ? filenames : [filenames];
+    const knownFiles = Array.isArray(window.CONFIG_FILES) ? window.CONFIG_FILES : [];
+    let emoji, title, desc, code = '';
 
-    const searchHint = `<span style="margin-top:8px;display:block;color:rgba(64,224,208,0.8);font-size:0.92em;">
-        💡 In <code>Linksammlung.html</code> nach <code>Dynamische Tab-Configs</code> suchen —
-        dort befinden sich die bestehenden <code>&lt;script&gt;</code>-Zeilen.
-    </span>`;
-
-    if (descEl) {
-        if (multiMode) {
-            descEl.innerHTML = `
-                Dateien in <code>Config/</code> ablegen. Die Script-Tags unten müssen nur
-                angepasst werden, wenn Tabs <strong>neu angelegt</strong> oder
-                <strong>gelöscht</strong> wurden — bei bestehenden Tabs reicht es,
-                die Datei zu überschreiben.${searchHint}`;
-        } else {
-            descEl.innerHTML = `
-                Kopiere diesen Tag und füge ihn in <code>Linksammlung.html</code> nach den
-                bestehenden <code>&lt;script src="Config/..."&gt;</code>-Zeilen ein.${searchHint}`;
-        }
+    if (multiMode) {
+        emoji = '📦'; title = 'ZIP in Config/ entpacken';
+        desc  = `Die ZIP-Datei in den Ordner <code>Config/</code> entpacken und vorhandene Dateien
+                 <strong>überschreiben</strong>. Die mitgelieferte <code>tabs.js</code> enthält bereits
+                 alle exportierten Tabs — danach die Seite neu laden, fertig.
+                 <span style="margin-top:8px;display:block;color:rgba(64,224,208,0.8);font-size:0.92em;">
+                     💡 Alte Config-Dateien, die nicht mehr in <code>tabs.js</code> stehen, werden
+                     nicht mehr geladen und können gelöscht werden.
+                 </span>`;
+        code  = files.join('\n');
+    } else if (knownFiles.includes(files[0])) {
+        emoji = '✅'; title = 'Datei überschreiben';
+        desc  = `Die Datei in den Ordner <code>Config/</code> legen und die vorhandene
+                 <strong>überschreiben</strong>. Der Tab ist bereits in <code>Config/tabs.js</code>
+                 eingetragen — sonst ist nichts zu tun.`;
+    } else {
+        emoji = '📋'; title = 'Neuen Tab eintragen';
+        desc  = `Die Datei in den Ordner <code>Config/</code> legen und diese Zeile in
+                 <code>Config/tabs.js</code> in die Liste <code>window.CONFIG_FILES</code> einfügen
+                 (Komma am Zeilenende beachten):`;
+        code  = `    ${JSON.stringify(files[0])},`;
     }
+
+    if (titleEl) titleEl.innerHTML = `<span class="modal-emoji">${emoji}</span> ${title}`;
+    descEl.innerHTML   = desc;
+    codeEl.textContent = code;
+    if (boxEl) boxEl.style.display = code ? '' : 'none';
 
     modal.style.display = 'block';
 }
@@ -773,7 +782,7 @@ function generateDefaultConfigJS(tabObj, cfgObj) {
  * Favoriten: ${totalFavorites}
  *
  * Tab wird automatisch aus dem Dateinamen erkannt.
- * Datei in Config/ ablegen + <script>-Tag in Linksammlung.html → Tab erscheint automatisch.
+ * Datei in Config/ ablegen + Dateinamen in Config/tabs.js eintragen → Tab erscheint automatisch.
  * ========================================================================
  */
 (function() {
@@ -784,6 +793,57 @@ function generateDefaultConfigJS(tabObj, cfgObj) {
         config: ${JSON.stringify(cleanedConfig, null, 8)}
     };
 })();`;
+}
+
+/**
+ * Dateinamen Default_config-{TabName}.js für mehrere Tabs — eindeutig gemacht,
+ * da z.B. "Tools!"/"Tools?" oder reine Emoji-Namen sonst denselben Namen ergeben
+ * @returns {string[]} gleiche Reihenfolge wie tabs
+ */
+function _defaultConfigFilenames(tabs) {
+    const names = [];
+    tabs.forEach(tab => {
+        const base = 'Default_config-' + (sanitizeFilename(tab.label) || 'Tab');
+        let name = base + '.js';
+        for (let i = 2; names.includes(name); i++) name = `${base}-${i}.js`;
+        names.push(name);
+    });
+    return names;
+}
+
+/**
+ * Dateiname für einen einzelnen Tab — identisch mit dem Namen beim ZIP-Export aller Tabs
+ */
+function _defaultConfigFilenameForTab(tabId) {
+    const exportableTabs = tabsList.filter(t => t.id !== 'favorites');
+    const idx = exportableTabs.findIndex(t => t.id === tabId);
+    return idx >= 0 ? _defaultConfigFilenames(exportableTabs)[idx] : 'Default_config-Config.js';
+}
+
+/**
+ * Inhalt für Config/tabs.js generieren (Liste der zu ladenden Config-Dateien)
+ * @param {string[]} filenames – in Tab-Reihenfolge
+ */
+function generateTabsListJS(filenames) {
+    return `/**
+ * ========================================================================
+ * TAB-LISTE: Welche Config-Dateien aus Config/ geladen werden
+ * ========================================================================
+ * Generiert am: ${new Date().toLocaleString('de-DE')}
+ * Reihenfolge hier = Tab-Reihenfolge in der App (beim ersten Start).
+ *
+ * Neuer Tab:  Datei in Config/ ablegen und den Dateinamen hier ergänzen.
+ * Tab weg:    Zeile hier entfernen (Datei kann danach gelöscht werden).
+ *
+ * Wird beim Export "Alle Default-Configs" (ZIP) automatisch mit erzeugt —
+ * ZIP in Config/ entpacken, vorhandene Dateien überschreiben, fertig.
+ * Fehlende Dateien werden übersprungen.
+ * ========================================================================
+ */
+window.CONFIG_FILES = [
+${filenames.map(f => '    ' + JSON.stringify(f)).join(',\n')}
+];
+`;
 }
 
 /**
@@ -800,8 +860,9 @@ function previewAllDefaultConfigs() {
 
     let totalLinks = 0, totalFavorites = 0, totalCategories = 0;
     let tabsPreview = '';
+    const filenames = _defaultConfigFilenames(exportableTabs);
 
-    exportableTabs.forEach(tab => {
+    exportableTabs.forEach((tab, idx) => {
         const cfg = getTabConfigById(tab.id);
         if (!cfg) return;
         const order = cfg.categoryOrder || Object.keys(cfg.categories || {});
@@ -818,7 +879,7 @@ function previewAllDefaultConfigs() {
         totalFavorites  += tabFavs;
 
         const favInfo = tabFavs > 0 ? ` (${tabFavs} ⭐)` : '';
-        const filename = 'Default_config-' + sanitizeFilename(tab.label) + '.js';
+        const filename = filenames[idx];
         tabsPreview += `<div style="margin:8px 0;padding:8px 12px;background:rgba(64,224,208,0.1);border-radius:8px;">
             <div style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:1.2em;">${esc(tab.icon || '📄')}</span>
@@ -865,8 +926,8 @@ function previewAllDefaultConfigs() {
                     <div style="color:#ffd54f;font-size:14px;margin-bottom:8px;"><strong>💡 Was passiert beim Export?</strong></div>
                     <div style="color:rgba(255,255,255,0.9);font-size:13px;line-height:1.4;">
                         • Eine ZIP-Datei <code>${esc(zipName)}</code> wird heruntergeladen<br>
-                        • Enthält für jeden Tab eine <code>Default_config-*.js</code> Datei<br>
-                        • Dateien in <code>Config/</code> ablegen — bestehende Tabs werden automatisch aktualisiert
+                        • Enthält für jeden Tab eine <code>Default_config-*.js</code> Datei und die passende <code>tabs.js</code><br>
+                        • ZIP in <code>Config/</code> entpacken und überschreiben — in <code>Linksammlung.html</code> muss nichts geändert werden
                     </div>
                 </div>
                 <div class="form-buttons" style="display:flex;gap:12px;justify-content:flex-end;">
@@ -908,12 +969,13 @@ function exportAllDefaultConfigs() {
 
     const files = [];
     const exportedFilenames = [];
+    const filenames = _defaultConfigFilenames(exportableTabs);
 
-    exportableTabs.forEach(tab => {
+    exportableTabs.forEach((tab, idx) => {
         try {
             const cfg      = getTabConfigById(tab.id);
             const content  = generateDefaultConfigJS(tab, cfg);
-            const filename = 'Default_config-' + sanitizeFilename(tab.label) + '.js';
+            const filename = filenames[idx];
             files.push({ name: filename, content });
             exportedFilenames.push(filename);
         } catch (e) {
@@ -925,6 +987,9 @@ function exportAllDefaultConfigs() {
         showMessage('Keine Dateien zum Exportieren.', 'error');
         return;
     }
+
+    // Passende Tab-Liste mitliefern → nach dem Entpacken ist nichts mehr von Hand einzutragen
+    files.push({ name: 'tabs.js', content: generateTabsListJS(exportedFilenames) });
 
     try {
         const date     = new Date().toISOString().slice(0, 10);
@@ -983,7 +1048,7 @@ function _buildZip(files) {
         const local = [
             0x50, 0x4B, 0x03, 0x04,   // Local file header signature
             ...u16(20),                 // Version needed: 2.0
-            ...u16(0),                  // General purpose flags
+            ...u16(0x0800),             // General purpose flags: Bit 11 = Dateiname in UTF-8 (sonst wird "Büro" zu "B├╝ro")
             ...u16(0),                  // Compression: store
             ...u16(dosDate.time),
             ...u16(dosDate.date),
@@ -1007,7 +1072,7 @@ function _buildZip(files) {
             0x50, 0x4B, 0x01, 0x02,   // Central directory signature
             ...u16(20),                 // Version made by
             ...u16(20),                 // Version needed
-            ...u16(0),
+            ...u16(0x0800),             // General purpose flags: UTF-8
             ...u16(0),                  // Compression: store
             ...u16(dosDate.time),
             ...u16(dosDate.date),

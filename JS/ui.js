@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - UI.JS v3.3
+// LINKSAMMLUNG - UI.JS v3.4
 // ========================================================================
 // Rendering, Modals, Status-Nachrichten, Menü, Kontext-Menüs
 // Abhängig von: config.js, drag-drop.js

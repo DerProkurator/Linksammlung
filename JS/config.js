@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - CONFIG.JS v3.3
+// LINKSAMMLUNG - CONFIG.JS v3.4
 // ========================================================================
 // Globale Variablen, Tab-aware Konfiguration laden/speichern, Migration
 // ========================================================================
@@ -106,8 +106,8 @@ let currentPickerElement = null;
  */
 function buildDefaultTabsFromConfigs() {
     const configs = window.DYNAMIC_CONFIGS || {};
-    const tabs = Object.keys(configs).map(label => ({
-        id:     toKey(label),
+    const tabs = getDynamicConfigTabIds().map(({ id, label }) => ({
+        id:     id,
         label:  label,
         icon:   configs[label].icon || '📋',
         hidden: configs[label].hidden || false
@@ -177,6 +177,29 @@ function uniqueKey(name, isTaken, fallback = 'neu') {
     let key = base, i = 1;
     while (isTaken(key)) { key = base + '_' + i; i++; }
     return key;
+}
+
+/**
+ * Tab-IDs der Config-Dateien (window.DYNAMIC_CONFIGS) in Lade-Reihenfolge.
+ * IDs werden eindeutig gemacht ("🎮"/"🎵" → "__"/"___1") — sonst teilen sich
+ * zwei Tabs eine ID und zeigen denselben Inhalt.
+ * @returns {Array<{id: string, label: string}>}
+ */
+function getDynamicConfigTabIds() {
+    const result = [];
+    Object.keys(window.DYNAMIC_CONFIGS || {}).forEach(label => {
+        const id = uniqueKey(label, k => k === 'favorites' || result.some(t => t.id === k));
+        result.push({ id, label });
+    });
+    return result;
+}
+
+/**
+ * Label (= Schlüssel in window.DYNAMIC_CONFIGS) zu einer Tab-ID finden
+ */
+function findDynamicConfigLabel(tabId) {
+    const match = getDynamicConfigTabIds().find(t => t.id === tabId);
+    return match ? match.label : undefined;
 }
 
 /**
@@ -310,9 +333,7 @@ function getTabConfigById(tabId) {
 
     // 2. Fallback: DYNAMIC_CONFIGS (Tab noch nie besucht)
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
-    const matchingKey = Object.keys(dynamicConfigs).find(
-        label => toKey(label) === tabId
-    );
+    const matchingKey = findDynamicConfigLabel(tabId);
     if (matchingKey && dynamicConfigs[matchingKey].config) {
         return JSON.parse(JSON.stringify(dynamicConfigs[matchingKey].config));
     }
@@ -363,9 +384,7 @@ function loadTabConfigById(tabId) {
 
     // Kein gespeicherter Stand: Tab-spezifischen Default aus DYNAMIC_CONFIGS laden
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
-    const matchingKey = Object.keys(dynamicConfigs).find(
-        label => toKey(label) === tabId
-    );
+    const matchingKey = findDynamicConfigLabel(tabId);
     if (matchingKey && dynamicConfigs[matchingKey].config) {
         config = JSON.parse(JSON.stringify(dynamicConfigs[matchingKey].config));
     } else if (tabId === (window.DEFAULT_TAB && window.DEFAULT_TAB.id) || tabId === 'allgemein' || tabId === 'homelab') {
@@ -464,9 +483,7 @@ function resetToDefault() {
     const tabLabel   = currentTab ? `${esc(currentTab.icon)} ${esc(currentTab.label)}` : esc(activeTabId);
 
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
-    const matchingKey = Object.keys(dynamicConfigs).find(
-        label => toKey(label) === activeTabId
-    );
+    const matchingKey = findDynamicConfigLabel(activeTabId);
     const hasDefaultConfig = !!(matchingKey && dynamicConfigs[matchingKey]?.config) || !!window.DEFAULT_CONFIG;
     const configSource = hasDefaultConfig
         ? `Default_config-${esc(currentTab?.label || activeTabId)}.js`

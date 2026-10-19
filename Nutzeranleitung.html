@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linksammlung v3.3 — Nutzeranleitung</title>
+    <title>Linksammlung v3.4 — Nutzeranleitung</title>
     <style>
         /* =============================================
            PRINT + SCREEN STYLES
@@ -233,7 +233,7 @@
             @page {
                 margin: 2cm 2.2cm 2.2cm 2.2cm;
                 @bottom-center {
-                    content: "Linksammlung v3.3 — Nutzeranleitung  |  Seite " counter(page);
+                    content: "Linksammlung v3.4 — Nutzeranleitung  |  Seite " counter(page);
                     font-size: 9pt;
                     color: #94a3b8;
                 }
@@ -269,7 +269,7 @@
     <div style="font-size: 48pt; margin-bottom: 12px;">🔗</div>
     <h1>Linksammlung</h1>
     <div class="subtitle">Deine persönliche Browser-Startseite für Links &amp; Lesezeichen</div>
-    <div class="version-badge">Version 3.3</div>
+    <div class="version-badge">Version 3.4</div>
     <div style="margin-top: 24px; font-size: 11pt; color: var(--muted);">
         Stand: April 2026 &nbsp;·&nbsp; Nutzeranleitung
     </div>
@@ -753,13 +753,14 @@
         mit einer <code>.js</code>-Datei pro Tab heruntergeladen.
     </li>
     <li>
-        Die heruntergeladene(n) <code>.js</code>-Datei(en) in den Ordner <code>Config/</code>
-        der Linksammlung kopieren und die alten Dateien gleichen Namens <strong>überschreiben</strong>.<br>
-        <strong>Nur bei neuen Tabs (kein gleichnamiges File vorhanden):</strong> Öffne
-        <code>Linksammlung.html</code> in einem Texteditor und füge einen neuen
-        <code>&lt;script&gt;</code>-Tag ein — direkt unterhalb der bestehenden Config-Script-Zeilen:
-        <code>&lt;script src="Config/Default_config-MeinTab.js"&gt;&lt;/script&gt;</code>.<br>
-        Beim Überschreiben bestehender Dateien ist dieser Schritt nicht nötig.
+        <strong>Option B (ZIP):</strong> Die ZIP-Datei in den Ordner <code>Config/</code> der
+        Linksammlung entpacken und vorhandene Dateien <strong>überschreiben</strong>. Die ZIP enthält
+        auch eine fertige <code>tabs.js</code> mit allen Tabs — sonst ist nichts zu tun.<br>
+        <strong>Option A (ein Tab):</strong> Die <code>.js</code>-Datei in <code>Config/</code> kopieren
+        und die alte Datei gleichen Namens überschreiben. <strong>Nur bei einem neuen Tab</strong>
+        zusätzlich den Dateinamen in <code>Config/tabs.js</code> in die Liste eintragen, z.&nbsp;B.
+        <code>"Default_config-MeinTab.js",</code> — die App zeigt nach dem Export an, ob das nötig ist.<br>
+        <code>Linksammlung.html</code> muss dafür nicht mehr bearbeitet werden.
     </li>
     <li>
         Browser neu starten und die <code>Linksammlung.html</code> öffnen —
@@ -853,7 +854,7 @@
      FOOTER
      ============================================= -->
 <div class="footer">
-    Linksammlung v3.3 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; April 2026
+    Linksammlung v3.4 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; Oktober 2026
 </div>
 
 </body>

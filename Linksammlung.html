@@ -75,7 +75,7 @@
         </div>
 
         <div class="copyright">
-            © 2026 BS - Link-Sammlung v3.3.2
+            © 2026 BS - Link-Sammlung v3.4
         </div>
     </div>
 
@@ -546,19 +546,12 @@
         </div>
     </div>
 
-    <!-- HTML-Snippet Hinweis nach Default-Config-Export -->
+    <!-- Hinweis nach Default-Config-Export (Inhalt wird in _showSnippetHint() gesetzt) -->
     <div class="modal" id="snippetHintModal" style="display:none;">
         <div class="modal-content" style="max-width:520px;">
-            <h2><span class="modal-emoji">📋</span> Script-Tag einfügen</h2>
-            <p id="snippetHintDesc" style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;">
-                Kopiere diesen Tag und füge ihn in <code>Linksammlung.html</code> nach den bestehenden
-                <code>&lt;script src="Config/..."&gt;</code>-Zeilen ein.
-                <span style="margin-top:8px;display:block;color:rgba(64,224,208,0.8);font-size:0.92em;">
-                    💡 In <code>Linksammlung.html</code> nach <code>Dynamische Tab-Configs</code> suchen —
-                    dort befinden sich die bestehenden <code>&lt;script&gt;</code>-Zeilen.
-                </span>
-            </p>
-            <div class="snippet-hint-box">
+            <h2 id="snippetHintTitle"><span class="modal-emoji">📋</span> Config-Datei ablegen</h2>
+            <p id="snippetHintDesc" style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;"></p>
+            <div class="snippet-hint-box" id="snippetHintBox">
                 <code id="snippetHintCode"></code>
                 <button class="snippet-copy-btn" onclick="copySnippetHint()" title="Kopieren">⎘</button>
             </div>
@@ -590,11 +583,11 @@
     <!-- Standard-Konfiguration laden (Fallback für Backward-Kompatibilität) -->
     <script src=".\Config\default-config.js"></script>
 
-    <!-- Dynamische Tab-Configs: jede Datei registriert sich als Tab.
-         Reihenfolge hier = Tab-Reihenfolge in der App.
-         Neuer Tab: Datei anlegen + Script-Tag hier eintragen. -->
-    <script src="Config/Demo_config-Allgemein.js"></script>
-    <script src="Config/Demo_config-Entwicklung.js"></script>
+    <!-- Dynamische Tab-Configs: Liste in Config/tabs.js, jede Datei registriert sich als Tab.
+         Neuer Tab: Datei in Config/ ablegen + Dateinamen in Config/tabs.js eintragen
+         (hier im HTML muss nichts mehr geändert werden). -->
+    <script src="Config/tabs.js"></script>
+    <script src="JS/config-files-loader.js"></script>
 
     <!-- Emoji-Datenbank laden -->
     <script src=".\JS\emoji-database.js"></script>

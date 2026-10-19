@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.3)
+ * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.4)
  * ========================================================================
  *
  * Prioritätsreihenfolge beim Start:
@@ -175,8 +175,8 @@ class ExtendedWelcomeLoader {
 
                     <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
                         <div style="color: #40e0d0; font-size: 13px; line-height: 1.6;">
-                            <strong>✨ Features (v3.3):</strong><br>
-                            • <strong>Multi-Tab-System</strong> – Tabs automatisch aus Config/-Dateien erkannt<br>
+                            <strong>✨ Features (v3.4):</strong><br>
+                            • <strong>Multi-Tab-System</strong> – Tabs aus Config/-Dateien, Liste in Config/tabs.js (keine HTML-Änderung nötig)<br>
                             • <strong>Favoriten-Tab</strong> – Alle markierten Links aus allen Tabs auf einen Blick<br>
                             • <strong>Angepinnte Links</strong> – Tab-übergreifende Schnellzugriffsleiste oben (📌 Rechtsklick auf Link)<br>
                             • <strong>Bento-Grid-Layout</strong> – Kacheln skalieren automatisch nach Link-Anzahl<br>

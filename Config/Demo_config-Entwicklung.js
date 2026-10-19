@@ -7,8 +7,8 @@
  *
  * SETUP FÜR WEITERGABE:
  *   1. Diese Datei nach Config/ kopieren
- *   2. In Linksammlung.html das Script-Tag anpassen:
- *      <script src=".\Config\Demo_config-Entwicklung.js"></script>
+ *   2. Dateinamen in Config/tabs.js eintragen:
+ *      "Demo_config-Entwicklung.js",
  * ========================================================================
  */
 (function() {
