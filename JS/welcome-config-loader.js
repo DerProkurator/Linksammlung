@@ -1,22 +1,19 @@
 /**
  * ========================================================================
- * ERWEITERTE WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v2.4)
+ * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.3)
  * ========================================================================
- * 
- * Neue Prioritätsreihenfolge:
- * 1. Lokale Konfiguration im Browser (localStorage) → Direktes Laden
- * 2. KEINE lokale Config → IMMER Welcome-Dialog anzeigen mit:
- *    - Option: JSON-Datei laden
- *    - Option: Standard-Config verwenden (falls verfügbar im Config-Verzeichnis)
- *    - Fallback: Einfache Grundkonfiguration erstellen
- * 
- * Features:
- * - Welcome-Dialog bei jedem ersten Start ohne lokale Config
- * - Intelligente Erkennung verfügbarer Standard-Konfigurationen
- * - Dynamische Anpassung des Dialogs je nach verfügbaren Optionen
- * - Integration mit bestehenden Import-Funktionen
- * - Unterstützung für Favoriten-System
- * 
+ *
+ * Prioritätsreihenfolge beim Start:
+ * 1. Lokale Konfiguration im Browser (localStorage) → Direktes Laden, kein Dialog
+ * 2. Keine lokale Config → Welcome-Dialog mit zwei Optionen:
+ *    a) JSON-Datei importieren (bestehende Sicherung)
+ *    b) Default-Configs aus Config/ direkt übernehmen
+ *
+ * Deaktivierung des Welcome-Dialogs:
+ * Diese Datei (welcome-config-loader.js) einfach löschen oder umbenennen.
+ * Dann werden beim Erststart automatisch die Default-Configs aus Config/
+ * geladen — ohne Dialog. Tabs und Kategorien erscheinen sofort.
+ *
  * ========================================================================
  */
 
@@ -27,16 +24,35 @@ class ExtendedWelcomeLoader {
     }
 
     /**
-     * Prüft, ob eine lokale Konfiguration im Browser existiert
+     * Prüft, ob eine lokale Konfiguration im Browser existiert.
+     * Unterstützt altes Format (linkConfig) und neues Tab-Format (linkConfig_*).
+     * linkTabs wird bewusst NICHT geprüft, da es beim ersten Start automatisch angelegt wird.
      */
     hasLocalConfig() {
         try {
+            // Neues Tab-Format: linkConfig_<tabId> (v3.0)
+            // Mindestens einer dieser Keys muss Kategorien enthalten
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('linkConfig_')) {
+                    const raw = localStorage.getItem(key);
+                    if (raw && raw.trim() !== '') {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === 'object' && parsed.categories &&
+                            Object.keys(parsed.categories).length > 0) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Altes Format (linkConfig) — wird beim nächsten loadConfig() migriert
             const localConfig = localStorage.getItem('linkConfig');
             if (localConfig && localConfig.trim() !== '') {
                 const parsed = JSON.parse(localConfig);
-                // Prüfen ob die Konfiguration valide ist
                 return parsed && typeof parsed === 'object' && parsed.categories;
             }
+
         } catch (error) {
             console.log('⚠️ Fehler beim Prüfen der lokalen Konfiguration:', error);
         }
@@ -44,13 +60,25 @@ class ExtendedWelcomeLoader {
     }
 
     /**
-     * Prüft, ob die default-config.js erfolgreich geladen wurde
+     * Prüft, ob eine Standard-Konfiguration verfügbar ist —
+     * entweder als DEFAULT_CONFIG (altes Format) oder als DYNAMIC_CONFIGS (Tab-Format)
      */
     hasDefaultConfig() {
-        return typeof window.DEFAULT_CONFIG !== 'undefined' && 
-               window.DEFAULT_CONFIG && 
+        // Altes Format: DEFAULT_CONFIG mit categories-Objekt
+        if (typeof window.DEFAULT_CONFIG !== 'undefined' &&
+               window.DEFAULT_CONFIG &&
                typeof window.DEFAULT_CONFIG === 'object' &&
-               window.DEFAULT_CONFIG.categories;
+               window.DEFAULT_CONFIG.categories) {
+            return true;
+        }
+        // Neues Tab-Format: DYNAMIC_CONFIGS mit mindestens einem Eintrag
+        if (typeof window.DYNAMIC_CONFIGS !== 'undefined' &&
+               window.DYNAMIC_CONFIGS &&
+               typeof window.DYNAMIC_CONFIGS === 'object' &&
+               Object.keys(window.DYNAMIC_CONFIGS).length > 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -126,7 +154,7 @@ class ExtendedWelcomeLoader {
         `;
 
         const defaultConfigButton = hasDefaultConfig ? `
-            <button type="button" class="btn btn-secondary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
+            <button type="button" class="btn btn-primary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
                 <span>🌟</span> Standard-Konfiguration aus Config-Verzeichnis verwenden
             </button>
         ` : `
@@ -146,37 +174,43 @@ class ExtendedWelcomeLoader {
                     ${configInfoSection}
 
                     <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
-                        <div style="color: #40e0d0; font-size: 13px; line-height: 1.4;">
-                            <strong>🆕 Neue Features in dieser Version:</strong><br>
-                            • <strong>Favoriten-System</strong> - Markieren Sie wichtige Links mit ⭐<br>
-                            • <strong>Kategorie-Import/Export</strong> - Teilen Sie Kategorien als JSON-Dateien<br>
-                            • <strong>Erweiterte Suche</strong> - Durchsuchen Sie alle Links mit STRG+K<br>
-                            • <strong>Drag & Drop</strong> - Sortieren Sie Links und Kategorien per Maus<br>
-                            • <strong>Responsive Design</strong> - Optimiert für Desktop und Mobile
+                        <div style="color: #40e0d0; font-size: 13px; line-height: 1.6;">
+                            <strong>✨ Features (v3.3):</strong><br>
+                            • <strong>Multi-Tab-System</strong> – Tabs automatisch aus Config/-Dateien erkannt<br>
+                            • <strong>Favoriten-Tab</strong> – Alle markierten Links aus allen Tabs auf einen Blick<br>
+                            • <strong>Angepinnte Links</strong> – Tab-übergreifende Schnellzugriffsleiste oben (📌 Rechtsklick auf Link)<br>
+                            • <strong>Bento-Grid-Layout</strong> – Kacheln skalieren automatisch nach Link-Anzahl<br>
+                            • <strong>Globale Suche</strong> – Alle Tabs gleichzeitig durchsuchen (Strg+K)<br>
+                            • <strong>Rechtsklick-Menü</strong> – Links/Kategorien bearbeiten, löschen, verschieben, anpinnen<br>
+                            • <strong>Tab-Kontextmenü</strong> – Rechtsklick auf Tab: umbenennen, ausblenden, zusammenführen<br>
+                            • <strong>Import / Export</strong> – Vollständige Config, einzelne Kategorie oder einzelner Link<br>
+                            • <strong>Standard zurücksetzen</strong> – Stellt Config, Icon und Tab-Reihenfolge aus der Default-Config wieder her
                         </div>
                     </div>
 
                     <div class="form-buttons" style="display: flex; flex-direction: column; gap: 15px;">
-                        <button type="button" class="btn btn-primary" id="loadJsonBtn" style="padding: 16px 24px; font-size: 16px;">
+                        <button type="button" class="${hasDefaultConfig ? 'btn btn-secondary' : 'btn btn-primary'}" id="loadJsonBtn" style="padding: 16px 24px; font-size: 16px;">
                             <span>📂</span> Bestehende Konfiguration aus JSON-Datei laden
                         </button>
-                        
+
                         ${defaultConfigButton}
-                        
+
                         <div style="text-align: center; margin-top: 15px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 10px; border: 1px solid rgba(255, 193, 7, 0.3);">
                             <div style="color: #ffd54f; font-size: 14px; margin-bottom: 8px;">
-                                <strong>💾 Hinweis zur Datenspeicherung</strong>
+                                <strong>💾 Datenspeicherung</strong>
                             </div>
                             <div style="color: rgba(255, 255, 255, 0.9); font-size: 12px; line-height: 1.4;">
-                                Ihre Konfiguration wird lokal in Ihrem Browser gespeichert.<br>
-                                Sie können jederzeit über das Menü (⚙️ → Daten verwalten) Backups erstellen.
+                                Die Konfiguration wird lokal im Browser gespeichert.<br>
+                                Über das Menü (☰) jederzeit exportieren, importieren oder zurücksetzen.
                             </div>
                         </div>
-                        
-                        <div style="text-align: center; margin-top: 10px;">
-                            <small style="color: rgba(240, 240, 240, 0.7); font-size: 12px;">
-                                ⚙️ Später: Menü → "Konfiguration laden" für weitere JSON-Importe
-                            </small>
+
+                        <div style="text-align: center; margin-top: 8px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.07);">
+                            <div style="color: rgba(200, 200, 200, 0.55); font-size: 11px; line-height: 1.5;">
+                                💡 <strong style="color: rgba(200,200,200,0.7);">Diesen Dialog dauerhaft deaktivieren:</strong><br>
+                                <code style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;">JS/welcome-config-loader.js</code> löschen oder umbenennen.<br>
+                                Beim nächsten Erststart werden die Default-Configs aus <code style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;">Config/</code> direkt geladen.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,7 +248,6 @@ class ExtendedWelcomeLoader {
         };
         document.addEventListener('keydown', handleEscapeKey);
 
-        const configType = hasDefaultConfig ? 'mit Standard-Konfiguration' : 'mit Fallback-Konfiguration';
     }
 
     /**
@@ -265,14 +298,16 @@ class ExtendedWelcomeLoader {
         // Prüfen ob die Hauptfunktion verfügbar ist
         if (typeof window.loadConfig === 'function') {
             const configLoaded = window.loadConfig();
-            
-            if (configLoaded && hasDefaultConfig) {
+            const hasDynamicConfigs = typeof window.DYNAMIC_CONFIGS !== 'undefined' &&
+                Object.keys(window.DYNAMIC_CONFIGS).length > 0;
+
+            if (configLoaded || hasDynamicConfigs) {
                 this.showStatusMessage({
                     title: '🌟 Standard-Konfiguration geladen',
-                    content: 'Die vorkonfigurierte Standard-Konfiguration wurde erfolgreich geladen! Erkunden Sie die neuen Features wie Favoriten (⭐) und Kategorie-Export.'
+                    content: 'Die Default-Konfiguration wurde geladen. Tabs, Links und Kategorien sind bereit — jetzt anpassen oder per Rechtsklick bearbeiten.'
                 }, 'success');
-            } else if (!configLoaded && hasDefaultConfig) {
-                // Standard-Config ist da, aber loadConfig gab false zurück
+            } else if (hasDefaultConfig) {
+                // Standard-Config ist da, aber keine DYNAMIC_CONFIGS und kein localStorage
                 this.showStatusMessage({
                     title: '⚠️ Problem beim Laden der Standard-Konfiguration',
                     content: 'Es gab ein Problem beim Laden der Standard-Konfiguration. Fallback wird verwendet.'
@@ -301,7 +336,7 @@ class ExtendedWelcomeLoader {
             setTimeout(() => {
                 this.showStatusMessage({
                     title: '✅ Lokale Konfiguration erfolgreich geladen',
-                    content: 'Ihre gespeicherte Konfiguration wurde aus dem Browser-Speicher geladen. Alle Features sind verfügbar!'
+                    content: 'Ihre gespeicherte Konfiguration wurde aus dem Browser-Speicher geladen.'
                 }, 'success');
             }, 1000);
         }

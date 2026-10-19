@@ -1,0 +1,250 @@
+/* ========================================================================
+   DRAG & DROP — Handles, Dragging States, Drop Indicators, Scroll Zones
+   ======================================================================== */
+
+/* Drag Handles */
+.drag-handle {
+    color: rgba(64, 224, 208, 0.4);
+    font-size: 1.5em;
+    cursor: grab;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    user-select: none;
+    opacity: 0.7;
+    z-index: 10;
+    position: relative;
+}
+
+.drag-handle:hover {
+    color: #40e0d0;
+    background: rgba(64, 224, 208, 0.1);
+    opacity: 1;
+}
+
+.drag-handle.active {
+    color: #40e0d0;
+    background: rgba(64, 224, 208, 0.15);
+    opacity: 1;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.link-drag-handle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 6px;
+    color: rgba(64, 224, 208, 0.6);
+    font-size: 1.2em;
+    cursor: grab;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    user-select: none;
+    opacity: 0;
+    z-index: 10;
+}
+
+.link-item:hover .link-drag-handle {
+    opacity: 1;
+}
+
+.link-drag-handle:hover {
+    color: #40e0d0;
+    background: rgba(64, 224, 208, 0.1);
+}
+
+.link-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Dragging States */
+.category.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+.link-item.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+    cursor: grabbing;
+}
+
+.link-item.dragging:hover {
+    transform: rotate(5deg);
+}
+
+/* Drag Over States */
+.category.drag-over-before {
+    transform: translateY(-5px);
+    border-color: rgba(64, 224, 208, 0.65) !important;
+    box-shadow: 0 -6px 20px rgba(64, 224, 208, 0.2), 0 6px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
+.category.drag-over-after {
+    transform: translateY(5px);
+    border-color: rgba(64, 224, 208, 0.65) !important;
+    box-shadow: 0 6px 20px rgba(64, 224, 208, 0.2), 0 6px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Placed Animation */
+@keyframes categoryPlaced {
+    0%   { box-shadow: 0 0 0 4px rgba(64, 224, 208, 0.55), 0 6px 28px rgba(0, 0, 0, 0.45); }
+    100% { box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45); }
+}
+
+.category.category-just-moved {
+    animation: categoryPlaced 0.5s ease-out forwards;
+}
+
+/* Link Drag Over States */
+.link-item.drag-over-top {
+    border-top: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-bottom {
+    border-bottom: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-left {
+    border-left: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-right {
+    border-right: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-top-left {
+    border-top: 3px solid rgba(64, 224, 208, 0.8);
+    border-left: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-bottom-right {
+    border-bottom: 3px solid rgba(64, 224, 208, 0.8);
+    border-right: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-top-right {
+    border-top: 3px solid rgba(64, 224, 208, 0.8);
+    border-right: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-bottom-left {
+    border-bottom: 3px solid rgba(64, 224, 208, 0.8);
+    border-left: 3px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.05);
+}
+
+.link-item.drag-over-center {
+    border: 2px solid rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.1);
+}
+
+/* Drop Indicators */
+.drop-indicator-line {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, rgba(64, 224, 208, 0.8), transparent);
+    border-radius: 2px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 10px rgba(64, 224, 208, 0.5);
+}
+
+.drop-indicator-line.active {
+    opacity: 1;
+}
+
+.drop-indicator-line.before {
+    top: -6px;
+    left: -20px;
+    right: -20px;
+    height: 3px;
+}
+
+.drop-indicator-line.after {
+    bottom: -6px;
+    left: -20px;
+    right: -20px;
+    height: 3px;
+}
+
+.drop-indicator-line.left {
+    left: -6px;
+    top: -10px;
+    bottom: -10px;
+    width: 3px;
+    background: linear-gradient(0deg, transparent, rgba(64, 224, 208, 0.8), transparent);
+}
+
+.drop-indicator-line.right {
+    right: -6px;
+    top: -10px;
+    bottom: -10px;
+    width: 3px;
+    background: linear-gradient(0deg, transparent, rgba(64, 224, 208, 0.8), transparent);
+}
+
+/* Scroll Zones für Auto-Scroll */
+.scroll-zone {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 100px;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: linear-gradient(transparent, rgba(64, 224, 208, 0.1));
+    border: 2px dashed rgba(64, 224, 208, 0.3);
+}
+
+.scroll-zone.top {
+    top: 0;
+    background: linear-gradient(rgba(64, 224, 208, 0.1), transparent);
+    border-bottom: 2px dashed rgba(64, 224, 208, 0.5);
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.scroll-zone.bottom {
+    bottom: 0;
+    background: linear-gradient(transparent, rgba(64, 224, 208, 0.1));
+    border-top: 2px dashed rgba(64, 224, 208, 0.5);
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+}
+
+.scroll-zone.active {
+    opacity: 1;
+}
+
+.scroll-zone::after {
+    content: '↑ Zum Scrollen hier halten';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(64, 224, 208, 0.8);
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.scroll-zone.bottom::after {
+    content: '↓ Zum Scrollen hier halten';
+}

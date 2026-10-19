@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linksammlung v3.3 — Nutzeranleitung</title>
+    <style>
+        /* =============================================
+           PRINT + SCREEN STYLES
+           ============================================= */
+        :root {
+            --accent:     #2563eb;
+            --accent-lt:  #dbeafe;
+            --text:       #1e293b;
+            --muted:      #64748b;
+            --border:     #e2e8f0;
+            --bg-section: #f8fafc;
+            --bg-warn:    #fffbeb;
+            --border-warn:#fde68a;
+            --bg-tip:     #f0fdf4;
+            --border-tip: #bbf7d0;
+            --bg-code:    #f1f5f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+            font-size: 13.5pt;
+            line-height: 1.65;
+            color: var(--text);
+            background: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 48px;
+        }
+
+        /* ---- TYPOGRAPHY ---- */
+        h1 {
+            font-size: 26pt;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        h2 {
+            font-size: 16pt;
+            font-weight: 700;
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            page-break-after: avoid;
+        }
+        h3 {
+            font-size: 12.5pt;
+            font-weight: 700;
+            color: var(--text);
+            margin-top: 20px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
+        }
+        p  { margin-bottom: 10px; }
+        ul, ol { padding-left: 22px; margin-bottom: 10px; }
+        li { margin-bottom: 4px; }
+
+        /* ---- COVER ---- */
+        .cover {
+            text-align: center;
+            padding: 60px 0 50px;
+            border-bottom: 3px solid var(--accent);
+            margin-bottom: 36px;
+        }
+        .cover .subtitle {
+            font-size: 13pt;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+        .cover .version-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10pt;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+            margin-top: 12px;
+        }
+
+        /* ---- TOC ---- */
+        .toc {
+            background: var(--bg-section);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 22px 28px;
+            margin-bottom: 36px;
+        }
+        .toc h2 {
+            border: none;
+            margin-top: 0;
+            font-size: 13pt;
+            color: var(--text);
+        }
+        .toc ol {
+            list-style: decimal;
+            padding-left: 20px;
+        }
+        .toc li { margin-bottom: 3px; font-size: 11.5pt; }
+        .toc a  { color: var(--accent); text-decoration: none; }
+
+        /* ---- CALLOUTS ---- */
+        .tip, .warning, .info {
+            border-radius: 7px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 12pt;
+        }
+        .tip {
+            background: var(--bg-tip);
+            border-left: 4px solid #22c55e;
+        }
+        .warning {
+            background: var(--bg-warn);
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: var(--accent-lt);
+            border-left: 4px solid var(--accent);
+        }
+        .tip strong, .warning strong, .info strong { display: block; margin-bottom: 3px; }
+
+        /* ---- KEYBOARD SHORTCUT ---- */
+        kbd {
+            display: inline-block;
+            background: #e2e8f0;
+            border: 1px solid #94a3b8;
+            border-radius: 4px;
+            padding: 1px 7px;
+            font-family: monospace;
+            font-size: 11.5pt;
+            font-weight: 600;
+            box-shadow: 0 1px 0 #94a3b8;
+        }
+
+        /* ---- CODE / INLINE ---- */
+        code {
+            background: var(--bg-code);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            font-size: 11pt;
+            color: #0f172a;
+        }
+
+        /* ---- STEP LIST ---- */
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding-left: 38px;
+            margin-bottom: 12px;
+        }
+        .steps li {
+            counter-increment: step;
+            position: relative;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: -38px;
+            top: 1px;
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10pt;
+            font-weight: 700;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+        }
+
+        /* ---- TABLE ---- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+            margin: 12px 0 16px;
+        }
+        th {
+            background: var(--accent);
+            color: #fff;
+            padding: 7px 11px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 6px 11px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:nth-child(even) td { background: var(--bg-section); }
+
+        /* ---- SECTION SEPARATOR ---- */
+        section { margin-bottom: 10px; }
+
+        /* ---- FOOTER ---- */
+        .footer {
+            margin-top: 48px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 10.5pt;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* =============================================
+           PRINT OVERRIDES
+           ============================================= */
+        @media print {
+            body { padding: 0; max-width: none; font-size: 11pt; }
+            .cover { padding: 40px 0 36px; }
+            h2 { margin-top: 24px; }
+            a { color: var(--accent) !important; text-decoration: none; }
+
+            /* force page breaks */
+            .page-break { page-break-before: always; }
+            section { page-break-inside: avoid; }
+
+            /* hide TOC links – printed doc has no hyperlinks */
+            .toc a { color: var(--text); }
+
+            @page {
+                margin: 2cm 2.2cm 2.2cm 2.2cm;
+                @bottom-center {
+                    content: "Linksammlung v3.3 — Nutzeranleitung  |  Seite " counter(page);
+                    font-size: 9pt;
+                    color: #94a3b8;
+                }
+            }
+        }
+
+        @media screen {
+            .print-hint {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: var(--accent);
+                color: #fff;
+                padding: 10px 18px;
+                border-radius: 8px;
+                font-size: 11pt;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                cursor: pointer;
+            }
+        }
+        @media print { .print-hint { display: none; } }
+    </style>
+</head>
+<body>
+
+<!-- PRINT HINT (nur im Browser sichtbar) -->
+<div class="print-hint" onclick="window.print()">🖨️ Als PDF speichern (Strg+P)</div>
+
+<!-- =============================================
+     COVER
+     ============================================= -->
+<div class="cover">
+    <div style="font-size: 48pt; margin-bottom: 12px;">🔗</div>
+    <h1>Linksammlung</h1>
+    <div class="subtitle">Deine persönliche Browser-Startseite für Links &amp; Lesezeichen</div>
+    <div class="version-badge">Version 3.3</div>
+    <div style="margin-top: 24px; font-size: 11pt; color: var(--muted);">
+        Stand: April 2026 &nbsp;·&nbsp; Nutzeranleitung
+    </div>
+</div>
+
+<!-- =============================================
+     INHALTSVERZEICHNIS
+     ============================================= -->
+<div class="toc">
+    <h2>Inhaltsverzeichnis</h2>
+    <ol>
+        <li><a href="#einleitung">Was ist die Linksammlung?</a></li>
+        <li><a href="#setup">Einrichtung &amp; Erster Start</a></li>
+        <li><a href="#oberflaeche">Oberfläche im Überblick</a></li>
+        <li><a href="#links">Links öffnen &amp; nutzen</a></li>
+        <li><a href="#hinzufuegen">Links &amp; Kategorien hinzufügen</a></li>
+        <li><a href="#bearbeiten">Bearbeiten, Löschen &amp; Verschieben</a></li>
+        <li><a href="#tabs">Tabs verwalten</a></li>
+        <li><a href="#suche">Suche</a></li>
+        <li><a href="#favoriten">Favoriten</a></li>
+        <li><a href="#sortieren">Reihenfolge &amp; Drag&amp;Drop</a></li>
+        <li><a href="#ansicht">Ansichtsoptionen</a></li>
+        <li><a href="#import-export">Import &amp; Export (Backup)</a></li>
+        <li><a href="#defaultconfig">Dauerhaftes Speichern via Default-Config</a></li>
+        <li><a href="#reset">Zurücksetzen</a></li>
+        <li><a href="#tipps">Tastenkürzel &amp; Tipps</a></li>
+
+    </ol>
+</div>
+
+<!-- =============================================
+     1. EINLEITUNG
+     ============================================= -->
+<section id="einleitung">
+<h2>1. Was ist die Linksammlung?</h2>
+<p>
+    Die Linksammlung ist eine persönliche <strong>Browser-Startseite</strong>, auf der du alle
+    deine wichtigen Websites, Tools und Dienste strukturiert ablegen kannst.
+    Sie läuft vollständig im Browser — es ist keine Installation,
+    kein Server und keine Internetverbindung erforderlich.
+</p>
+<p>
+    Deine Links werden in <strong>Tabs</strong> (Themengruppen) und innerhalb der Tabs in
+    <strong>Kategorien</strong> organisiert. Alles, was du hinzufügst oder änderst,
+    wird automatisch im Browser gespeichert.
+</p>
+
+<h3>Was kann die App?</h3>
+<ul>
+    <li><strong>Multi-Tab-System</strong> — mehrere Themen-Tabs (z.&nbsp;B. Arbeit, Gaming, News)</li>
+    <li><strong>Kategorien &amp; Links</strong> — Links nach Thema gruppieren</li>
+    <li><strong>Favoriten-Sidebar</strong> — Lieblingslinks immer schnell erreichbar</li>
+    <li><strong>Globale Suche</strong> — alle Links auf einmal durchsuchen</li>
+    <li><strong>Drag &amp; Drop</strong> — Links und Kategorien per Maus umsortieren</li>
+    <li><strong>Import &amp; Export</strong> — Konfiguration sichern und auf anderen Geräten wiederherstellen</li>
+    <li><strong>Browser-Lesezeichen importieren</strong> — bestehende Favoriten übernehmen</li>
+    <li><strong>Kein Konto, kein Cloud-Dienst</strong> — alles bleibt lokal auf deinem Gerät</li>
+</ul>
+</section>
+
+<!-- =============================================
+     2. EINRICHTUNG
+     ============================================= -->
+<section id="setup" class="page-break">
+<h2>2. Einrichtung &amp; Erster Start</h2>
+
+<h3>Voraussetzungen</h3>
+<p>Du brauchst nur einen modernen Browser (Chrome, Firefox, Edge, Safari).
+   Öffne die Datei <code>Linksammlung.html</code> aus dem erhaltenen Ordner
+   direkt im Browser — per Doppelklick oder über <em>Datei → Öffnen</em>.</p>
+
+<div class="tip">
+    <strong>💡 Tipp: Als Startseite setzen</strong>
+    In deinem Browser kannst du die Datei als Startseite festlegen, sodass sie
+    automatisch beim Öffnen eines neuen Fensters erscheint.
+</div>
+
+<h3>Willkommensdialog beim ersten Start</h3>
+<p>Wenn noch keine eigene Konfiguration vorhanden ist, erscheint beim ersten
+   Öffnen ein Begrüßungsdialog mit zwei Optionen:</p>
+
+<table>
+    <tr>
+        <th>Option</th>
+        <th>Wann sinnvoll?</th>
+    </tr>
+    <tr>
+        <td>📂 <strong>Konfiguration aus JSON laden</strong></td>
+        <td>Du hast eine Backup-Datei (<code>.json</code>) von einem anderen Gerät.</td>
+    </tr>
+    <tr>
+        <td>🌟 <strong>Standard-Konfiguration verwenden</strong></td>
+        <td>Erster Start ohne Backup — lädt die mitgelieferten Demo-Links als Startpunkt.</td>
+    </tr>
+</table>
+
+<div class="info">
+    <strong>ℹ️ Hinweis zur Datenspeicherung</strong>
+    Die Linksammlung speichert deine Daten im <em>localStorage</em> des Browsers.
+    Das bedeutet: Die Daten sind an genau diesen Browser und diesen Nutzer gebunden.
+    Andere Browser oder andere Nutzerprofile auf demselben PC sehen eine leere App.
+    Für Übertragungen auf andere Geräte nutze die <a href="#import-export">Export-Funktion</a>.
+</div>
+</section>
+
+<!-- =============================================
+     3. OBERFLÄCHE
+     ============================================= -->
+<section id="oberflaeche" class="page-break">
+<h2>3. Oberfläche im Überblick</h2>
+
+<p>Die Benutzeroberfläche besteht aus vier Hauptbereichen:</p>
+
+<table>
+    <tr>
+        <th>Bereich</th>
+        <th>Position</th>
+        <th>Funktion</th>
+    </tr>
+    <tr>
+        <td>🔍 <strong>Suchleiste</strong></td>
+        <td>Oben, mittig</td>
+        <td>Links schnell finden — auch per <kbd>Strg</kbd>+<kbd>K</kbd></td>
+    </tr>
+    <tr>
+        <td>📋 <strong>Tab-Leiste</strong></td>
+        <td>Unter der Suchleiste</td>
+        <td>Zwischen Themen-Tabs wechseln</td>
+    </tr>
+    <tr>
+        <td>⭐ <strong>Favoriten-Button</strong></td>
+        <td>Oben links (fest)</td>
+        <td>Favoriten-Sidebar öffnen/schließen</td>
+    </tr>
+    <tr>
+        <td>➕ <strong>Menü-Button</strong></td>
+        <td>Unten rechts (fest)</td>
+        <td>Hauptmenü: Links/Kategorien/Tabs hinzufügen, Import/Export</td>
+    </tr>
+</table>
+
+<h3>Haupt-Inhaltsbereich</h3>
+<p>Unterhalb der Tab-Leiste siehst du die <strong>Kategorien</strong> des aktiven Tabs.
+   Jede Kategorie hat einen Titel mit Emoji und enthält Link-Kacheln.
+   Kategorien lassen sich durch Klick auf den Titel auf- und zuklappen.</p>
+
+<h3>Der + / Menü-Button</h3>
+<p>Der runde <strong>+</strong>-Button unten rechts öffnet das Hauptmenü mit allen
+   Verwaltungsfunktionen. Klicke ihn erneut oder drücke <kbd>Esc</kbd>, um ihn zu schließen.</p>
+</section>
+
+<!-- =============================================
+     4. LINKS ÖFFNEN
+     ============================================= -->
+<section id="links">
+<h2>4. Links öffnen &amp; nutzen</h2>
+
+<ul>
+    <li><strong>Linksklick</strong> auf eine Link-Kachel → öffnet die Seite in einem neuen Tab.</li>
+    <li><strong>Beschreibung</strong> — erscheint entweder immer oder nur beim Hover (einstellbar, siehe <a href="#ansicht">Abschnitt 11</a>).</li>
+    <li>Das <strong>Emoji-Icon</strong> links auf der Kachel ist das individuelle Symbol des Links.</li>
+</ul>
+</section>
+
+<!-- =============================================
+     5. HINZUFÜGEN
+     ============================================= -->
+<section id="hinzufuegen" class="page-break">
+<h2>5. Links &amp; Kategorien hinzufügen</h2>
+
+<h3>Neuen Link hinzufügen</h3>
+<ol class="steps">
+    <li>Klicke auf den <strong>+ Button</strong> unten rechts.</li>
+    <li>Wähle <strong>➕ Neuen Link hinzufügen</strong>.</li>
+    <li>Fülle das Formular aus: Kategorie, Titel, URL (Pflichtfelder) sowie optional Beschreibung und Icon.</li>
+    <li>Mit dem <strong>😊-Button</strong> neben dem Icon-Feld öffnest du einen Emoji-Picker.</li>
+    <li>Optional: <strong>Als Favorit</strong> setzen, damit der Link sofort in der Favoriten-Sidebar erscheint.</li>
+    <li>Klicke <strong>Hinzufügen</strong> — fertig.</li>
+</ol>
+
+<h3>Neue Kategorie erstellen</h3>
+<ol class="steps">
+    <li>Klicke auf den <strong>+ Button</strong> → <strong>📁 Neue Kategorie erstellen</strong>.</li>
+    <li>Gib einen Namen ein und wähle optional ein Emoji-Icon.</li>
+    <li>Klicke <strong>Erstellen</strong>.</li>
+</ol>
+<p>Die neue Kategorie erscheint im aktuell aktiven Tab.</p>
+
+<div class="tip">
+    <strong>💡 Schneller Einstieg</strong>
+    Du kannst auch <strong>Browser-Lesezeichen importieren</strong> (HTML-Export aus Chrome/Firefox).
+    Öffne dazu das Hauptmenü → <em>Importieren</em> → <em>Browser-Lesezeichen</em>.
+    Du wählst dann, welche Ordner übernommen werden sollen.
+</div>
+</section>
+
+<!-- =============================================
+     6. BEARBEITEN / LÖSCHEN / VERSCHIEBEN
+     ============================================= -->
+<section id="bearbeiten">
+<h2>6. Bearbeiten, Löschen &amp; Verschieben</h2>
+
+<h3>Link-Kontextmenü (Rechtsklick auf eine Link-Kachel)</h3>
+<table>
+    <tr><th>Option</th><th>Funktion</th></tr>
+    <tr><td>⭐ Als Favorit setzen</td><td>Link zur Favoriten-Sidebar hinzufügen/entfernen</td></tr>
+    <tr><td>✏️ Bearbeiten</td><td>Titel, URL, Beschreibung oder Icon ändern</td></tr>
+    <tr><td>🔀 In Tab verschieben</td><td>Link in einen anderen Tab und/oder eine andere Kategorie verschieben</td></tr>
+    <tr><td>📤 Exportieren</td><td>Diesen einzelnen Link als JSON-Datei speichern</td></tr>
+    <tr><td>🗑️ Löschen</td><td>Link dauerhaft entfernen</td></tr>
+</table>
+
+<h3>Kategorie-Kontextmenü (Rechtsklick auf den Kategorie-Titel)</h3>
+<table>
+    <tr><th>Option</th><th>Funktion</th></tr>
+    <tr><td>✏️ Kategorie bearbeiten</td><td>Name oder Icon der Kategorie ändern</td></tr>
+    <tr><td>👁️ Auf-/Zuklappen</td><td>Kategorie ausblenden oder einblenden</td></tr>
+    <tr><td>🔀 In Tab verschieben</td><td>Gesamte Kategorie in einen anderen Tab verschieben</td></tr>
+    <tr><td>📤 Kategorie exportieren</td><td>Kategorie mit allen Links als JSON speichern</td></tr>
+    <tr><td>🗑️ Kategorie löschen</td><td>Kategorie dauerhaft entfernen</td></tr>
+</table>
+
+<div class="warning">
+    <strong>⚠️ Vorsicht beim Löschen</strong>
+    Gelöschte Links und Kategorien können nicht rückgängig gemacht werden.
+    Mache vorher ein Backup über <em>Menü → Konfiguration exportieren</em>.
+</div>
+</section>
+
+<!-- =============================================
+     7. TABS
+     ============================================= -->
+<section id="tabs" class="page-break">
+<h2>7. Tabs verwalten</h2>
+
+<p>Tabs ermöglichen es, die Linksammlung in große Themenbereiche aufzuteilen
+   (z.&nbsp;B. „Arbeit", „Freizeit", „Projekte").</p>
+
+<h3>Neuen Tab erstellen</h3>
+<ol class="steps">
+    <li>Klicke auf den <strong>+ Button</strong> unten rechts.</li>
+    <li>Am Ende der Tab-Leiste befindet sich ein <strong>＋-Button</strong> — klicke ihn.</li>
+    <li>Gib dem Tab einen Namen und optional ein Emoji-Icon.</li>
+    <li>Klicke <strong>Tab erstellen</strong>.</li>
+</ol>
+
+<h3>Tab-Kontextmenü (Rechtsklick auf einen Tab)</h3>
+<table>
+    <tr><th>Option</th><th>Funktion</th></tr>
+    <tr><td>✏️ Tab umbenennen</td><td>Name und Icon des Tabs ändern</td></tr>
+    <tr><td>👁️ Tab ausblenden</td><td>Tab aus der Leiste verstecken (Inhalt bleibt erhalten)</td></tr>
+    <tr><td>🔀 Mit Tab zusammenführen</td><td>Alle Kategorien dieses Tabs in einen anderen Tab verschieben</td></tr>
+    <tr><td>🗑️ Tab löschen</td><td>Tab mit allen Kategorien und Links dauerhaft entfernen</td></tr>
+</table>
+
+<div class="info">
+    <strong>ℹ️ Ausgeblendete Tabs</strong>
+    Ausgeblendete Tabs erscheinen nicht mehr in der Leiste, aber ihr Inhalt geht
+    nicht verloren. Du kannst sie über das Menü jederzeit wieder einblenden.
+</div>
+
+<h3>Spezial-Tab: Favoriten</h3>
+<p>Der erste Tab in der Leiste ist der <strong>⭐ Favoriten-Tab</strong>. Er zeigt automatisch
+   alle Links an, die du als Favorit markiert hast — aus allen anderen Tabs zusammen.
+   Er kann nicht gelöscht werden.</p>
+</section>
+
+<!-- =============================================
+     8. SUCHE
+     ============================================= -->
+<section id="suche">
+<h2>8. Suche</h2>
+
+<h3>Schnellsuche in der Suchleiste</h3>
+<p>Die Suchleiste oben filtert Links des aktuell sichtbaren Tabs in Echtzeit.</p>
+
+<h3>Globale Suche mit Strg+K</h3>
+<ol class="steps">
+    <li>Drücke <kbd>Strg</kbd>+<kbd>K</kbd> (oder klicke in die Suchleiste, bis das große Suchfenster erscheint).</li>
+    <li>Tippe einen Suchbegriff — <strong>alle Tabs</strong> werden gleichzeitig durchsucht.</li>
+    <li>Navigiere mit <kbd>↑</kbd> / <kbd>↓</kbd> durch die Ergebnisse.</li>
+    <li>Drücke <kbd>↵</kbd> (Enter), um den markierten Link zu öffnen.</li>
+    <li>Drücke <kbd>Esc</kbd>, um die Suche zu schließen.</li>
+</ol>
+
+<h3>Suchbereich umschalten</h3>
+<p>Neben der Suchleiste gibt es einen <strong>🌐-Button</strong>. Er steuert, ob die
+   Suche alle Tabs oder nur den aktiven Tab durchsucht — per Klick umschalten.</p>
+</section>
+
+<!-- =============================================
+     9. FAVORITEN
+     ============================================= -->
+<section id="favoriten">
+<h2>9. Favoriten</h2>
+
+<p>Favoriten sind Links, die du als besonders wichtig markierst. Du kannst
+   auf alle Favoriten jederzeit über die Sidebar zugreifen.</p>
+
+<h3>Link als Favorit markieren</h3>
+<ul>
+    <li><strong>Beim Hinzufügen:</strong> Haken bei „Als Favorit setzen" setzen.</li>
+    <li><strong>Nachträglich:</strong> Rechtsklick auf den Link → <em>⭐ Als Favorit setzen</em>.</li>
+</ul>
+
+<h3>Favoriten-Sidebar öffnen</h3>
+<p>Klicke auf den <strong>⭐-Button</strong> oben links. Die Sidebar schiebt sich von links herein
+   und zeigt alle Favoriten-Links. Die Zahl auf dem Button zeigt die aktuelle Anzahl.</p>
+</section>
+
+<!-- =============================================
+     10. SORTIEREN / DRAG & DROP
+     ============================================= -->
+<section id="sortieren" class="page-break">
+<h2>10. Reihenfolge &amp; Drag&amp;Drop</h2>
+
+<p>Sowohl Links als auch Kategorien können per Maus frei umsortiert werden.</p>
+
+<h3>So funktioniert es</h3>
+<ol class="steps">
+    <li>Halte die Maus über eine Link-Kachel oder einen Kategorie-Titel — der <strong>⋮⋮ Handle</strong> erscheint links.</li>
+    <li>Klicke und halte den Handle (<strong>⋮⋮</strong>) gedrückt.</li>
+    <li>Ziehe das Element an die gewünschte Position.</li>
+    <li>Lasse die Maustaste los — die neue Reihenfolge wird automatisch gespeichert.</li>
+</ol>
+
+<div class="tip">
+    <strong>💡 Hinweis</strong>
+    Links können nur innerhalb ihrer Kategorie umsortiert werden.
+    Um einen Link in eine andere Kategorie oder einen anderen Tab zu verschieben,
+    nutze das Rechtsklick-Menü → <em>🔀 In Tab verschieben</em>.
+</div>
+</section>
+
+<!-- =============================================
+     11. ANSICHTSOPTIONEN
+     ============================================= -->
+<section id="ansicht">
+<h2>11. Ansichtsoptionen</h2>
+
+<h3>Beschreibungen-Toggle</h3>
+<p>Unterhalb der Tab-Leiste gibt es einen Button <strong>📝 Beschreibungen</strong>. Damit schaltest du um, ob Beschreibungen
+   der Links dauerhaft sichtbar sind oder nur beim Darüberfahren (Hover)
+   erscheinen.</p>
+
+<h3>Alle Kategorien auf-/zuklappen</h3>
+<p>Über das Hauptmenü (<strong>+ Button</strong> → Abschnitt <em>Ansicht</em>) kannst du:</p>
+<ul>
+    <li><strong>📖 Alle Kategorien aufklappen</strong> — zeigt alle Links in allen Kategorien.</li>
+    <li><strong>📋 Alle Kategorien zuklappen</strong> — versteckt alle Links, nur Titel sind sichtbar.</li>
+</ul>
+<p>Einzelne Kategorien lassen sich auch durch direkten Klick auf den Kategorie-Titel umschalten.</p>
+</section>
+
+<!-- =============================================
+     12. IMPORT & EXPORT
+     ============================================= -->
+<section id="import-export" class="page-break">
+<h2>12. Import &amp; Export (Backup)</h2>
+
+<p>Das Menü (<strong>+ Button</strong>) bietet verschiedene Import- und Export-Optionen.</p>
+
+<div class="warning">
+    <strong>⚠️ Wichtig: Alle Import/Export-Funktionen beziehen sich immer nur auf den aktuell geöffneten Tab.</strong>
+    Um mehrere oder alle Tabs zu sichern, musst du jeden Tab einzeln exportieren — oder die
+    Funktion <em>Alle Default-Configs</em> verwenden (siehe <a href="#defaultconfig">Abschnitt 13</a>).
+</div>
+
+<h3>Exportieren (aktueller Tab)</h3>
+<table>
+    <tr><th>Option</th><th>Was wird gespeichert?</th></tr>
+    <tr>
+        <td>💾 Konfiguration exportieren</td>
+        <td>Den <strong>aktuell geöffneten Tab</strong> (alle Kategorien + Links) als JSON-Datei.
+            Dateiname: <code>meine-links-&lt;TabName&gt;.json</code></td>
+    </tr>
+    <tr>
+        <td>📤 Einzelnen Link exportieren</td>
+        <td>Rechtsklick auf einen Link → <em>Exportieren</em> — speichert nur diesen einen Link.</td>
+    </tr>
+    <tr>
+        <td>📤 Kategorie exportieren</td>
+        <td>Rechtsklick auf einen Kategorie-Titel → <em>Kategorie exportieren</em> — speichert die ganze Kategorie mit allen Links.</td>
+    </tr>
+</table>
+
+<h3>Importieren (in aktuellen Tab)</h3>
+<table>
+    <tr><th>Option</th><th>Was passiert?</th></tr>
+    <tr>
+        <td>📂 Konfiguration laden</td>
+        <td><strong>Ersetzt den aktuellen Tab</strong> durch den Inhalt der JSON-Datei.
+            Nutze dies zum Wiederherstellen eines Tab-Backups.</td>
+    </tr>
+    <tr>
+        <td>📁 Kategorie importieren</td>
+        <td>Fügt eine gespeicherte Kategorie (mit Links) in den aktuellen Tab ein.</td>
+    </tr>
+    <tr>
+        <td>🔗 Link importieren</td>
+        <td>Fügt einen einzelnen Link hinzu — du kannst die Zielkategorie wählen.</td>
+    </tr>
+    <tr>
+        <td>🌐 Browser-Lesezeichen</td>
+        <td>Importiert eine HTML-Lesezeichendatei aus Chrome, Firefox oder Edge.
+            Du wählst, welche Ordner übernommen werden sollen.</td>
+    </tr>
+</table>
+
+<div class="warning">
+    <strong>⚠️ Achtung beim Konfiguration laden</strong>
+    „Konfiguration laden" überschreibt den gesamten Inhalt des aktuellen Tabs.
+    Mache vorher ein Backup (Konfiguration exportieren), falls du die Daten nicht verlieren möchtest.
+</div>
+
+<h3>Browser-Lesezeichen exportieren (Chrome)</h3>
+<ol class="steps">
+    <li>Chrome: <kbd>Strg</kbd>+<kbd>Umschalt</kbd>+<kbd>O</kbd> → Lesezeichen-Manager öffnen.</li>
+    <li>Rechts oben auf die <strong>⋮ Drei-Punkte</strong> klicken → <em>Lesezeichen exportieren</em>.</li>
+    <li>Die gespeicherte <code>.html</code>-Datei in der Linksammlung unter <em>Importieren → Browser-Lesezeichen</em> laden.</li>
+</ol>
+</section>
+
+<!-- =============================================
+     13. DEFAULT-CONFIG (dauerhaftes Speichern)
+     ============================================= -->
+<section id="defaultconfig" class="page-break">
+<h2>13. Dauerhaftes Speichern via Default-Config</h2>
+
+<h3>Hintergrund: Wie die App Daten speichert</h3>
+<p>
+    Die Linksammlung speichert alle Änderungen im <strong>localStorage</strong> des Browsers.
+    Das ist ein browserseitiger Zwischenspeicher — er kann in bestimmten Situationen
+    verloren gehen:
+</p>
+<ul>
+    <li>Browser-Einstellung „Daten beim Beenden löschen" ist aktiv</li>
+    <li>Privater / Inkognito-Modus (localStorage wird bei Fenster-Schließen geleert)</li>
+    <li>Manuelles Löschen von Browser-Daten / Cache</li>
+    <li>Manche Browser-Profile oder Unternehmensrichtlinien deaktivieren localStorage</li>
+</ul>
+<p>
+    In diesen Fällen hilft ein JSON-Backup allein nicht, weil man es nach jedem
+    Browser-Start manuell importieren müsste. Die Lösung sind <strong>Default-Config-Dateien</strong>.
+</p>
+
+<h3>Was sind Default-Config-Dateien?</h3>
+<p>
+    Im Ordner <code>Config/</code> liegen <code>.js</code>-Dateien (z.&nbsp;B.
+    <code>Default_config-Allgemein.js</code>). Diese werden beim Start der App
+    direkt geladen — <em>unabhängig</em> vom Browser-Cache. Wenn der localStorage
+    leer ist (z.&nbsp;B. nach Browser-Neustart), greift die App automatisch auf
+    diese Dateien zurück. Wer seine Änderungen also in diese Dateien schreibt,
+    hat sie dauerhaft gespeichert.
+</p>
+
+<div class="info">
+    <strong>ℹ️ Ladereihenfolge beim App-Start</strong><br>
+    1. Ist etwas im localStorage? → diesen Stand laden (Änderungen der letzten Session)<br>
+    2. localStorage leer? → Inhalt aus den <code>Default_config-*.js</code>-Dateien laden
+</div>
+
+<h3>Workflow: Änderungen dauerhaft in Default-Config schreiben</h3>
+
+<p>
+    Wenn du in einer Umgebung arbeitest, in der der Browser-Speicher regelmäßig
+    gelöscht wird, gehe nach jeder Bearbeitungssession so vor:
+</p>
+
+<ol class="steps">
+    <li>
+        Wechsle zum Tab, den du sichern möchtest (oder exportiere alle auf einmal).
+    </li>
+    <li>
+        Öffne das Hauptmenü (+ Button) → Abschnitt <em>Exportieren</em>.<br>
+        <strong>Option A — nur der aktive Tab:</strong> Klicke auf
+        <em>💫 Default-Config (Tab)</em>. Es erscheint eine Vorschau mit Statistiken,
+        dann → <em>Default-Config exportieren</em>.<br>
+        <strong>Option B — alle Tabs auf einmal:</strong> Klicke auf
+        <em>📦 Alle Default-Configs</em>. Es wird eine <code>.zip</code>-Datei
+        mit einer <code>.js</code>-Datei pro Tab heruntergeladen.
+    </li>
+    <li>
+        Die heruntergeladene(n) <code>.js</code>-Datei(en) in den Ordner <code>Config/</code>
+        der Linksammlung kopieren und die alten Dateien gleichen Namens <strong>überschreiben</strong>.<br>
+        <strong>Nur bei neuen Tabs (kein gleichnamiges File vorhanden):</strong> Öffne
+        <code>Linksammlung.html</code> in einem Texteditor und füge einen neuen
+        <code>&lt;script&gt;</code>-Tag ein — direkt unterhalb der bestehenden Config-Script-Zeilen:
+        <code>&lt;script src="Config/Default_config-MeinTab.js"&gt;&lt;/script&gt;</code>.<br>
+        Beim Überschreiben bestehender Dateien ist dieser Schritt nicht nötig.
+    </li>
+    <li>
+        Browser neu starten und die <code>Linksammlung.html</code> öffnen —
+        die App lädt jetzt deine gespeicherten Inhalte aus den neuen <code>.js</code>-Dateien.
+    </li>
+</ol>
+
+<div class="tip">
+    <strong>💡 Wann welche Export-Option?</strong><br>
+    <strong>JSON-Export</strong> (<em>Konfiguration exportieren</em>) → klassisches Backup eines einzelnen
+    Tabs; nützlich zum Übertragen auf ein anderes Gerät oder als schnelle Sicherung.<br>
+    <strong>Default-Config-Export</strong> → macht die aktuellen Inhalte zum neuen
+    „Werksstand" — sinnvoll wenn localStorage unzuverlässig ist oder du die
+    App an jemand anderen weitergibst.
+</div>
+
+<div class="warning">
+    <strong>⚠️ Dateien müssen im richtigen Ordner liegen</strong>
+    Die <code>.js</code>-Dateien müssen im <code>Config/</code>-Ordner direkt neben
+    <code>Linksammlung.html</code> liegen. Die App lädt sie nicht automatisch aus
+    Unterordnern oder anderen Pfaden.
+</div>
+</section>
+
+<!-- =============================================
+     14. ZURÜCKSETZEN
+     ============================================= -->
+<section id="reset">
+<h2>14. Zurücksetzen</h2>
+
+<p>Über das Hauptmenü → ganz unten → <strong>🔄 Auf Standard zurücksetzen</strong> wird der
+   <strong>aktuell aktive Tab</strong> auf den Inhalt seiner zugehörigen
+   <code>Default_config-&lt;TabName&gt;.js</code>-Datei zurückgesetzt.
+   Alle anderen Tabs bleiben unverändert.</p>
+
+<p>Was genau passiert:</p>
+<ul>
+    <li>Alle Kategorien und Links des <em>aktiven</em> Tabs werden durch den Stand der
+        entsprechenden Default-Config-Datei ersetzt.</li>
+    <li>Tab-Reihenfolge und Icons werden ebenfalls aus der Default-Config wiederhergestellt.</li>
+    <li>Tabs, die manuell angelegt wurden (kein eigener Default-Config-Eintrag vorhanden), bleiben erhalten.</li>
+</ul>
+
+<div class="warning">
+    <strong>⚠️ Achtung: Daten des aktiven Tabs werden überschrieben</strong>
+    Alle eigenen Änderungen im aktuellen Tab (Links, Kategorien) werden gelöscht und durch
+    den Inhalt der Default-Config ersetzt. Vorher ein Backup erstellen
+    (<em>Konfiguration exportieren</em>)!
+</div>
+
+<h3>Duplikate prüfen</h3>
+<p>Über das Hauptmenü → <em>🛠️ Verwaltung</em> → <strong>🔍 Duplikate prüfen</strong> kannst du
+   doppelt vorhandene Links finden und bereinigen.</p>
+</section>
+
+<!-- =============================================
+     15. TASTENKÜRZEL & TIPPS
+     ============================================= -->
+<section id="tipps" class="page-break">
+<h2>15. Tastenkürzel &amp; Tipps</h2>
+
+<h3>Tastenkürzel</h3>
+<table>
+    <tr><th>Kürzel</th><th>Funktion</th></tr>
+    <tr><td><kbd>Strg</kbd>+<kbd>K</kbd></td><td>Globale Suche öffnen (alle Tabs)</td></tr>
+    <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>In Suchergebnissen navigieren</td></tr>
+    <tr><td><kbd>↵</kbd></td><td>Markierten Treffer öffnen</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Suche / Menü schließen</td></tr>
+</table>
+
+<h3>Schnell-Tipps</h3>
+<ul>
+    <li>Rechtsklick auf einen Link oder Kategorie-Titel für alle Bearbeitungsoptionen.</li>
+    <li>Rechtsklick auf einen Tab für Umbenennen, Ausblenden oder Zusammenführen.</li>
+    <li>Die Zahl am ⭐-Button zeigt sofort, wie viele Favoriten du hast.</li>
+    <li>Kategorien lassen sich durch Klick auf den Titel auf- und zuklappen — praktisch bei vielen Links.</li>
+    <li>Der Suchbereich-Schalter (🌐) neben der Suchleiste wechselt zwischen Tab-Suche und Globalsuche.</li>
+    <li>Beim Importieren von Browser-Lesezeichen kannst du einzelne Ordner gezielt auswählen — du musst nicht alles übernehmen.</li>
+</ul>
+
+<h3>Daten sichern — Best Practices</h3>
+<ul>
+    <li>Exportiere die Konfiguration vor größeren Änderungen (Menü → Konfiguration exportieren).</li>
+    <li>Benenne die Backup-Datei mit Datum, z.&nbsp;B. <code>linksammlung-2026-04-06.json</code>.</li>
+    <li>Lösche keine Browser-Daten / Cache ohne vorheriges Backup — der localStorage geht dabei verloren.</li>
+    <li>Auf einem neuen Gerät einfach die JSON-Datei importieren (Menü → Konfiguration laden).</li>
+</ul>
+</section>
+
+<!-- =============================================
+     FOOTER
+     ============================================= -->
+<div class="footer">
+    Linksammlung v3.3 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; April 2026
+</div>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+/* ========================================================================
+   NAVIGATION — FAB-Button, Submenü, Menü-Items
+   ======================================================================== */
+
+/* Haupt-Add Button (FAB) */
+.add-link {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #40e0d0, #64ffda);
+    color: #1a1a2e;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: bold;
+    z-index: 100;
+}
+
+.add-link:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(64, 224, 208, 0.5);
+}
+
+.add-link.active {
+    transform: rotate(45deg);
+}
+
+/* Submenu */
+.menu-submenu {
+    position: fixed;
+    bottom: 110px;
+    right: 30px;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    z-index: 99;
+    background: rgba(15, 15, 28, 0.97);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(64, 224, 208, 0.3);
+    border-radius: 18px;
+    padding: 12px;
+    width: 250px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(64, 224, 208, 0.3) transparent;
+}
+
+.menu-submenu.active {
+    display: flex;
+    animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.submenu-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 0;
+}
+
+.submenu-section:not(:last-child) {
+    border-bottom: 1px solid rgba(64, 224, 208, 0.12);
+}
+
+.submenu-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(64, 224, 208, 0.6);
+    padding: 0 6px 4px;
+}
+
+.submenu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.submenu-item {
+    background: rgba(30, 30, 50, 0.7);
+    border: 1px solid rgba(64, 224, 208, 0.18);
+    border-radius: 10px;
+    padding: 9px 10px;
+    color: #d0d0d0;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.submenu-item:hover {
+    background: rgba(64, 224, 208, 0.1);
+    border-color: rgba(64, 224, 208, 0.45);
+    transform: translateY(-1px);
+    color: #e8e8e8;
+}
+
+.submenu-item.primary {
+    background: linear-gradient(135deg, rgba(64, 224, 208, 0.25), rgba(100, 255, 218, 0.15));
+    border-color: rgba(64, 224, 208, 0.5);
+    color: #40e0d0;
+    font-weight: 600;
+}
+
+.submenu-item.primary:hover {
+    background: linear-gradient(135deg, rgba(64, 224, 208, 0.35), rgba(100, 255, 218, 0.25));
+    border-color: rgba(64, 224, 208, 0.75);
+}
+
+.submenu-item.danger {
+    border-color: rgba(255, 80, 80, 0.25);
+    color: rgba(255, 130, 130, 0.85);
+    width: 100%;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.submenu-item.danger:hover {
+    background: rgba(255, 60, 60, 0.12);
+    border-color: rgba(255, 80, 80, 0.5);
+    color: #ff8080;
+    transform: none;
+}

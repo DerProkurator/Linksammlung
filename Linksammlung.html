@@ -15,56 +15,80 @@
     </div>
 
     <div class="container">
+        <!-- Top-Bar: Favoriten-Toggle + angepinnte Links -->
+        <div class="top-bar">
+            <button class="top-bar-fav-btn" id="favoritesToggle" onclick="toggleFavorites()">
+                <span class="favorites-icon">⭐</span>
+                <span class="favorites-count" id="favoritesCount">0</span>
+            </button>
+            <div class="top-bar-pinned" id="pinnedBar"></div>
+        </div>
+
         <h1>Meine Links</h1>
-        
-        <!-- Suchleiste -->
+
+        <!-- Suchleiste (global, über allen Tabs) -->
         <div class="search-container">
             <div style="position: relative;">
-                <input type="text" 
-                       class="search-input" 
-                       id="searchInput" 
-                       placeholder="Links durchsuchen..." 
+                <input type="text"
+                       class="search-input"
+                       id="searchInput"
+                       placeholder="Links durchsuchen..."
                        autocomplete="off">
                 <div class="search-shortcut">STRG+K</div>
                 <span class="search-icon">🔍</span>
             </div>
+            <button class="search-scope-btn" id="searchScopeBtn"
+                    onclick="toggleSearchScope()"
+                    title="Alle Tabs durchsuchen (klicken: nur aktiver Tab)">🌐</button>
         </div>
 
-        <!-- Favoriten-Toggle Button (oben links fixed) -->
-        <button class="favorites-toggle-button" id="favoritesToggle" onclick="toggleFavorites()">
-            <span class="favorites-icon">⭐</span>
-            <span class="favorites-count" id="favoritesCount">0</span>
-        </button>
+        <!-- ================================================
+             TAB-LEISTE + ANSICHTS-OPTIONEN
+             ================================================ -->
+        <div class="tab-bar" id="tabBar">
+            <!-- Wird dynamisch durch tabs.js befüllt -->
+        </div>
 
-        
-        <input type="file" id="fileInput" accept=".json" onchange="importConfig(event)">
-        <input type="file" id="linkFileInput" accept=".json" onchange="importSingleLink(event)">
+        <!-- Ansichts-Optionen (Beschreibungen-Toggle) -->
+        <div class="view-options-bar">
+            <button class="desc-toggle-btn" id="descriptionToggleBtn" onclick="toggleDescriptionMode()" title="Umschalten: Beschreibungen immer sichtbar / nur bei Hover anzeigen">
+                <span id="descToggleIcon">📝</span>
+                <span id="descToggleText">Beschreibungen</span>
+            </button>
+        </div>
+
+        <!-- Versteckte File-Inputs -->
+        <input type="file" id="fileInput"         accept=".json" onchange="importConfig(event)">
+        <input type="file" id="linkFileInput"     accept=".json" onchange="importSingleLink(event)">
         <input type="file" id="categoryFileInput" accept=".json" onchange="importSingleCategory(event)">
-        
+        <input type="file" id="bookmarkFileInput" accept=".html,.htm" style="display:none;" onchange="importBrowserBookmarks(event)">
+
         <div id="categoriesContainer">
             <!-- Kategorien werden hier dynamisch eingefügt -->
         </div>
         <br>
         <br>
         <div class="drag-info">
-            💡 Tipp: 
-            Kategorien und Links über ⋮⋮ verschieben • Kategorie-Titel zum Auf-/Zuklappen klicken und Rechtsklick für Bearbeitung. 
-            <strong>Suche mit STRG+K</strong> • <strong>⭐ für Favoriten</strong>
+            💡 Tipp:
+            Kategorien und Links über ⋮⋮ verschieben • Kategorie-Titel zum Auf-/Zuklappen klicken und Rechtsklick für Bearbeitung.
+            <strong>Suche mit STRG+K durchsucht alle Tabs</strong> • <strong>⭐ für Favoriten</strong>
         </div>
 
         <div class="copyright">
-            © 2025 BS - Link-Sammlung v2.6
+            © 2026 BS - Link-Sammlung v3.3
         </div>
     </div>
 
-    <!-- Such-Overlay -->
+    <!-- ================================================
+         SUCH-OVERLAY
+         ================================================ -->
     <div class="search-overlay" id="searchOverlay">
         <div class="search-modal">
             <div class="search-modal-header">
-                <input type="text" 
-                       class="search-modal-input" 
-                       id="searchModalInput" 
-                       placeholder="Links durchsuchen..." 
+                <input type="text"
+                       class="search-modal-input"
+                       id="searchModalInput"
+                       placeholder="Links durchsuchen (alle Tabs)..."
                        autocomplete="off">
             </div>
             <div class="search-results" id="searchResults">
@@ -92,67 +116,105 @@
         </div>
     </div>
 
-    <!-- Toast-Notification außerhalb des Containers -->
+    <!-- Toast-Notification -->
     <div class="status-message" id="statusMessage"></div>
 
+    <!-- ================================================
+         HAUPTMENÜ (+ Button)
+         ================================================ -->
     <div class="menu-submenu" id="menuSubmenu">
+
         <div class="submenu-section">
-            <div class="submenu-item section-title">
-                <span>📝</span> Inhalte hinzufügen
-            </div>
-            <div class="submenu-item primary" onclick="openModal()">
-                <span>➕</span> Neuen Link hinzufügen
-            </div>
-            <div class="submenu-item" onclick="openCategoryModal()">
-                <span>📁</span> Neue Kategorie erstellen
+            <div class="submenu-section-title">📝 Hinzufügen</div>
+            <div class="submenu-list">
+                <div class="submenu-item primary" onclick="openModal()">
+                    <span>➕</span> Neuen Link hinzufügen
+                </div>
+                <div class="submenu-item" onclick="openCategoryModal()">
+                    <span>📁</span> Neue Kategorie erstellen
+                </div>
             </div>
         </div>
-        
+
         <div class="submenu-section">
-            <div class="submenu-item section-title">
-                <span>👁️</span> Ansicht verwalten
-            </div>
-            <div class="submenu-item" onclick="expandAllCategories()">
-                <span>📖</span> Alle Kategorien aufklappen
-            </div>
-            <div class="submenu-item" onclick="collapseAllCategories()">
-                <span>📋</span> Alle Kategorien zuklappen
+            <div class="submenu-section-title">👁️ Ansicht</div>
+            <div class="submenu-list">
+                <div class="submenu-item" onclick="expandAllCategories()">
+                    <span>📖</span> Alle Kategorien aufklappen
+                </div>
+                <div class="submenu-item" onclick="collapseAllCategories()">
+                    <span>📋</span> Alle Kategorien zuklappen
+                </div>
             </div>
         </div>
-        
+
         <div class="submenu-section">
-            <div class="submenu-item section-title">
-                <span>💾</span> Daten verwalten
+            <div class="submenu-section-title">📥 Importieren</div>
+            <div class="submenu-list">
+                <div class="submenu-item" onclick="document.getElementById('fileInput').click()">
+                    <span>📂</span> Konfiguration laden
+                </div>
+                <div class="submenu-item" onclick="document.getElementById('categoryFileInput').click()">
+                    <span>📁</span> Kategorie importieren
+                </div>
+                <div class="submenu-item" onclick="document.getElementById('linkFileInput').click()">
+                    <span>🔗</span> Link importieren
+                </div>
+                <div class="submenu-item" onclick="document.getElementById('bookmarkFileInput').click()">
+                    <span>🌐</span> Browser-Lesezeichen
+                </div>
             </div>
-            <div class="submenu-item" onclick="document.getElementById('linkFileInput').click()">
-                <span>📥</span> Link importieren
+        </div>
+
+        <div class="submenu-section">
+            <div class="submenu-section-title">💾 Exportieren</div>
+            <div class="submenu-list">
+                <div class="submenu-item" onclick="exportConfig()">
+                    <span>💾</span> Konfiguration exportieren
+                </div>
+                <div class="submenu-item" onclick="previewDefaultConfig()">
+                    <span>💫</span> Default-Config (Tab)
+                </div>
+                <div class="submenu-item" onclick="previewAllDefaultConfigs()">
+                    <span>📦</span> Alle Default-Configs
+                </div>
             </div>
-            <div class="submenu-item" onclick="document.getElementById('categoryFileInput').click()">
-                <span>📥</span> Kategorie importieren
+        </div>
+
+        <div class="submenu-section">
+            <div class="submenu-section-title">🛠️ Verwaltung</div>
+            <div class="submenu-list">
+                <div class="submenu-item" onclick="openDuplicatesModal()">
+                    <span>🔍</span> Duplikate prüfen
+                </div>
             </div>
-            <div class="submenu-item" onclick="exportConfig()">
-                <span>💾</span> Konfiguration exportieren
-            </div>
-            <div class="submenu-item" onclick="previewDefaultConfig()">
-                <span>💫</span> Default-Config exportieren
-            </div>
-            <div class="submenu-item" onclick="document.getElementById('fileInput').click()">
-                <span>📁</span> Konfiguration laden
-            </div>
-            <div class="submenu-item" onclick="resetToDefault()">
+        </div>
+
+        <div class="submenu-section">
+            <div class="submenu-item danger" onclick="resetToDefault()">
                 <span>🔄</span> Auf Standard zurücksetzen
             </div>
         </div>
+
     </div>
 
     <button class="add-link" id="mainMenuButton" onclick="toggleMenu()">+</button>
 
+    <!-- ================================================
+         KONTEXT-MENÜS
+         ================================================ -->
     <div class="context-menu" id="contextMenu">
         <div class="context-menu-item" onclick="toggleLinkFavorite()">
             <span id="favoriteToggleIcon">⭐</span> <span id="favoriteToggleText">Als Favorit setzen</span>
         </div>
+        <div class="context-menu-item" onclick="toggleLinkPinned()">
+            <span id="pinnedToggleIcon">📌</span> <span id="pinnedToggleText">Anpinnen</span>
+        </div>
         <div class="context-menu-item" onclick="editLink()">
             <span>✏️</span> Bearbeiten
+        </div>
+        <div class="context-menu-item" onclick="openMoveLinkModal()">
+            <span>🔀</span> In Tab verschieben
         </div>
         <div class="context-menu-item export" onclick="exportSingleLink()">
             <span>📤</span> Exportieren
@@ -169,6 +231,9 @@
         <div class="context-menu-item toggle" onclick="toggleCategoryFromContext()">
             <span>👁️</span> Kategorie auf-/zuklappen
         </div>
+        <div class="context-menu-item" onclick="openMoveCategoryModal()">
+            <span>🔀</span> In Tab verschieben
+        </div>
         <div class="context-menu-item export" onclick="exportSingleCategory()">
             <span>📤</span> Kategorie exportieren
         </div>
@@ -177,6 +242,27 @@
         </div>
     </div>
 
+    <!-- Tab-Kontext-Menü (Rechtsklick auf Tab) -->
+    <div class="context-menu" id="tabContextMenu">
+        <div class="context-menu-item" onclick="renameTabFromContext()">
+            <span>✏️</span> Tab umbenennen
+        </div>
+        <div class="context-menu-item" id="tabContextHide" onclick="toggleTabVisibilityFromContext()">
+            <span>👁️</span> <span id="tabContextHideLabel">Tab ausblenden</span>
+        </div>
+        <div class="context-menu-item" onclick="openMergeTabModal()">
+            <span>🔀</span> Mit Tab zusammenführen
+        </div>
+        <div class="context-menu-item delete" id="tabContextDelete" onclick="deleteTabFromContext()">
+            <span>🗑️</span> Tab löschen
+        </div>
+    </div>
+
+    <!-- ================================================
+         MODALS
+         ================================================ -->
+
+    <!-- Link hinzufügen / bearbeiten -->
     <div class="modal" id="linkModal">
         <div class="modal-content">
             <h2>Neuen Link hinzufügen</h2>
@@ -207,13 +293,9 @@
                         <div class="emoji-picker" id="linkIconPicker">
                             <div class="emoji-picker-header">
                                 <input type="text" class="emoji-search" placeholder="Emoji suchen..." onkeyup="searchEmojis(this.value, 'linkIconPicker')">
-                                <div class="emoji-categories" id="linkIconCategories">
-                                    <!-- Kategorien werden dynamisch eingefügt -->
-                                </div>
+                                <div class="emoji-categories" id="linkIconCategories"></div>
                             </div>
-                            <div class="emoji-grid" id="linkIconGrid">
-                                <!-- Emojis werden dynamisch eingefügt -->
-                            </div>
+                            <div class="emoji-grid" id="linkIconGrid"></div>
                         </div>
                     </div>
                 </div>
@@ -236,6 +318,7 @@
         </div>
     </div>
 
+    <!-- Kategorie erstellen / bearbeiten -->
     <div class="modal" id="categoryModal">
         <div class="modal-content">
             <h2>Neue Kategorie erstellen</h2>
@@ -252,13 +335,9 @@
                         <div class="emoji-picker" id="categoryIconPicker">
                             <div class="emoji-picker-header">
                                 <input type="text" class="emoji-search" placeholder="Emoji suchen..." onkeyup="searchEmojis(this.value, 'categoryIconPicker')">
-                                <div class="emoji-categories" id="categoryIconCategories">
-                                    <!-- Kategorien werden dynamisch eingefügt -->
-                                </div>
+                                <div class="emoji-categories" id="categoryIconCategories"></div>
                             </div>
-                            <div class="emoji-grid" id="categoryIconGrid">
-                                <!-- Emojis werden dynamisch eingefügt -->
-                            </div>
+                            <div class="emoji-grid" id="categoryIconGrid"></div>
                         </div>
                     </div>
                 </div>
@@ -270,6 +349,7 @@
         </div>
     </div>
 
+    <!-- Kategorie auswählen (beim Link-Import) -->
     <div class="modal" id="categorySelectModal">
         <div class="modal-content">
             <h2>Kategorie auswählen</h2>
@@ -289,7 +369,6 @@
                     <option value="__new__">📁 Neue Kategorie erstellen</option>
                 </select>
             </div>
-            
             <div id="newCategoryFields" style="display: none;">
                 <div class="form-group">
                     <label>Neuer Kategorie-Name</label>
@@ -303,18 +382,13 @@
                         <div class="emoji-picker" id="newCategoryIconPicker">
                             <div class="emoji-picker-header">
                                 <input type="text" class="emoji-search" placeholder="Emoji suchen..." onkeyup="searchEmojis(this.value, 'newCategoryIconPicker')">
-                                <div class="emoji-categories" id="newCategoryIconCategories">
-                                    <!-- Kategorien werden dynamisch eingefügt -->
-                                </div>
+                                <div class="emoji-categories" id="newCategoryIconCategories"></div>
                             </div>
-                            <div class="emoji-grid" id="newCategoryIconGrid">
-                                <!-- Emojis werden dynamisch eingefügt -->
-                            </div>
+                            <div class="emoji-grid" id="newCategoryIconGrid"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            
             <div class="form-buttons">
                 <button type="button" class="btn btn-secondary" onclick="closeCategorySelectModal()">Abbrechen</button>
                 <button type="button" class="btn btn-primary" onclick="confirmLinkImport()">Importieren</button>
@@ -322,13 +396,11 @@
         </div>
     </div>
 
-    <!-- Neues Modal für leere Kategorie-Bestätigung -->
+    <!-- Leere Kategorie -->
     <div class="modal" id="emptyCategoryModal">
         <div class="modal-content">
             <h2>🗑️ Leere Kategorie gefunden</h2>
-            <div id="emptyCategoryMessage" style="margin-bottom: 20px;">
-                <!-- Dynamischer Inhalt wird hier eingefügt -->
-            </div>
+            <div id="emptyCategoryMessage" style="margin-bottom: 20px;"></div>
             <div class="form-buttons">
                 <button type="button" class="btn btn-secondary" onclick="handleEmptyCategoryDecision(false)">
                     <span>📁</span> Kategorie behalten
@@ -336,6 +408,162 @@
                 <button type="button" class="btn btn-primary" onclick="handleEmptyCategoryDecision(true)">
                     <span>🗑️</span> Kategorie löschen
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Neuen Tab hinzufügen -->
+    <div class="modal" id="addTabModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h2>Neuen Tab hinzufügen</h2>
+            <div class="form-group">
+                <label>Tab-Name</label>
+                <input type="text" id="newTabLabel" placeholder="z.B. Gaming, Projekte, ..." maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>Icon (Emoji) <span style="color: rgba(224, 224, 224, 0.6); font-size: 0.9em;">(optional)</span></label>
+                <div class="emoji-input-container">
+                    <input type="text" id="newTabIcon" placeholder="📋 (Standard)" maxlength="2">
+                    <div class="emoji-trigger" onclick="toggleEmojiPicker('newTabIcon')">😊</div>
+                    <div class="emoji-picker" id="newTabIconPicker">
+                        <div class="emoji-picker-header">
+                            <input type="text" class="emoji-search" placeholder="Emoji suchen..." onkeyup="searchEmojis(this.value, 'newTabIconPicker')">
+                            <div class="emoji-categories" id="newTabIconCategories"></div>
+                        </div>
+                        <div class="emoji-grid" id="newTabIconGrid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeAddTabModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAddTab()">Tab erstellen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab umbenennen -->
+    <div class="modal" id="renameTabModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h2>Tab umbenennen</h2>
+            <input type="hidden" id="renameTabId">
+            <div class="form-group">
+                <label>Neuer Name</label>
+                <input type="text" id="renameTabLabel" placeholder="Tab-Name" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>Icon (Emoji)</label>
+                <div class="emoji-input-container">
+                    <input type="text" id="renameTabIcon" placeholder="📋" maxlength="2">
+                    <div class="emoji-trigger" onclick="toggleEmojiPicker('renameTabIcon')">😊</div>
+                    <div class="emoji-picker" id="renameTabIconPicker">
+                        <div class="emoji-picker-header">
+                            <input type="text" class="emoji-search" placeholder="Emoji suchen..." onkeyup="searchEmojis(this.value, 'renameTabIconPicker')">
+                            <div class="emoji-categories" id="renameTabIconCategories"></div>
+                        </div>
+                        <div class="emoji-grid" id="renameTabIconGrid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeRenameTabModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="confirmRenameTab()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser-Lesezeichen importieren -->
+    <div class="modal" id="bookmarkImportModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2><span class="modal-emoji">🌐</span> Browser-Lesezeichen importieren</h2>
+            <div class="bm-stats" id="bmStats"></div>
+            <div class="bm-import-tree" id="bmImportTree"></div>
+            <div id="bmRootLinksSection"></div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeBookmarkImportModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="confirmBookmarkImport()">
+                    <span>📥</span> <span id="bmImportBtnText">Importieren</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link in anderen Tab verschieben -->
+    <div class="modal" id="moveLinkModal" style="display:none;">
+        <div class="modal-content" style="max-width:460px;">
+            <h2><span class="modal-emoji">🔀</span> Link verschieben</h2>
+            <p class="move-modal-info" id="moveLinkInfo"></p>
+            <div class="form-group">
+                <label>Ziel-Tab</label>
+                <select class="form-input" id="moveLinkTargetTab" onchange="updateMoveLinkCategories()"></select>
+            </div>
+            <div class="form-group">
+                <label>Ziel-Kategorie</label>
+                <select class="form-input" id="moveLinkTargetCat" onchange="toggleMoveLinkNewCat()"></select>
+            </div>
+            <div class="form-group" id="moveLinkNewCatGroup" style="display:none;">
+                <label>Name der neuen Kategorie</label>
+                <input type="text" class="form-input" id="moveLinkNewCatName" placeholder="Kategorie-Name">
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeMoveLinkModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="confirmMoveLink()">Verschieben</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs zusammenführen -->
+    <div class="modal" id="mergeTabModal" style="display:none;">
+        <div class="modal-content" style="max-width:460px;">
+            <h2><span class="modal-emoji">🔀</span> Tabs zusammenführen</h2>
+            <p class="move-modal-info">
+                Tab <strong id="mergeTabSourceName"></strong> wird aufgelöst und alle Kategorien
+                in den Ziel-Tab eingefügt. Gleichnamige Kategorien werden zusammengeführt.
+            </p>
+            <div class="form-group">
+                <label>Zusammenführen mit</label>
+                <select class="form-input" id="mergeTabTarget"></select>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeMergeTabModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary btn-danger-confirm" onclick="confirmMergeTab()">Zusammenführen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kategorie in anderen Tab verschieben -->
+    <div class="modal" id="moveCategoryModal" style="display:none;">
+        <div class="modal-content" style="max-width:460px;">
+            <h2><span class="modal-emoji">🔀</span> Kategorie verschieben</h2>
+            <p class="move-modal-info" id="moveCategoryInfo"></p>
+            <div class="form-group">
+                <label>Ziel-Tab</label>
+                <select class="form-input" id="moveCategoryTargetTab"></select>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeMoveCategoryModal()">Abbrechen</button>
+                <button type="button" class="btn btn-primary" onclick="confirmMoveCategory()">Verschieben</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTML-Snippet Hinweis nach Default-Config-Export -->
+    <div class="modal" id="snippetHintModal" style="display:none;">
+        <div class="modal-content" style="max-width:520px;">
+            <h2><span class="modal-emoji">📋</span> Script-Tag einfügen</h2>
+            <p id="snippetHintDesc" style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;">
+                Kopiere diesen Tag und füge ihn in <code>Linksammlung.html</code> nach den bestehenden
+                <code>&lt;script src="Config/..."&gt;</code>-Zeilen ein.
+                <span style="margin-top:8px;display:block;color:rgba(64,224,208,0.8);font-size:0.92em;">
+                    💡 In <code>Linksammlung.html</code> nach <code>Dynamische Tab-Configs</code> suchen —
+                    dort befinden sich die bestehenden <code>&lt;script&gt;</code>-Zeilen.
+                </span>
+            </p>
+            <div class="snippet-hint-box">
+                <code id="snippetHintCode"></code>
+                <button class="snippet-copy-btn" onclick="copySnippetHint()" title="Kopieren">⎘</button>
+            </div>
+            <div class="form-buttons" style="margin-top:16px;">
+                <button type="button" class="btn btn-primary" onclick="closeSnippetHintModal()">Verstanden</button>
             </div>
         </div>
     </div>
@@ -356,19 +584,38 @@
     </div>
 
     <!-- ========================================
-         SCRIPTS: KONFIGURATION + ORIGINAL + WILLKOMMEN
+         SCRIPTS: KONFIGURATION + MODULE
          ======================================== -->
-    
-    <!-- Standard-Konfiguration laden -->
+
+    <!-- Standard-Konfiguration laden (Fallback für Backward-Kompatibilität) -->
     <script src=".\Config\default-config.js"></script>
+
+    <!-- Dynamische Tab-Configs: jede Datei registriert sich als Tab.
+         Reihenfolge hier = Tab-Reihenfolge in der App.
+         Neuer Tab: Datei anlegen + Script-Tag hier eintragen. -->
+    <script src="Config/Demo_config-Allgemein.js"></script>
+    <script src="Config/Demo_config-Entwicklung.js"></script>
 
     <!-- Emoji-Datenbank laden -->
     <script src=".\JS\emoji-database.js"></script>
-    
-    <!-- Original Linksammlung (erweitert) -->
+
+    <!-- Module (Reihenfolge beachten: Abhängigkeiten zuerst) -->
+    <script src=".\JS\config.js"></script>
+    <script src=".\JS\tabs.js"></script>
+    <script src=".\JS\favorites.js"></script>
+    <script src=".\JS\search.js"></script>
+    <script src=".\JS\categories.js"></script>
+    <script src=".\JS\links.js"></script>
+    <script src=".\JS\import-export.js"></script>
+    <script src=".\JS\drag-drop.js"></script>
+    <script src=".\JS\ui.js"></script>
+    <script src=".\JS\emoji.js"></script>
+    <script src=".\JS\pinned.js"></script>
+
+    <!-- Initialisierung -->
     <script src=".\JS\script.js"></script>
-    
-    <!-- NEU: Willkommensdialog beim ersten Start (erweitert) -->
+
+    <!-- Willkommensdialog beim ersten Start -->
     <script src=".\JS\welcome-config-loader.js"></script>
 </body>
 </html>

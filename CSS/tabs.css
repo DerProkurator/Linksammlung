@@ -1,0 +1,274 @@
+/* ========================================================================
+   TABS — Tab-Leiste, Tab-Buttons, Favoriten-Tab, Favoriten-Tab-Inhalt
+   ======================================================================== */
+
+/* Tab-Leiste */
+.tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    margin-bottom: 0;
+    padding: 8px 12px;
+    background: rgba(15, 15, 28, 0.7);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    border: 1px solid rgba(64, 224, 208, 0.15);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(64, 224, 208, 0.3) transparent;
+    flex-wrap: nowrap;
+}
+
+.tab-bar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+    background: rgba(64, 224, 208, 0.3);
+    border-radius: 2px;
+}
+
+/* Tab-Button */
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 50, 0.5);
+    border: 1px solid rgba(64, 224, 208, 0.15);
+    border-radius: 10px;
+    color: rgba(224, 224, 224, 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+.tab-btn:hover {
+    background: rgba(40, 40, 65, 0.8);
+    border-color: rgba(64, 224, 208, 0.35);
+    color: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    background: rgba(64, 224, 208, 0.18);
+    border-color: rgba(64, 224, 208, 0.55);
+    color: #40e0d0;
+    font-weight: 600;
+    box-shadow: 0 2px 12px rgba(64, 224, 208, 0.2);
+}
+
+.tab-btn-icon {
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+
+.tab-btn-label {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Favoriten-Tab Button */
+.tab-btn-favorites {
+    border-color: rgba(255, 193, 7, 0.2);
+    color: rgba(255, 213, 79, 0.7);
+}
+
+.tab-btn-favorites:hover {
+    background: rgba(255, 193, 7, 0.12);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #ffd54f;
+}
+
+.tab-btn-favorites.active {
+    background: rgba(255, 193, 7, 0.18);
+    border-color: rgba(255, 193, 7, 0.6);
+    color: #ffd54f;
+    box-shadow: 0 2px 12px rgba(255, 193, 7, 0.25);
+}
+
+/* Indikator ausgeblendete Tabs */
+.tab-hidden-indicator {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 10px;
+    background: rgba(30, 30, 50, 0.5);
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+.tab-hidden-indicator:hover { border-color: rgba(64,224,208,0.4); color: rgba(64,224,208,0.8); }
+
+/* Popup für ausgeblendete Tabs */
+.hidden-tabs-popup {
+    position: fixed;
+    z-index: 9999;
+    background: rgba(20, 20, 35, 0.97);
+    border: 1px solid rgba(64,224,208,0.3);
+    border-radius: 10px;
+    padding: 6px 0;
+    min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.hidden-tabs-popup-item {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.hidden-tabs-popup-item:hover { background: rgba(64,224,208,0.12); color: #40e0d0; }
+
+/* + Tab hinzufügen Button */
+.tab-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: rgba(30, 30, 50, 0.5);
+    border: 1px dashed rgba(64, 224, 208, 0.25);
+    border-radius: 10px;
+    color: rgba(64, 224, 208, 0.5);
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+    font-family: inherit;
+    line-height: 1;
+    padding: 0;
+}
+
+.tab-add-btn:hover {
+    background: rgba(64, 224, 208, 0.12);
+    border-color: rgba(64, 224, 208, 0.5);
+    border-style: solid;
+    color: #40e0d0;
+    transform: scale(1.1);
+}
+
+/* ========================================================================
+   FAVORITEN-TAB — Aggregierte Favoriten-Ansicht
+   ======================================================================== */
+
+/* Haupt-Wrapper: Sektionen untereinander */
+.fav-tab-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+/* Sektion pro Tab: gold-akzentuierte Karte */
+.fav-tab-section {
+    width: 100%;
+    background: rgba(20, 20, 35, 0.55);
+    border: 1px solid rgba(255, 193, 7, 0.22);
+    border-radius: 14px;
+    padding: 12px 14px 14px;
+    backdrop-filter: blur(12px);
+    box-sizing: border-box;
+}
+
+/* Kompakter Pill-Header */
+.fav-tab-section-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 193, 7, 0.12);
+}
+
+.fav-tab-section-icon {
+    font-size: 0.95em;
+    line-height: 1;
+}
+
+.fav-tab-section-label {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: rgba(255, 213, 79, 0.85);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex: 1;
+}
+
+.fav-tab-section-count {
+    font-size: 0.7em;
+    font-weight: 700;
+    color: #ffd54f;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 10px;
+    padding: 1px 7px;
+    line-height: 1.6;
+}
+
+/* Grid innerhalb einer Sektion */
+.fav-tab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    width: 100%;
+}
+
+/* Favoriten-Tab Link-Item */
+.favorites-tab-item {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.favorites-tab-item:hover {
+    border-color: rgba(255, 213, 79, 0.85);
+    box-shadow: 0 6px 18px rgba(255, 193, 7, 0.12);
+}
+
+/* Herkunfts-Badge ans untere Ende der Karte drücken */
+.favorites-tab-source {
+    font-size: 0.71em;
+    color: rgba(255, 193, 7, 0.5);
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 193, 7, 0.1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Leer-Zustand Favoriten-Tab */
+.favorites-tab-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(224, 224, 224, 0.6);
+}
+
+.favorites-tab-empty-icon {
+    font-size: 3.5em;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.favorites-tab-empty-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: rgba(224, 224, 224, 0.8);
+}
+
+.favorites-tab-empty-hint {
+    font-size: 0.9em;
+    opacity: 0.7;
+}

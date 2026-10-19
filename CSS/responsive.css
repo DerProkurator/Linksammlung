@@ -1,0 +1,132 @@
+/* ========================================================================
+   RESPONSIVE — Media Queries für alle Breakpoints
+   ======================================================================== */
+
+/* Mobile (bis 768px) */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .top-bar {
+        position: static;
+        margin-bottom: 4px;
+        right: auto;
+        left: auto;
+        top: auto;
+    }
+
+    .top-bar-pinned-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(100, 200, 255, 0.3) transparent;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    .bento-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tile-md,
+    .tile-lg {
+        grid-column: span 1;
+        height: 220px;
+    }
+
+    .link-item {
+        padding: 10px 8px;
+    }
+
+    .drag-handle {
+        font-size: 1.2em;
+    }
+
+    .search-hints {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .search-modal {
+        width: 95%;
+        max-height: 85vh;
+    }
+
+    .search-modal-header {
+        padding: 20px;
+    }
+
+    /* Favoriten Mobile */
+    .favorites-sidebar {
+        width: 90%;
+        max-width: 350px;
+    }
+
+    .favorites-toggle-button {
+        top: 15px;
+        left: 15px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .favorites-sidebar-header {
+        padding: 20px 20px 15px;
+    }
+
+    .favorites-sidebar-content {
+        padding: 15px;
+    }
+
+    .favorite-item {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .favorite-item:hover {
+        transform: translateX(4px);
+    }
+
+    /* Favoriten-Checkbox Mobile */
+    .favorites-checkbox-group {
+        padding: 16px 18px;
+        gap: 14px;
+    }
+
+    .custom-checkbox {
+        width: 22px;
+        height: 22px;
+    }
+
+    .custom-checkbox::before {
+        font-size: 12px;
+    }
+
+    .favorites-text {
+        font-size: 14px;
+    }
+}
+
+/* Tablet (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        padding: 30px;
+    }
+
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tile-lg {
+        height: 220px;
+        grid-row: span 1;
+    }
+}
+
+/* Desktop Klein (1025px - 1400px) */
+@media (min-width: 1025px) and (max-width: 1400px) {
+    .bento-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

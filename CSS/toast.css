@@ -1,0 +1,71 @@
+/* ========================================================================
+   TOAST — Status-Nachrichten (Erfolg, Fehler, Warnung, Info)
+   ======================================================================== */
+
+.status-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    z-index: 1100;
+    transform: translateX(400px);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    max-width: 350px;
+    word-wrap: break-word;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.status-message.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.status-success {
+    background: rgba(46, 204, 113, 0.25);
+    border: 1px solid rgba(46, 204, 113, 0.5);
+    color: #7bed9f;
+}
+
+.status-error {
+    background: rgba(231, 76, 60, 0.25);
+    border: 1px solid rgba(231, 76, 60, 0.5);
+    color: #ff7675;
+}
+
+.status-warning {
+    background: rgba(255, 193, 7, 0.25);
+    border: 1px solid rgba(255, 193, 7, 0.5);
+    color: #fdcb6e;
+}
+
+.status-info {
+    background: rgba(52, 152, 219, 0.25);
+    border: 1px solid rgba(52, 152, 219, 0.5);
+    color: #74b9ff;
+}
+
+/* Erweiterte Toast-Nachrichten */
+.status-message.important {
+    max-width: 420px;
+    padding: 18px 24px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+    border-width: 2px;
+}
+
+.status-message.important .status-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.status-message.important .status-content {
+    opacity: 0.95;
+    color: rgba(255, 255, 255, 0.9);
+}
