@@ -278,7 +278,7 @@ function toggleTabVisibilityFromContext() {
     // DYNAMIC_CONFIGS synchronisieren, damit Export den aktuellen Wert hat
     const dynCfgs = window.DYNAMIC_CONFIGS || {};
     const dynKey  = Object.keys(dynCfgs).find(
-        label => label.toLowerCase().replace(/[^a-z0-9]/g, '_') === tabId
+        label => toKey(label) === tabId
     );
     if (dynKey) dynCfgs[dynKey].hidden = tab.hidden;
 
@@ -468,13 +468,7 @@ function confirmAddTab() {
     }
 
     // Eindeutige ID erzeugen
-    const baseId = label.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    let tabId = baseId;
-    let counter = 1;
-    while (tabsList.find(t => t.id === tabId) || tabId === 'favorites') {
-        tabId = baseId + '_' + counter;
-        counter++;
-    }
+    const tabId = uniqueKey(label, k => k === 'favorites' || tabsList.some(t => t.id === k));
 
     const newTab = { id: tabId, label, icon };
     tabsList.push(newTab);

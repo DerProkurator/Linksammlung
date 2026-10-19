@@ -219,12 +219,12 @@ function confirmLinkImport() {
 
     if (categoryKey === '__original__') {
         const originalCategoryTitle = pendingOriginalCategoryTitle;
-        const newKey = originalCategoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-        if (linkCategories[newKey]) {
+        if (categoryTitleExists(linkCategories, originalCategoryTitle)) {
             alert('Eine Kategorie mit diesem Namen existiert bereits!');
             return;
         }
+
+        const newKey = uniqueKey(originalCategoryTitle, k => !!linkCategories[k]);
 
         linkCategories[newKey] = { title: originalCategoryTitle, icon: '📁', collapsed: false, links: [] };
         categoryOrder.push(newKey);
@@ -246,12 +246,12 @@ function confirmLinkImport() {
             return;
         }
 
-        const newKey = newCategoryTitle.toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-        if (linkCategories[newKey]) {
+        if (categoryTitleExists(linkCategories, newCategoryTitle)) {
             alert('Eine Kategorie mit diesem Namen existiert bereits!');
             return;
         }
+
+        const newKey = uniqueKey(newCategoryTitle, k => !!linkCategories[k]);
 
         linkCategories[newKey] = { title: newCategoryTitle, icon: newCategoryIcon, collapsed: false, links: [] };
         categoryOrder.push(newKey);
@@ -425,14 +425,7 @@ function showCategoryImportConflictDialog(categoryData, existingCategoryKey, con
  */
 function importCategoryDirectly(categoryData) {
     const category            = categoryData.category;
-    let newCategoryKey        = category.title.toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-    let counter = 1;
-    const baseKey = newCategoryKey;
-    while (linkCategories[newCategoryKey]) {
-        newCategoryKey = `${baseKey}_${counter}`;
-        counter++;
-    }
+    const newCategoryKey      = uniqueKey(category.title, k => !!linkCategories[k]);
 
     category.links.forEach(link => {
         if (link.favorite === undefined) link.favorite = false;
@@ -1709,9 +1702,7 @@ function _bmMakeCat(name, icon, cfg) {
     for (const [k, cat] of Object.entries(cfg.categories)) {
         if (cat.title === name) return k;
     }
-    const base = (name.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'importiert');
-    let key = base, i = 1;
-    while (cfg.categories[key]) { key = base + '_' + i; i++; }
+    const key = uniqueKey(name, k => !!cfg.categories[k], 'importiert');
     cfg.categories[key] = { title: name, icon: icon || '📁', collapsed: false, links: [] };
     if (!cfg.categoryOrder) cfg.categoryOrder = [];
     cfg.categoryOrder.push(key);
@@ -1720,9 +1711,7 @@ function _bmMakeCat(name, icon, cfg) {
 
 /** Neuen Tab anlegen und zu tabsList hinzufügen */
 function _bmMakeTab(name, icon) {
-    const base = (name.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'importiert');
-    let id = base, i = 1;
-    while (tabsList.find(t => t.id === id) || id === 'favorites') { id = base + '_' + i; i++; }
+    const id = uniqueKey(name, k => k === 'favorites' || tabsList.some(t => t.id === k), 'importiert');
     tabsList.push({ id, label: name, icon: icon || '📂' });
     return id;
 }

@@ -163,9 +163,7 @@ function confirmMoveLink() {
         const newName = document.getElementById('moveLinkNewCatName').value.trim();
         if (!newName) { showMessage('Bitte Kategorie-Namen eingeben', 'warning'); return; }
         // Eindeutigen Key generieren
-        const base = newName.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'neu';
-        let key = base, i = 1;
-        while (targetCfg.categories[key]) { key = base + '_' + i; i++; }
+        const key = uniqueKey(newName, k => !!targetCfg.categories[k]);
         targetCfg.categories[key] = { title: newName, icon: '📁', collapsed: false, links: [] };
         if (!targetCfg.categoryOrder) targetCfg.categoryOrder = [];
         targetCfg.categoryOrder.push(key);

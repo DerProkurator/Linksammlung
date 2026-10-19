@@ -71,12 +71,12 @@ function setupFormHandlers() {
             saveConfig(true);
             showMessage('Kategorie erfolgreich bearbeitet', 'success');
         } else {
-            const categoryKey = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-            if (linkCategories[categoryKey]) {
+            if (categoryTitleExists(linkCategories, title)) {
                 alert('Eine Kategorie mit diesem Namen existiert bereits!');
                 return;
             }
+
+            const categoryKey = uniqueKey(title, k => !!linkCategories[k]);
 
             linkCategories[categoryKey] = { title, icon, collapsed: false, links: [] };
             categoryOrder.push(categoryKey);

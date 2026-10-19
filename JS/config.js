@@ -107,7 +107,7 @@ let currentPickerElement = null;
 function buildDefaultTabsFromConfigs() {
     const configs = window.DYNAMIC_CONFIGS || {};
     const tabs = Object.keys(configs).map(label => ({
-        id:     label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        id:     toKey(label),
         label:  label,
         icon:   configs[label].icon || '📋',
         hidden: configs[label].hidden || false
@@ -157,6 +157,35 @@ function isSafeUrl(url) {
 // -----------------------------------------------------------------------
 // HILFSFUNKTIONEN
 // -----------------------------------------------------------------------
+
+/**
+ * Name → interner Schlüssel (Tab-ID / Kategorie-Key).
+ * Format nicht ändern: bestehende Tab-IDs und localStorage-Keys basieren darauf.
+ * Verschiedene Namen können denselben Schlüssel ergeben (z.B. "Büro"/"Bäro" → "b_ro"),
+ * daher für neue Einträge immer uniqueKey() verwenden.
+ */
+function toKey(name, fallback = '') {
+    return String(name).toLowerCase().replace(/[^a-z0-9]/g, '_') || fallback;
+}
+
+/**
+ * Eindeutigen Schlüssel erzeugen: base, base_1, base_2, ...
+ * @param {function} isTaken - (key) => true, wenn der Schlüssel schon vergeben ist
+ */
+function uniqueKey(name, isTaken, fallback = 'neu') {
+    const base = toKey(name, fallback);
+    let key = base, i = 1;
+    while (isTaken(key)) { key = base + '_' + i; i++; }
+    return key;
+}
+
+/**
+ * Prüfen, ob eine Kategorie mit diesem Titel existiert (Groß-/Kleinschreibung egal)
+ */
+function categoryTitleExists(categories, title) {
+    const needle = title.trim().toLowerCase();
+    return Object.values(categories).some(cat => cat.title.trim().toLowerCase() === needle);
+}
 
 /**
  * Favoriten-Support zu allen Links im aktiven Config hinzufügen
@@ -282,7 +311,7 @@ function getTabConfigById(tabId) {
     // 2. Fallback: DYNAMIC_CONFIGS (Tab noch nie besucht)
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
     const matchingKey = Object.keys(dynamicConfigs).find(
-        label => label.toLowerCase().replace(/[^a-z0-9]/g, '_') === tabId
+        label => toKey(label) === tabId
     );
     if (matchingKey && dynamicConfigs[matchingKey].config) {
         return JSON.parse(JSON.stringify(dynamicConfigs[matchingKey].config));
@@ -335,7 +364,7 @@ function loadTabConfigById(tabId) {
     // Kein gespeicherter Stand: Tab-spezifischen Default aus DYNAMIC_CONFIGS laden
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
     const matchingKey = Object.keys(dynamicConfigs).find(
-        label => label.toLowerCase().replace(/[^a-z0-9]/g, '_') === tabId
+        label => toKey(label) === tabId
     );
     if (matchingKey && dynamicConfigs[matchingKey].config) {
         config = JSON.parse(JSON.stringify(dynamicConfigs[matchingKey].config));
@@ -436,7 +465,7 @@ function resetToDefault() {
 
     const dynamicConfigs = window.DYNAMIC_CONFIGS || {};
     const matchingKey = Object.keys(dynamicConfigs).find(
-        label => label.toLowerCase().replace(/[^a-z0-9]/g, '_') === activeTabId
+        label => toKey(label) === activeTabId
     );
     const hasDefaultConfig = !!(matchingKey && dynamicConfigs[matchingKey]?.config) || !!window.DEFAULT_CONFIG;
     const configSource = hasDefaultConfig
