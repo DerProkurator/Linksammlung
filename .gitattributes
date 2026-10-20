@@ -1,0 +1,7 @@
+# Dateien, die nur für GitHub bzw. die Zusammenarbeit gebraucht werden,
+# aus "Code → Download ZIP" (git archive) ausschließen.
+# Im Repository und auf GitHub Pages bleiben sie erhalten.
+index.html      export-ignore
+CLAUDE.md       export-ignore
+.gitattributes  export-ignore
+.gitignore      export-ignore
