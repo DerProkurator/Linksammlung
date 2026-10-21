@@ -13,7 +13,7 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 - Kategorien & Links frei anlegen, bearbeiten, per Drag & Drop sortieren
 - Favoriten-Sidebar für schnellen Zugriff
 - Volltextsuche über alle Links
-- Emoji-Picker für Icons
+- Emoji-Picker für Icons (inkl. Länderflaggen)
 - Import/Export der Konfiguration als JSON (vollständige Config, einzelner Link oder einzelne Kategorie)
 - Mehrere Tabs für verschiedene Themenbereiche
 - Komplett offline-fähig, keine externen Abhängigkeiten
@@ -27,3 +27,5 @@ Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration 
 ## Lizenz
 
 Privates Projekt — Nutzung und Anpassung für eigene Zwecke frei.
+
+Drittanbieter: Die Flaggen-Schrift `CSS/fonts/TwemojiCountryFlags.woff2` stammt aus [country-flag-emoji-polyfill](https://github.com/talkjs/country-flag-emoji-polyfill) (Code: MIT); die Flaggen-Grafiken sind von [Twemoji](https://github.com/twitter/twemoji) und stehen unter [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Details: `CSS/fonts/LICENSE-TwemojiCountryFlags.md`.

@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - EMOJI.JS v3.4
+// LINKSAMMLUNG - EMOJI.JS v3.5
 // ========================================================================
 // Emoji-Picker-System
 // Abhängig von: emoji-database.js (EMOJI_DATABASE global)

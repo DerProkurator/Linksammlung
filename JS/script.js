@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - SCRIPT.JS v3.4 (Initialisierung)
+// LINKSAMMLUNG - SCRIPT.JS v3.5 (Initialisierung)
 // ========================================================================
 // Nur noch: DOMContentLoaded, Form-Handler, globale Event-Listener
 //
@@ -282,5 +282,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========================================================================
-// ENDE SCRIPT.JS v3.4
+// ENDE SCRIPT.JS v3.5
 // ========================================================================

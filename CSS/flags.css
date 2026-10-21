@@ -1,0 +1,23 @@
+/* ========================================================================
+   FLAGS — Länderflaggen-Emojis unter Windows
+   ========================================================================
+   Windows liefert keine Flaggen-Emojis: Chrome/Edge zeigen statt 🇩🇪 nur "DE".
+   Diese Schrift (Twemoji Country Flags, CC-BY 4.0, siehe fonts/LICENSE-*)
+   greift dank unicode-range NUR für Flaggen-Zeichen — alle anderen Zeichen
+   und Emojis kommen weiterhin aus den bisherigen Schriften.
+   ======================================================================== */
+
+@font-face {
+    font-family: 'Twemoji Country Flags';
+    unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067,
+                   U+E006C, U+E006E, U+E0073-E0074, U+E0077, U+E007F;
+    src: url('fonts/TwemojiCountryFlags.woff2') format('woff2');
+    font-display: swap;
+}
+
+/* Gleiche Schriften wie body in base.css, nur mit Flaggen-Schrift davor */
+body,
+input[id$="Icon"],
+input[id^="bmTabIcon_"] {
+    font-family: 'Twemoji Country Flags', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}

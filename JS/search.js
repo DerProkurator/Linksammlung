@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - SEARCH.JS v3.4
+// LINKSAMMLUNG - SEARCH.JS v3.5
 // ========================================================================
 // Such-System: STRG+K, globale Suche über alle Tabs, Tab-Badge
 // Abhängig von: config.js, tabs.js

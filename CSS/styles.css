@@ -1,11 +1,12 @@
 /* ========================================================================
-   LINKSAMMLUNG — Master-Stylesheet v3.4
+   LINKSAMMLUNG — Master-Stylesheet v3.5
    ========================================================================
 
    Alle Styles sind in thematische Module aufgeteilt.
    Reihenfolge ist bewusst gewählt (Abhängigkeiten / Spezifität):
 
     1. base.css          — Reset, Body, Container, Layout-Animationen
+       flags.css         — Flaggen-Schrift (Länderflaggen unter Windows)
     2. search.css        — Suchleiste, Such-Modal, Ergebnisse
     3. favorites.css     — Favoriten-Sidebar, Toggle, Checkbox, Items
     4. categories.css    — Kategorien, Link-Grid, Link-Cards
@@ -22,6 +23,7 @@
    ======================================================================== */
 
 @import url('base.css');
+@import url('flags.css');
 @import url('search.css');
 @import url('favorites.css');
 @import url('categories.css');

@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - LINKS.JS v3.4
+// LINKSAMMLUNG - LINKS.JS v3.5
 // ========================================================================
 // Link-Management: bearbeiten, löschen, Modal-System
 // Abhängig von: config.js, categories.js

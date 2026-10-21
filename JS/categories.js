@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - CATEGORIES.JS v3.4
+// LINKSAMMLUNG - CATEGORIES.JS v3.5
 // ========================================================================
 // Kategorie-Management: auf-/zuklappen, bearbeiten, löschen, erstellen
 // Abhängig von: config.js
