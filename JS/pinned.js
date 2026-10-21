@@ -66,7 +66,7 @@ function updatePinnedBar() {
 
         chip.addEventListener('click', (e) => {
             if (e.target.closest('.pinned-chip-unpin')) return;
-            if (isSafeUrl(p.url)) window.open(p.url, '_blank');
+            if (isSafeUrl(p.url)) window.open(p.url, '_blank', 'noopener,noreferrer');
         });
 
         chip.querySelector('.pinned-chip-unpin').addEventListener('click', (e) => {

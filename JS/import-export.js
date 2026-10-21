@@ -1475,7 +1475,7 @@ function _bmRenderTree(data) {
         tabsList.forEach(t => {
             const sel     = currentChoice === t.id ? ' selected' : '';
             const warning = t.label.toLowerCase() === topFolder.name.toLowerCase() ? ' ⚠️' : '';
-            html += `<option value="${t.id}"${sel}>→ ${t.icon} ${_bmEsc(t.label)}${warning}</option>`;
+            html += `<option value="${t.id}"${sel}>→ ${_bmEsc(t.icon)} ${_bmEsc(t.label)}${warning}</option>`;
         });
         html += `</select>`;
 
@@ -1572,7 +1572,7 @@ function _bmRenderRootLinks(data) {
     const cur = window._bmRootTabChoice;
     let opts = `<option value="new"${cur === 'new' ? ' selected' : ''}>📋 Neuer Tab</option>`;
     opts += tabsList.map(t =>
-        `<option value="${t.id}"${cur === t.id ? ' selected' : ''}>${t.icon} ${_bmEsc(t.label)}</option>`
+        `<option value="${t.id}"${cur === t.id ? ' selected' : ''}>${_bmEsc(t.icon)} ${_bmEsc(t.label)}</option>`
     ).join('');
 
     const savedName = window._bmRootTabName || '';
@@ -1883,7 +1883,7 @@ function openDuplicatesModal() {
                             data-group="${gIdx}"
                             ${isChecked ? 'checked' : ''}
                             style="margin-top:4px; cursor:pointer; accent-color:#ff6b6b; flex-shrink:0;">
-                        <div style="font-size:1.3em; flex-shrink:0; margin-top:1px;">${icon}</div>
+                        <div style="font-size:1.3em; flex-shrink:0; margin-top:1px;">${_bmEsc(icon)}</div>
                         <label for="${cbId}" style="flex:1; cursor:pointer; min-width:0;">
                             <div style="color:#f0f0f0; font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${_bmEsc(link.title)}</div>
                             ${descHtml}

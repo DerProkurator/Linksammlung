@@ -629,7 +629,7 @@ function renderFavoritesTab() {
                 <div class="favorites-tab-source">${esc(fav.categoryIcon)} ${esc(fav.categoryTitle)}</div>
             `;
 
-            linkEl.addEventListener('click', () => { if (isSafeUrl(fav.url)) window.open(fav.url, '_blank'); });
+            linkEl.addEventListener('click', () => { if (isSafeUrl(fav.url)) window.open(fav.url, '_blank', 'noopener,noreferrer'); });
             linkEl.title = `${fav.title}\n↗ Klicken zum Öffnen\n✏️ Bearbeiten im Tab "${fav.tabLabel}"`;
 
             grid.appendChild(linkEl);

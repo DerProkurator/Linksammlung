@@ -108,7 +108,7 @@ function createCategoryElement(categoryKey, category) {
             linkElement.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('link-drag-handle')) {
                     // isSafeUrl() blockiert javascript: und data: URLs aus der Config (XSS-Schutz)
-                    if (isSafeUrl(link.url)) window.open(link.url, '_blank');
+                    if (isSafeUrl(link.url)) window.open(link.url, '_blank', 'noopener,noreferrer');
                 }
             });
 

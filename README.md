@@ -26,6 +26,6 @@ Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration 
 
 ## Lizenz
 
-Privates Projekt — Nutzung und Anpassung für eigene Zwecke frei.
+MIT — siehe [`LICENSE`](LICENSE). Private und berufliche Nutzung, Anpassung und Weitergabe sind frei.
 
 Drittanbieter: Die Flaggen-Schrift `CSS/fonts/TwemojiCountryFlags.woff2` stammt aus [country-flag-emoji-polyfill](https://github.com/talkjs/country-flag-emoji-polyfill) (Code: MIT); die Flaggen-Grafiken sind von [Twemoji](https://github.com/twitter/twemoji) und stehen unter [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Details: `CSS/fonts/LICENSE-TwemojiCountryFlags.md`.

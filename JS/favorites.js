@@ -136,7 +136,7 @@ function updateFavoritesList() {
         });
 
         el.addEventListener('click', () => {
-            if (isSafeUrl(favorite.url)) window.open(favorite.url, '_blank');
+            if (isSafeUrl(favorite.url)) window.open(favorite.url, '_blank', 'noopener,noreferrer');
         });
         favoritesContent.appendChild(el);
     });

@@ -432,5 +432,5 @@ function openSelectedSearchResult() {
  * Link in neuem Tab öffnen — nur http/https erlaubt
  */
 function openLink(url) {
-    if (isSafeUrl(url)) window.open(url, '_blank');
+    if (isSafeUrl(url)) window.open(url, '_blank', 'noopener,noreferrer');
 }
