@@ -17,6 +17,8 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 - Emoji-Picker für Icons (inkl. Länderflaggen)
 - Import/Export der Konfiguration als JSON (vollständige Config, einzelner Link oder einzelne Kategorie)
 - Mehrere Tabs für verschiedene Themenbereiche
+- Tastaturbedienung: Links, Kategorien und Menüs per Tab/Enter/Kontextmenü-Taste, Sortieren mit Alt+Pfeiltasten
+- Robuste Datenhaltung: Importe werden vor dem Übernehmen geprüft, Speicherfehler und Änderungen aus anderen Fenstern überschreiben nichts
 - Komplett offline-fähig, keine externen Abhängigkeiten
 
 ## Konfiguration
@@ -24,6 +26,16 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 Die Konfiguration wird im `localStorage` des Browsers gespeichert. Eigene Links, Kategorien und Tabs lassen sich direkt in der App hinzufügen — nichts muss im Code geändert werden.
 
 Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration (Factory-Reset-Basis). `Config/Demo_config-*.js` sind zusätzliche Beispiel-Tabs, die beim Erststart geladen werden. Welche Config-Dateien geladen werden, steht in `Config/tabs.js` (Reihenfolge = Tab-Reihenfolge). Neue Tabs: Config-Datei nach dem gleichen Schema in `Config/` ablegen und den Dateinamen in `Config/tabs.js` eintragen — `Linksammlung.html` muss dafür nicht geändert werden. Der Export „Alle Default-Configs“ liefert eine fertige `tabs.js` gleich mit.
+
+## Tests
+
+`Tests/regression.cjs` startet Edge bzw. Chrome headless mit einem temporären Profil und prüft Datenintegrität, Import/Export, Speicherfehler, parallele Fenster und Tastaturbedienung:
+
+```
+node Tests/regression.cjs
+```
+
+Voraussetzung: Node.js ≥ 22. Anderer Browserpfad über die Umgebungsvariable `LINKSAMMLUNG_BROWSER`.
 
 ## Lizenz
 

@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - TABS.JS v3.6
+// LINKSAMMLUNG - TABS.JS v3.7
 // ========================================================================
 // Tab-System: Storage, Tab-UI, Switching, Favoriten-Tab
 // Abhängig von: config.js
@@ -238,8 +238,7 @@ function showTabContextMenu(event, tabId) {
         hideLabel.textContent = tab.hidden ? 'Tab einblenden' : 'Tab ausblenden';
     }
 
-    let x = event.clientX;
-    let y = event.clientY;
+    let { x, y } = menuPositionFor(event);
 
     if (x + 180 > window.innerWidth) x = window.innerWidth - 185;
     if (y + 80 > window.innerHeight)  y = window.innerHeight - 85;
@@ -247,6 +246,7 @@ function showTabContextMenu(event, tabId) {
     menu.style.left = x + 'px';
     menu.style.top  = y + 'px';
     menu.style.display = 'block';
+    focusMenuIfKeyboard(menu);
 
     return false;
 }
@@ -256,8 +256,10 @@ function showTabContextMenu(event, tabId) {
  */
 function hideTabContextMenu() {
     const menu = document.getElementById('tabContextMenu');
+    const wasOpen = !!menu && menu.style.display === 'block';
     if (menu) menu.style.display = 'none';
     tabContextMenuTabId = null;
+    if (wasOpen) restoreMenuFocus();
 }
 
 /**
@@ -280,10 +282,13 @@ function _showHiddenTabsMenu(anchor, hiddenTabs) {
     menu = document.createElement('div');
     menu.id = 'hiddenTabsPopup';
     menu.className = 'hidden-tabs-popup';
+    menu.setAttribute('role', 'menu');
 
     hiddenTabs.forEach(tab => {
         const item = document.createElement('div');
         item.className = 'hidden-tabs-popup-item';
+        item.setAttribute('role', 'menuitem');
+        item.tabIndex = 0;
         item.textContent = `${tab.icon} ${tab.label}`;
         item.title = 'Einblenden';
         item.addEventListener('click', () => {
@@ -669,6 +674,8 @@ function renderFavoritesTab() {
         tabFavorites.forEach(fav => {
             const linkEl = document.createElement('div');
             linkEl.className = 'link-item favorites-tab-item favorite';
+            linkEl.setAttribute('role', 'link');
+            linkEl.tabIndex = 0;
             linkEl.dataset.description = fav.description || '';
 
             linkEl.innerHTML = `

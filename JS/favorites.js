@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - FAVORITES.JS v3.6
+// LINKSAMMLUNG - FAVORITES.JS v3.7
 // ========================================================================
 // Favoriten-Sidebar-System (aktiver Tab)
 // Abhängig von: config.js
@@ -117,6 +117,8 @@ function updateFavoritesList() {
     favorites.forEach(favorite => {
         const el = document.createElement('div');
         el.className = 'favorite-item';
+        el.setAttribute('role', 'link');
+        el.tabIndex = 0;
         el.innerHTML = `
             <div class="favorite-item-icon">${esc(favorite.icon)}</div>
             <div class="favorite-item-content">
@@ -127,7 +129,7 @@ function updateFavoritesList() {
                 </div>
                 <div class="favorite-item-url">${esc(favorite.url)}</div>
             </div>
-            <div class="favorite-item-remove">✕</div>
+            <div class="favorite-item-remove" role="button" tabindex="0" aria-label="Aus Favoriten entfernen">✕</div>
         `;
 
         const removeBtn = el.querySelector('.favorite-item-remove');

@@ -17,7 +17,7 @@
     <div class="container">
         <!-- Top-Bar: Favoriten-Toggle + angepinnte Links -->
         <div class="top-bar">
-            <button class="top-bar-fav-btn" id="favoritesToggle" onclick="toggleFavorites()">
+            <button class="top-bar-fav-btn" id="favoritesToggle" onclick="toggleFavorites()" aria-label="Favoriten anzeigen">
                 <span class="favorites-icon">⭐</span>
                 <span class="favorites-count" id="favoritesCount">0</span>
             </button>
@@ -39,6 +39,7 @@
             </div>
             <button class="search-scope-btn" id="searchScopeBtn"
                     onclick="toggleSearchScope()"
+                    aria-label="Suchbereich umschalten"
                     title="Alle Tabs durchsuchen (klicken: nur aktiver Tab)">🌐</button>
         </div>
 
@@ -70,12 +71,12 @@
         <br>
         <div class="drag-info">
             💡 Tipp:
-            Kategorien und Links über ⋮⋮ verschieben • Kategorie-Titel zum Auf-/Zuklappen klicken und Rechtsklick für Bearbeitung.
+            Kategorien und Links über ⋮⋮ verschieben (Tastatur: Alt+Pfeiltasten) • Kategorie-Titel zum Auf-/Zuklappen klicken und Rechtsklick (Tastatur: Kontextmenü-Taste / Shift+F10) für Bearbeitung.
             <strong>Suche mit STRG+K durchsucht alle Tabs</strong> • <strong>⭐ für Favoriten</strong>
         </div>
 
         <div class="copyright">
-            © 2026 DP (BS) - Link-Sammlung v3.6.2
+            © 2026 DP (BS) - Link-Sammlung v3.7.0
         </div>
     </div>
 
@@ -201,7 +202,7 @@
 
     </div>
 
-    <button class="add-link" id="mainMenuButton" onclick="toggleMenu()">+</button>
+    <button class="add-link" id="mainMenuButton" onclick="toggleMenu()" aria-label="Menü" aria-haspopup="menu" aria-expanded="false">+</button>
 
     <!-- ================================================
          KONTEXT-MENÜS
@@ -556,7 +557,7 @@
             <p id="snippetHintDesc" style="color:rgba(255,255,255,0.75);font-size:13px;margin-bottom:12px;"></p>
             <div class="snippet-hint-box" id="snippetHintBox">
                 <code id="snippetHintCode"></code>
-                <button class="snippet-copy-btn" onclick="copySnippetHint()" title="Kopieren">⎘</button>
+                <button class="snippet-copy-btn" onclick="copySnippetHint()" title="Kopieren" aria-label="Kopieren">⎘</button>
             </div>
             <div class="form-buttons" style="margin-top:16px;">
                 <button type="button" class="btn btn-primary" onclick="closeSnippetHintModal()">Verstanden</button>
@@ -572,7 +573,7 @@
                 <span class="favorites-header-icon">⭐</span>
                 <span class="favorites-header-text">Meine Favoriten</span>
             </div>
-            <button class="favorites-close-btn" onclick="toggleFavorites()">✕</button>
+            <button class="favorites-close-btn" onclick="toggleFavorites()" aria-label="Favoriten schließen">✕</button>
         </div>
         <div class="favorites-sidebar-content" id="favoritesContent">
             <!-- Favoriten werden hier dynamisch eingefügt -->
@@ -608,6 +609,7 @@
     <script src=".\JS\emoji.js"></script>
     <script src=".\JS\pinned.js"></script>
     <script src=".\JS\link-overview.js"></script>
+    <script src=".\JS\a11y.js"></script>
 
     <!-- Initialisierung -->
     <script src=".\JS\script.js"></script>

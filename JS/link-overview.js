@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - LINK-OVERVIEW.JS v3.6
+// LINKSAMMLUNG - LINK-OVERVIEW.JS v3.7
 // ========================================================================
 // Link-Übersicht: alle Links aller Tabs als sortierbare Tabelle
 // (alphabetisch, A–Z-Sprungleiste, Filter, Bearbeiten/Löschen,

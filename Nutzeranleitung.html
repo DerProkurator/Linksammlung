@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linksammlung v3.6 — Nutzeranleitung</title>
+    <title>Linksammlung v3.7 — Nutzeranleitung</title>
     <style>
         /* =============================================
            PRINT + SCREEN STYLES
@@ -233,7 +233,7 @@
             @page {
                 margin: 2cm 2.2cm 2.2cm 2.2cm;
                 @bottom-center {
-                    content: "Linksammlung v3.6 — Nutzeranleitung  |  Seite " counter(page);
+                    content: "Linksammlung v3.7 — Nutzeranleitung  |  Seite " counter(page);
                     font-size: 9pt;
                     color: #94a3b8;
                 }
@@ -269,9 +269,9 @@
     <div style="font-size: 48pt; margin-bottom: 12px;">🔗</div>
     <h1>Linksammlung</h1>
     <div class="subtitle">Deine persönliche Browser-Startseite für Links &amp; Lesezeichen</div>
-    <div class="version-badge">Version 3.6</div>
+    <div class="version-badge">Version 3.7</div>
     <div style="margin-top: 24px; font-size: 11pt; color: var(--muted);">
-        Stand: April 2026 &nbsp;·&nbsp; Nutzeranleitung
+        Stand: Oktober 2026 &nbsp;·&nbsp; Nutzeranleitung
     </div>
 </div>
 
@@ -457,7 +457,12 @@
     <li>Gib einen Namen ein und wähle optional ein Emoji-Icon.</li>
     <li>Klicke <strong>Erstellen</strong>.</li>
 </ol>
-<p>Die neue Kategorie erscheint im aktuell aktiven Tab.</p>
+<p>Die neue Kategorie erscheint im aktuell aktiven Tab. Solange sie noch leer ist, wird sie
+   gestrichelt mit dem Hinweis <em>„Noch keine Links“</em> angezeigt – über ihr <strong>+</strong>
+   oder per Drag&amp;Drop kommen Links hinein.</p>
+<p>Als URL sind nur Adressen mit <code>http://</code> oder <code>https://</code> erlaubt
+   (auch für Homelab-Ziele wie <code>http://192.168.x.x:8080</code>). Andere Adressen werden
+   beim Speichern mit einem Hinweis abgelehnt.</p>
 
 <div class="tip">
     <strong>💡 Schneller Einstieg</strong>
@@ -641,6 +646,14 @@
     <li>Lasse die Maustaste los — die neue Reihenfolge wird automatisch gespeichert.</li>
 </ol>
 
+<h3>Ohne Maus sortieren</h3>
+<ul>
+    <li>Link-Kachel mit <kbd>Tab</kbd> ansteuern, dann <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd>
+        (oder <kbd>↑</kbd>/<kbd>↓</kbd>) – der Link wandert eine Position weiter.</li>
+    <li>Kategorie-Titel ansteuern, dann <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> – die Kategorie
+        wandert eine Position nach oben bzw. unten.</li>
+</ul>
+
 <div class="tip">
     <strong>💡 Hinweis</strong>
     Links können nur innerhalb ihrer Kategorie umsortiert werden.
@@ -730,6 +743,16 @@
     Mache vorher ein Backup (Konfiguration exportieren), falls du die Daten nicht verlieren möchtest.
 </div>
 
+<div class="info">
+    <strong>ℹ️ Prüfung beim Import</strong><br>
+    Jede Import-Datei wird vor dem Übernehmen vollständig geprüft (max. 10&nbsp;MB).
+    Enthält sie Fehler – z.&nbsp;B. falsche Datentypen oder Links ohne <code>http(s)</code>-Adresse –,
+    wird sie mit einer Begründung <strong>abgelehnt und nichts verändert</strong>.
+    Beim Lesezeichen-Import werden Einträge ohne <code>http(s)</code>-Adresse (z.&nbsp;B. <code>javascript:</code>,
+    <code>ftp:</code>, Browser-interne Einträge) übersprungen und gezählt. Vom Browser erzeugte Hüllordner
+    wie „Lesezeichenleiste“ oder „Weitere Lesezeichen“ werden übersprungen, eigene Ordner der obersten Ebene bleiben erhalten.
+</div>
+
 <h3>Browser-Lesezeichen exportieren (Chrome)</h3>
 <ol class="steps">
     <li>Chrome: <kbd>Strg</kbd>+<kbd>Umschalt</kbd>+<kbd>O</kbd> → Lesezeichen-Manager öffnen.</li>
@@ -760,6 +783,20 @@
     In diesen Fällen hilft ein JSON-Backup allein nicht, weil man es nach jedem
     Browser-Start manuell importieren müsste. Die Lösung sind <strong>Default-Config-Dateien</strong>.
 </p>
+
+<div class="info">
+    <strong>ℹ️ Sicherheitsnetz beim Speichern</strong><br>
+    • <strong>Speicher voll oder gesperrt:</strong> Die App meldet <em>„Änderung nicht gespeichert“</em>
+      und verwirft nur diese eine Änderung – Formulare bleiben mit deiner Eingabe offen.
+      Aktionen über mehrere Tabs (z.&nbsp;B. Verschieben) werden ganz oder gar nicht gespeichert.<br>
+    • <strong>Mehrere Fenster/Tabs gleichzeitig offen:</strong> Änderungen aus einem anderen Fenster
+      werden automatisch übernommen. Hat ein anderes Fenster denselben Tab inzwischen geändert,
+      wird nichts überschrieben – die Ansicht wird aktualisiert und du wiederholst die letzte Änderung.<br>
+    • <strong>Beschädigte Daten:</strong> Ist ein gespeicherter Stand fehlerhaft, zeigt die App eine Warnung
+      und legt den Originalstand unter <code>linkConfigBackup_&lt;TabID&gt;</code> im Browser-Speicher ab.<br>
+    • <strong>Speicherort:</strong> localStorage gehört zum jeweiligen Browserprofil und zum Speicherort der
+      HTML-Datei. Vor dem Verschieben/Kopieren der Linksammlung oder einem Browserwechsel daher immer exportieren.
+</div>
 
 <h3>Was sind Default-Config-Dateien?</h3>
 <p>
@@ -858,7 +895,9 @@
 
 <h3>Duplikate prüfen</h3>
 <p>Über das Hauptmenü → <em>🛠️ Verwaltung</em> → <strong>🔍 Duplikate prüfen</strong> kannst du
-   doppelt vorhandene Links finden und bereinigen. Für <em>ähnliche</em> (nicht exakt gleiche) Links
+   doppelt vorhandene Links finden und bereinigen. Als Duplikat gilt nur eine <strong>exakt gleiche Adresse</strong>
+   (Groß-/Kleinschreibung im Pfad und in Parametern zählt, z.&nbsp;B. sind <code>/Docs?id=Ab</code> und
+   <code>/docs?id=ab</code> verschiedene Links). Für <em>ähnliche</em> (nicht exakt gleiche) Links
    gibt es in der <a href="#bearbeiten">Link-Übersicht</a> die Funktion <strong>🧩 Ähnliche anzeigen</strong>.</p>
 </section>
 
@@ -874,7 +913,12 @@
     <tr><td><kbd>Strg</kbd>+<kbd>K</kbd></td><td>Globale Suche öffnen (alle Tabs)</td></tr>
     <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>In Suchergebnissen navigieren</td></tr>
     <tr><td><kbd>↵</kbd></td><td>Markierten Treffer öffnen</td></tr>
-    <tr><td><kbd>Esc</kbd></td><td>Suche / Menü / Link-Übersicht schließen</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Obersten Dialog schließen, sonst Suche / Menü schließen</td></tr>
+    <tr><td><kbd>Tab</kbd> / <kbd>Umschalt</kbd>+<kbd>Tab</kbd></td><td>Links, Kategorie-Titel und Bedienelemente nacheinander ansteuern (in Dialogen bleibt der Fokus im Dialog)</td></tr>
+    <tr><td><kbd>↵</kbd> auf einem Link</td><td>Link öffnen</td></tr>
+    <tr><td><kbd>↵</kbd> / <kbd>Leertaste</kbd> auf einem Kategorie-Titel</td><td>Kategorie auf-/zuklappen</td></tr>
+    <tr><td>Kontextmenü-Taste oder <kbd>Umschalt</kbd>+<kbd>F10</kbd></td><td>Rechtsklick-Menü für Link, Kategorie oder Tab öffnen; im Menü mit <kbd>↑</kbd>/<kbd>↓</kbd> wählen, <kbd>↵</kbd> ausführen</td></tr>
+    <tr><td><kbd>Alt</kbd>+Pfeiltasten</td><td>Link bzw. Kategorie verschieben (siehe <a href="#sortieren">Abschnitt 10</a>)</td></tr>
 </table>
 
 <h3>Schnell-Tipps</h3>
@@ -901,7 +945,7 @@
      FOOTER
      ============================================= -->
 <div class="footer">
-    Linksammlung v3.6 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; Oktober 2026
+    Linksammlung v3.7 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; Oktober 2026
 </div>
 
 </body>

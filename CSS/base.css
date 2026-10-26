@@ -12,6 +12,15 @@
     box-sizing: border-box;
 }
 
+/* Sichtbarer Tastaturfokus für klickbare Nicht-Buttons (Links, Menüeinträge, Chips) */
+[role="link"]:focus-visible,
+[role="button"]:focus-visible,
+[role="menuitem"]:focus-visible,
+.modal-content:focus-visible {
+    outline: 2px solid #40e0d0;
+    outline-offset: 2px;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);

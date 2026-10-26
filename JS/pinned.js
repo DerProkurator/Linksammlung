@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - PINNED.JS v3.6
+// LINKSAMMLUNG - PINNED.JS v3.7
 // ========================================================================
 // Angepinnte Links: Tab-übergreifende Leiste unter der Suchleiste.
 // Die Leiste wird nur angezeigt wenn mindestens ein Link angepinnt ist.
@@ -57,11 +57,13 @@ function updatePinnedBar() {
     pinned.forEach(p => {
         const chip = document.createElement('div');
         chip.className = 'pinned-chip';
+        chip.setAttribute('role', 'link');
+        chip.tabIndex = 0;
         chip.title = `${p.title}\n${p.tabIcon} ${p.tabLabel}`;
         chip.innerHTML = `
             <span class="pinned-chip-icon">${esc(p.icon)}</span>
             <span class="pinned-chip-label">${esc(p.title)}</span>
-            <span class="pinned-chip-unpin" title="Losgelöst (unpin)">✕</span>
+            <span class="pinned-chip-unpin" title="Losgelöst (unpin)" role="button" tabindex="0" aria-label="Pin lösen">✕</span>
         `;
 
         chip.addEventListener('click', (e) => {

@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - UI.JS v3.6
+// LINKSAMMLUNG - UI.JS v3.7
 // ========================================================================
 // Rendering, Modals, Status-Nachrichten, Menü, Kontext-Menüs
 // Abhängig von: config.js, drag-drop.js
@@ -78,9 +78,21 @@ function createCategoryElement(categoryKey, category) {
     const categoryTitle = document.createElement('h2');
     categoryTitle.className = 'category-title';
     categoryTitle.innerHTML = `<span class="category-icon">${esc(category.icon)}</span> ${esc(category.title)}`;
+    // Tastatur: Enter/Leertaste klappt um, Kontextmenü-Taste/Shift+F10 öffnet das Menü,
+    // Alt+↑/↓ verschiebt die Kategorie
+    categoryTitle.setAttribute('role', 'button');
+    categoryTitle.tabIndex = 0;
+    categoryTitle.setAttribute('aria-expanded', String(!category.collapsed));
+    categoryTitle.dataset.categoryKey = categoryKey;
 
     categoryTitle.addEventListener('click',       () => toggleCategoryCollapsed(categoryKey));
     categoryTitle.addEventListener('contextmenu', (e) => showCategoryContextMenu(e, categoryKey));
+    categoryTitle.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            moveCategoryByKeyboard(categoryKey, e.key === 'ArrowUp' ? -1 : 1);
+        }
+    });
 
     const addBtn = document.createElement('button');
     addBtn.className = 'category-add-btn';
@@ -115,6 +127,10 @@ function createCategoryElement(categoryKey, category) {
             linkElement.dataset.description = link.description || '';
             linkElement.dataset.catKey      = categoryKey;
             linkElement.dataset.linkIndex   = linkIndex;
+            // Tastatur: Enter öffnet, Kontextmenü-Taste/Shift+F10 öffnet das Menü,
+            // Alt+Pfeiltasten verschieben den Link innerhalb der Kategorie
+            linkElement.setAttribute('role', 'link');
+            linkElement.tabIndex = 0;
 
             linkElement.innerHTML = `
                 <div class="link-header">
@@ -133,7 +149,17 @@ function createCategoryElement(categoryKey, category) {
                 }
             });
 
+            linkElement.addEventListener('keydown', (e) => {
+                if (!e.altKey) return;
+                const delta = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key];
+                if (delta) {
+                    e.preventDefault();
+                    moveLinkByKeyboard(categoryKey, linkIndex, delta);
+                }
+            });
+
             const lDragHandle = linkElement.querySelector('.link-drag-handle');
+            lDragHandle.setAttribute('aria-hidden', 'true');
             lDragHandle.addEventListener('click', (e) => e.stopPropagation());
 
             linkGrid.appendChild(linkElement);
@@ -150,6 +176,36 @@ function createCategoryElement(categoryKey, category) {
     makeCategoryDroppable(categoryDiv, categoryKey);
 
     return categoryDiv;
+}
+
+/**
+ * Link per Tastatur (Alt+Pfeiltaste) innerhalb seiner Kategorie verschieben
+ */
+function moveLinkByKeyboard(categoryKey, linkIndex, delta) {
+    const links  = linkCategories[categoryKey].links;
+    const target = linkIndex + delta;
+    if (target < 0 || target >= links.length) return;
+
+    [links[linkIndex], links[target]] = [links[target], links[linkIndex]];
+    if (!saveConfig(true)) return;
+    renderCategories();
+    const el = document.querySelector(`.link-item[data-cat-key="${CSS.escape(categoryKey)}"][data-link-index="${target}"]`);
+    if (el) el.focus();
+}
+
+/**
+ * Kategorie per Tastatur (Alt+↑/↓) in der Reihenfolge verschieben
+ */
+function moveCategoryByKeyboard(categoryKey, delta) {
+    const index  = categoryOrder.indexOf(categoryKey);
+    const target = index + delta;
+    if (index < 0 || target < 0 || target >= categoryOrder.length) return;
+
+    [categoryOrder[index], categoryOrder[target]] = [categoryOrder[target], categoryOrder[index]];
+    if (!saveConfig(true)) return;
+    renderCategories();
+    const el = document.querySelector(`.category-title[data-category-key="${CSS.escape(categoryKey)}"]`);
+    if (el) el.focus();
 }
 
 /**
@@ -179,8 +235,7 @@ function showContextMenu(event, categoryKey, linkIndex) {
     updateContextMenuFavoriteOption();
     updateContextMenuPinnedOption();
 
-    let x = event.clientX;
-    let y = event.clientY;
+    let { x, y } = menuPositionFor(event);
 
     // Menü am Bildschirmrand abfangen, damit es nicht über den Viewport hinausragt
     if (x + 200 > window.innerWidth)  x = window.innerWidth  - 200;
@@ -189,6 +244,7 @@ function showContextMenu(event, categoryKey, linkIndex) {
     contextMenu.style.left    = x + 'px';
     contextMenu.style.top     = y + 'px';
     contextMenu.style.display = 'block';
+    focusMenuIfKeyboard(contextMenu);
 
     return false;
 }
@@ -203,8 +259,7 @@ function showCategoryContextMenu(event, categoryKey) {
     const categoryContextMenu  = document.getElementById('categoryContextMenu');
     currentContextCategory     = categoryKey;
 
-    let x = event.clientX;
-    let y = event.clientY;
+    let { x, y } = menuPositionFor(event);
 
     // Menü am Bildschirmrand abfangen, damit es nicht über den Viewport hinausragt
     if (x + 200 > window.innerWidth)  x = window.innerWidth  - 200;
@@ -213,6 +268,7 @@ function showCategoryContextMenu(event, categoryKey) {
     categoryContextMenu.style.left    = x + 'px';
     categoryContextMenu.style.top     = y + 'px';
     categoryContextMenu.style.display = 'block';
+    focusMenuIfKeyboard(categoryContextMenu);
 
     return false;
 }
@@ -223,10 +279,12 @@ function showCategoryContextMenu(event, categoryKey) {
 function hideContextMenu() {
     const contextMenu         = document.getElementById('contextMenu');
     const categoryContextMenu = document.getElementById('categoryContextMenu');
+    const wasOpen = contextMenu.style.display === 'block' || categoryContextMenu.style.display === 'block';
     contextMenu.style.display         = 'none';
     categoryContextMenu.style.display = 'none';
     currentContextLink     = null;
     currentContextCategory = null;
+    if (wasOpen) restoreMenuFocus();
 }
 
 // -----------------------------------------------------------------------
@@ -323,11 +381,12 @@ function toggleMenu() {
     const menuButton  = document.getElementById('mainMenuButton');
 
     if (submenu.classList.contains('active')) {
-        submenu.classList.remove('active');
-        menuButton.classList.remove('active');
+        closeMenu();
     } else {
         submenu.classList.add('active');
         menuButton.classList.add('active');
+        menuButton.setAttribute('aria-expanded', 'true');
+        focusMenuIfKeyboard(submenu);
     }
 }
 
@@ -337,8 +396,11 @@ function toggleMenu() {
 function closeMenu() {
     const submenu    = document.getElementById('menuSubmenu');
     const menuButton = document.getElementById('mainMenuButton');
+    const wasOpen = submenu.classList.contains('active');
     submenu.classList.remove('active');
     menuButton.classList.remove('active');
+    menuButton.setAttribute('aria-expanded', 'false');
+    if (wasOpen) restoreMenuFocus();
 }
 
 // -----------------------------------------------------------------------

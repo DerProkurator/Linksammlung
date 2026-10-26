@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - SCRIPT.JS v3.6 (Initialisierung)
+// LINKSAMMLUNG - SCRIPT.JS v3.7 (Initialisierung)
 // ========================================================================
 // Nur noch: DOMContentLoaded, Form-Handler, globale Event-Listener
 //
@@ -178,12 +178,9 @@ function setupGlobalEventListeners() {
     // Escape-Taste: alle offenen Overlays schließen
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            closeModal();
-            closeCategoryModal();
-            closeCategorySelectModal();
-            closeEmptyCategoryModal();
-            closeAddTabModal();
-            closeRenameTabModal();
+            // Offener Dialog: nur den obersten schließen (Fokus kehrt zum Auslöser zurück)
+            if (closeTopDialog()) return;
+
             closeMenu();
             hideContextMenu();
             hideTabContextMenu();
@@ -275,5 +272,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========================================================================
-// ENDE SCRIPT.JS v3.6
+// ENDE SCRIPT.JS v3.7
 // ========================================================================
