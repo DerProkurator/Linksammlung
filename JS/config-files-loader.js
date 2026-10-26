@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - CONFIG-FILES-LOADER.JS v3.5
+// LINKSAMMLUNG - CONFIG-FILES-LOADER.JS v3.6
 // ========================================================================
 // Lädt die in Config/tabs.js (window.CONFIG_FILES) gelisteten Tab-Configs.
 //

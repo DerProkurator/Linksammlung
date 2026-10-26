@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - PINNED.JS v3.5
+// LINKSAMMLUNG - PINNED.JS v3.6
 // ========================================================================
 // Angepinnte Links: Tab-übergreifende Leiste unter der Suchleiste.
 // Die Leiste wird nur angezeigt wenn mindestens ein Link angepinnt ist.

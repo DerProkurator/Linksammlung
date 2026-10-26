@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - FAVORITES.JS v3.5
+// LINKSAMMLUNG - FAVORITES.JS v3.6
 // ========================================================================
 // Favoriten-Sidebar-System (aktiver Tab)
 // Abhängig von: config.js

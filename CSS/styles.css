@@ -1,5 +1,5 @@
 /* ========================================================================
-   LINKSAMMLUNG — Master-Stylesheet v3.5
+   LINKSAMMLUNG — Master-Stylesheet v3.6
    ========================================================================
 
    Alle Styles sind in thematische Module aufgeteilt.
@@ -18,7 +18,8 @@
    10. toast.css         — Status-Nachrichten (Erfolg / Fehler / Warnung)
    11. tabs.css          — Tab-Leiste, Favoriten-Tab-Inhalt
    12. view-options.css  — Beschreibungs-Toggle, Tooltip-Modus
-   13. responsive.css    — Media Queries (Mobile / Tablet / Desktop)
+   13. link-overview.css — Link-Übersicht (Tabelle aller Links)
+   14. responsive.css    — Media Queries (Mobile / Tablet / Desktop)
 
    ======================================================================== */
 
@@ -36,4 +37,5 @@
 @import url('tabs.css');
 @import url('view-options.css');
 @import url('pinned-bar.css');
+@import url('link-overview.css');
 @import url('responsive.css');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linksammlung v3.5 — Nutzeranleitung</title>
+    <title>Linksammlung v3.6 — Nutzeranleitung</title>
     <style>
         /* =============================================
            PRINT + SCREEN STYLES
@@ -233,7 +233,7 @@
             @page {
                 margin: 2cm 2.2cm 2.2cm 2.2cm;
                 @bottom-center {
-                    content: "Linksammlung v3.5 — Nutzeranleitung  |  Seite " counter(page);
+                    content: "Linksammlung v3.6 — Nutzeranleitung  |  Seite " counter(page);
                     font-size: 9pt;
                     color: #94a3b8;
                 }
@@ -269,7 +269,7 @@
     <div style="font-size: 48pt; margin-bottom: 12px;">🔗</div>
     <h1>Linksammlung</h1>
     <div class="subtitle">Deine persönliche Browser-Startseite für Links &amp; Lesezeichen</div>
-    <div class="version-badge">Version 3.5</div>
+    <div class="version-badge">Version 3.6</div>
     <div style="margin-top: 24px; font-size: 11pt; color: var(--muted);">
         Stand: April 2026 &nbsp;·&nbsp; Nutzeranleitung
     </div>
@@ -491,6 +491,38 @@
     <tr><td>🔀 In Tab verschieben</td><td>Gesamte Kategorie in einen anderen Tab verschieben</td></tr>
     <tr><td>📤 Kategorie exportieren</td><td>Kategorie mit allen Links als JSON speichern</td></tr>
     <tr><td>🗑️ Kategorie löschen</td><td>Kategorie dauerhaft entfernen</td></tr>
+</table>
+
+<h3>Alle Links (Übersicht)</h3>
+<p>Über das Hauptmenü → <em>🛠️ Verwaltung</em> → <strong>📋 Alle Links (Übersicht)</strong> öffnet sich
+   eine Tabelle mit <strong>allen Links aus allen Tabs</strong> – auch aus ausgeblendeten Tabs
+   (markiert mit „ausgeblendet“). Ideal, um einfach mal durch die eigene Sammlung zu scrollen
+   oder einen Link wiederzufinden, von dem man nur noch ungefähr weiß, wie er hieß.</p>
+<ul>
+    <li><strong>Spalten:</strong> Icon, Name, URL, Beschreibung, Tab, Kategorie, Favorit und Aktionen.</li>
+    <li><strong>Sortierung:</strong> standardmäßig alphabetisch nach Name (Umlaute richtig einsortiert).
+        Klick auf <em>Name</em>, <em>URL</em>, <em>Tab</em> oder <em>Kategorie</em> sortiert danach, erneuter Klick dreht die Richtung um.</li>
+    <li><strong>A–Z-Leiste:</strong> am rechten Rand – ein Klick springt direkt zum Buchstaben.</li>
+    <li><strong>Filter:</strong> Textfeld (durchsucht alle Spalten) sowie Auswahl nach Tab und Kategorie.</li>
+</ul>
+<table>
+    <tr><th>Aktion</th><th>Funktion</th></tr>
+    <tr><td>☆ / ⭐</td><td>Favorit an/aus</td></tr>
+    <tr><td>🔗 Öffnen</td><td>Link in neuem Browser-Tab öffnen</td></tr>
+    <tr><td>📍 Im Tab anzeigen</td><td>Wechselt in den passenden Tab, klappt die Kategorie auf und hebt den Link kurz hervor</td></tr>
+    <tr><td>✏️ Bearbeiten</td><td>Titel, URL, Beschreibung, Icon oder Favorit ändern – funktioniert für Links aus jedem Tab</td></tr>
+    <tr><td>🗑️ Löschen</td><td>Link löschen; wird die Kategorie dadurch leer, wirst du gefragt, ob sie ebenfalls weg soll</td></tr>
+</table>
+
+<h3>Ähnliche Links finden</h3>
+<p>Ein 🧩 neben dem Namen zeigt, dass es ähnliche Links gibt (Tooltip zeigt, wie viele und warum).
+   Klick darauf filtert die Tabelle auf genau diese Links. Mit dem Button <strong>🧩 Ähnliche anzeigen</strong>
+   werden alle Treffer gruppiert dargestellt – in drei Stufen:</p>
+<table>
+    <tr><th>Stufe</th><th>Bedeutung</th></tr>
+    <tr><td>🔗 Fast gleiche Adresse</td><td>Gleich bis auf <code>http</code>/<code>https</code>, <code>www.</code>, Parameter (<code>?…</code>, <code>#…</code>) oder abschließenden <code>/</code></td></tr>
+    <tr><td>🔤 Ähnlicher Name</td><td>Gemeinsame Wörter (z. B. „Outlook Web“ / „Outlook – Webmail“) oder nur kleine Tippfehler-Unterschiede</td></tr>
+    <tr><td>🌐 Gleiche Domain</td><td>Verschiedene Seiten derselben Website – oft gewollt, daher nur als Hinweis (🧩 grau)</td></tr>
 </table>
 
 <div class="warning">
@@ -814,7 +846,8 @@
 
 <h3>Duplikate prüfen</h3>
 <p>Über das Hauptmenü → <em>🛠️ Verwaltung</em> → <strong>🔍 Duplikate prüfen</strong> kannst du
-   doppelt vorhandene Links finden und bereinigen.</p>
+   doppelt vorhandene Links finden und bereinigen. Für <em>ähnliche</em> (nicht exakt gleiche) Links
+   gibt es in der <a href="#bearbeiten">Link-Übersicht</a> die Funktion <strong>🧩 Ähnliche anzeigen</strong>.</p>
 </section>
 
 <!-- =============================================
@@ -829,7 +862,7 @@
     <tr><td><kbd>Strg</kbd>+<kbd>K</kbd></td><td>Globale Suche öffnen (alle Tabs)</td></tr>
     <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>In Suchergebnissen navigieren</td></tr>
     <tr><td><kbd>↵</kbd></td><td>Markierten Treffer öffnen</td></tr>
-    <tr><td><kbd>Esc</kbd></td><td>Suche / Menü schließen</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Suche / Menü / Link-Übersicht schließen</td></tr>
 </table>
 
 <h3>Schnell-Tipps</h3>
@@ -838,6 +871,7 @@
     <li>Rechtsklick auf einen Tab für Umbenennen, Ausblenden oder Zusammenführen.</li>
     <li>Die Zahl am ⭐-Button zeigt sofort, wie viele Favoriten du hast.</li>
     <li>Kategorien lassen sich durch Klick auf den Titel auf- und zuklappen — praktisch bei vielen Links.</li>
+    <li>Link vergessen? <em>Menü → 📋 Alle Links (Übersicht)</em> listet alles alphabetisch über alle Tabs hinweg.</li>
     <li>Der Suchbereich-Schalter (🌐) neben der Suchleiste wechselt zwischen Tab-Suche und Globalsuche.</li>
     <li>Beim Importieren von Browser-Lesezeichen kannst du einzelne Ordner gezielt auswählen — du musst nicht alles übernehmen.</li>
 </ul>
@@ -855,7 +889,7 @@
      FOOTER
      ============================================= -->
 <div class="footer">
-    Linksammlung v3.5 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; Oktober 2026
+    Linksammlung v3.6 &nbsp;·&nbsp; Nutzeranleitung &nbsp;·&nbsp; Oktober 2026
 </div>
 
 </body>

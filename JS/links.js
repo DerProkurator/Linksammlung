@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - LINKS.JS v3.5
+// LINKSAMMLUNG - LINKS.JS v3.6
 // ========================================================================
 // Link-Management: bearbeiten, löschen, Modal-System
 // Abhängig von: config.js, categories.js
@@ -244,6 +244,7 @@ function closeModal() {
 
     isEditMode         = false;
     currentEditingLink = null;
+    overviewEditTarget = null;
     document.querySelector('#linkModal h2').textContent          = 'Neuen Link hinzufügen';
     document.querySelector('#linkModal .btn-primary').textContent = 'Hinzufügen';
 

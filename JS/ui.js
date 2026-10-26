@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - UI.JS v3.5
+// LINKSAMMLUNG - UI.JS v3.6
 // ========================================================================
 // Rendering, Modals, Status-Nachrichten, Menü, Kontext-Menüs
 // Abhängig von: config.js, drag-drop.js
@@ -94,6 +94,8 @@ function createCategoryElement(categoryKey, category) {
             const linkElement = document.createElement('div');
             linkElement.className = 'link-item draggable' + (link.favorite ? ' favorite' : '');
             linkElement.dataset.description = link.description || '';
+            linkElement.dataset.catKey      = categoryKey;
+            linkElement.dataset.linkIndex   = linkIndex;
 
             linkElement.innerHTML = `
                 <div class="link-header">

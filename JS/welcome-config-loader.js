@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.5)
+ * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.6)
  * ========================================================================
  *
  * Prioritätsreihenfolge beim Start:
@@ -175,12 +175,13 @@ class ExtendedWelcomeLoader {
 
                     <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
                         <div style="color: #40e0d0; font-size: 13px; line-height: 1.6;">
-                            <strong>✨ Features (v3.5):</strong><br>
+                            <strong>✨ Features (v3.6):</strong><br>
                             • <strong>Multi-Tab-System</strong> – Tabs aus Config/-Dateien, Liste in Config/tabs.js (keine HTML-Änderung nötig)<br>
                             • <strong>Favoriten-Tab</strong> – Alle markierten Links aus allen Tabs auf einen Blick<br>
                             • <strong>Angepinnte Links</strong> – Tab-übergreifende Schnellzugriffsleiste oben (📌 Rechtsklick auf Link)<br>
                             • <strong>Bento-Grid-Layout</strong> – Kacheln skalieren automatisch nach Link-Anzahl<br>
                             • <strong>Globale Suche</strong> – Alle Tabs gleichzeitig durchsuchen (Strg+K)<br>
+                            • <strong>Link-Übersicht</strong> – Alle Links als alphabetische Tabelle, inkl. Erkennung ähnlicher Links<br>
                             • <strong>Rechtsklick-Menü</strong> – Links/Kategorien bearbeiten, löschen, verschieben, anpinnen<br>
                             • <strong>Tab-Kontextmenü</strong> – Rechtsklick auf Tab: umbenennen, ausblenden, zusammenführen<br>
                             • <strong>Emoji-Picker</strong> – Icons für Links, Kategorien und Tabs, inkl. Länderflaggen<br>

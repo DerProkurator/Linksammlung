@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - TABS.JS v3.5
+// LINKSAMMLUNG - TABS.JS v3.6
 // ========================================================================
 // Tab-System: Storage, Tab-UI, Switching, Favoriten-Tab
 // Abhängig von: config.js

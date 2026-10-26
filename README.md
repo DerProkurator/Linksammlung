@@ -13,6 +13,7 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 - Kategorien & Links frei anlegen, bearbeiten, per Drag & Drop sortieren
 - Favoriten-Sidebar für schnellen Zugriff
 - Volltextsuche über alle Links
+- Link-Übersicht: alle Links aller Tabs als alphabetische Tabelle, mit Filter und Erkennung ähnlicher Links
 - Emoji-Picker für Icons (inkl. Länderflaggen)
 - Import/Export der Konfiguration als JSON (vollständige Config, einzelner Link oder einzelne Kategorie)
 - Mehrere Tabs für verschiedene Themenbereiche

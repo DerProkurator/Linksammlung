@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - SCRIPT.JS v3.5 (Initialisierung)
+// LINKSAMMLUNG - SCRIPT.JS v3.6 (Initialisierung)
 // ========================================================================
 // Nur noch: DOMContentLoaded, Form-Handler, globale Event-Listener
 //
@@ -14,6 +14,7 @@
 //   drag-drop.js     — Drag & Drop-System
 //   ui.js            — Rendering, Modals, Status-Nachrichten, Menü
 //   emoji.js         — Emoji-Picker-System
+//   link-overview.js — Übersicht aller Links (Tabelle, Ähnlichkeit)
 // ========================================================================
 
 /**
@@ -30,6 +31,12 @@ function setupFormHandlers() {
         const description = document.getElementById('linkDescription').value;
         const icon        = document.getElementById('linkIcon').value.trim() || '🔗';
         const favorite    = document.getElementById('linkFavorite').checked;
+
+        // Bearbeitung aus der Link-Übersicht (kann jeden Tab betreffen)
+        if (overviewEditTarget) {
+            saveOverviewLinkEdit({ title, url, description, icon, favorite });
+            return;
+        }
 
         if (isEditMode && currentEditingLink) {
             const { categoryKey, linkIndex } = currentEditingLink;
@@ -282,5 +289,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========================================================================
-// ENDE SCRIPT.JS v3.5
+// ENDE SCRIPT.JS v3.6
 // ========================================================================
