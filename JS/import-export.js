@@ -6,6 +6,47 @@
 // ========================================================================
 
 // -----------------------------------------------------------------------
+// GEMEINSAME HILFSFUNKTIONEN FÜR IMPORT / EXPORT
+// -----------------------------------------------------------------------
+
+/**
+ * Link für alle Exporte (Einzel-Link, Kategorie, Default-Config) einheitlich serialisieren
+ */
+function serializeLink(link) {
+    return {
+        title:       link.title,
+        url:         link.url,
+        description: link.description || '',
+        icon:        link.icon || '🔗',
+        favorite:    !!link.favorite,
+        pinned:      !!link.pinned
+    };
+}
+
+/**
+ * Datei aus einem File-Input lesen – mit Größenlimit vor dem Einlesen
+ * @param {Event} event – change-Event des File-Inputs
+ * @param {function(string)} onText
+ */
+function readImportFile(event, onText) {
+    closeMenu();
+    const input = event.target;
+    const file  = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+
+    if (file.size > DATA_LIMITS.fileBytes) {
+        showMessage(`Datei zu groß (max. ${Math.round(DATA_LIMITS.fileBytes / 1024 / 1024)} MB)`, 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload  = e => onText(e.target.result);
+    reader.onerror = () => showMessage('Datei konnte nicht gelesen werden', 'error');
+    reader.readAsText(file);
+}
+
+// -----------------------------------------------------------------------
 // EINZELNEN LINK EXPORTIEREN / IMPORTIEREN
 // -----------------------------------------------------------------------
 
@@ -23,13 +64,7 @@ function exportSingleLink() {
         type:       'single_link',
         version:    '1.0',
         exportDate: new Date().toISOString(),
-        link: {
-            title:       link.title,
-            url:         link.url,
-            description: link.description,
-            icon:        link.icon,
-            favorite:    link.favorite || false
-        },
+        link:       serializeLink(link),
         originalCategory:    category.title,
         originalCategoryKey: categoryKey
     };
@@ -49,80 +84,61 @@ function exportSingleLink() {
  * Einzelnen Link importieren
  */
 function importSingleLink(event) {
-    closeMenu();
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
+    readImportFile(event, text => {
+        let linkData;
         try {
-            const linkData = JSON.parse(e.target.result);
+            linkData = JSON.parse(text);
+        } catch (e) {
+            showMessage('Fehler beim Importieren: Datei ist kein gültiges JSON', 'error');
+            return;
+        }
 
-            if (!validateSingleLink(linkData)) {
-                throw new Error('Ungültige Link-Datei');
-            }
+        const checked = validateSingleLink(linkData);
+        if (checked.error) {
+            showMessage({ title: '❌ Ungültige Link-Datei', content: checked.error }, 'error');
+            return;
+        }
 
-            const link                 = linkData.link;
-            const originalCategoryKey  = linkData.originalCategoryKey;
-            const originalCategoryTitle = linkData.originalCategory;
+        const link                  = checked.link;
+        const originalCategoryKey   = typeof linkData.originalCategoryKey === 'string' ? linkData.originalCategoryKey : '';
+        const originalCategoryTitle = typeof linkData.originalCategory === 'string' && linkData.originalCategory.trim()
+            ? linkData.originalCategory.trim()
+            : 'Importiert';
 
-            if (link.favorite === undefined) link.favorite = false;
+        let targetCategoryKey = null;
 
-            let targetCategoryKey = null;
-
-            if (originalCategoryKey && linkCategories[originalCategoryKey]) {
-                targetCategoryKey = originalCategoryKey;
-            } else {
-                for (const [key, category] of Object.entries(linkCategories)) {
-                    if (category.title === originalCategoryTitle) {
-                        targetCategoryKey = key;
-                        break;
-                    }
+        if (originalCategoryKey && Object.hasOwn(linkCategories, originalCategoryKey)) {
+            targetCategoryKey = originalCategoryKey;
+        } else {
+            for (const [key, category] of Object.entries(linkCategories)) {
+                if (category.title === originalCategoryTitle) {
+                    targetCategoryKey = key;
+                    break;
                 }
             }
-
-            if (targetCategoryKey) {
-                linkCategories[targetCategoryKey].links.push(link);
-                sortCategoriesEmptyLast();
-                saveConfig(true);
-                renderCategories();
-                updateFavoritesCount();
-                showMessage(`Link "${link.title}" erfolgreich in "${linkCategories[targetCategoryKey].title}" importiert`, 'success');
-            } else {
-                showCategorySelectionModal(link, originalCategoryTitle);
-            }
-
-        } catch (e) {
-            console.error('Import error:', e);
-            showMessage('Fehler beim Importieren: Ungültige Link-Datei', 'error');
         }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+
+        if (targetCategoryKey) {
+            linkCategories[targetCategoryKey].links.push(link);
+            sortCategoriesEmptyLast();
+            if (!saveConfig(true)) return;
+            refreshViews();
+            showMessage(`Link "${link.title}" erfolgreich in "${linkCategories[targetCategoryKey].title}" importiert`, 'success');
+        } else {
+            showCategorySelectionModal(link, originalCategoryTitle);
+        }
+    });
 }
 
 /**
- * Einzelnen Link validieren
+ * Einzelnen Link prüfen (verändert linkData nicht)
+ * @returns {{link: object}|{error: string}}
  */
 function validateSingleLink(linkData) {
-    if (typeof linkData !== 'object' || linkData === null) return false;
-    if (linkData.type !== 'single_link') return false;
-    if (!linkData.link || typeof linkData.link !== 'object') return false;
-
-    const link = linkData.link;
-    if (!link.title || !link.url) return false;
-    if (!isSafeUrl(link.url)) return false;
-
-    if (!link.description) link.description = 'Keine Beschreibung';
-    if (!link.icon)        link.icon = '🔗';
-    if (link.favorite === undefined) link.favorite = false;
-
-    if (link.priority !== undefined) {
-        link.favorite = link.priority;
-        delete link.priority;
+    if (!isPlainObject(linkData) || linkData.type !== 'single_link') {
+        return { error: 'Die Datei ist kein Einzel-Link-Export.' };
     }
-
-    return true;
+    return normalizeLink(linkData.link);
 }
 
 // -----------------------------------------------------------------------
@@ -224,17 +240,16 @@ function confirmLinkImport() {
             return;
         }
 
-        const newKey = uniqueKey(originalCategoryTitle, k => !!linkCategories[k]);
+        const newKey = uniqueKey(originalCategoryTitle, k => Object.hasOwn(linkCategories, k));
 
         linkCategories[newKey] = { title: originalCategoryTitle, icon: '📁', collapsed: false, links: [] };
         categoryOrder.push(newKey);
         linkCategories[newKey].links.push(pendingLinkImport);
 
         sortCategoriesEmptyLast();
-        saveConfig(true);
-        renderCategories();
+        if (!saveConfig(true)) return;
+        refreshViews();
         populateCategorySelect();
-        updateFavoritesCount();
         showMessage(`Ursprüngliche Kategorie "${originalCategoryTitle}" erstellt und Link "${pendingLinkImport.title}" importiert`, 'success');
 
     } else if (categoryKey === '__new__') {
@@ -251,26 +266,25 @@ function confirmLinkImport() {
             return;
         }
 
-        const newKey = uniqueKey(newCategoryTitle, k => !!linkCategories[k]);
+        const newKey = uniqueKey(newCategoryTitle, k => Object.hasOwn(linkCategories, k));
 
         linkCategories[newKey] = { title: newCategoryTitle, icon: newCategoryIcon, collapsed: false, links: [] };
         categoryOrder.push(newKey);
         linkCategories[newKey].links.push(pendingLinkImport);
 
         sortCategoriesEmptyLast();
-        saveConfig(true);
-        renderCategories();
+        if (!saveConfig(true)) return;
+        refreshViews();
         populateCategorySelect();
-        updateFavoritesCount();
         showMessage(`Neue Kategorie "${newCategoryTitle}" erstellt und Link "${pendingLinkImport.title}" importiert`, 'success');
 
     } else {
+        if (!Object.hasOwn(linkCategories, categoryKey)) return;
         linkCategories[categoryKey].links.push(pendingLinkImport);
 
         sortCategoriesEmptyLast();
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
+        if (!saveConfig(true)) return;
+        refreshViews();
         showMessage(`Link "${pendingLinkImport.title}" erfolgreich in "${linkCategories[categoryKey].title}" importiert`, 'success');
     }
 
@@ -297,13 +311,7 @@ function exportSingleCategory() {
             title:     category.title,
             icon:      category.icon,
             collapsed: category.collapsed,
-            links:     category.links.map(link => ({
-                title:       link.title,
-                url:         link.url,
-                description: link.description,
-                icon:        link.icon,
-                favorite:    link.favorite || false
-            }))
+            links:     category.links.map(serializeLink)
         },
         originalCategoryKey: currentContextCategory
     };
@@ -323,49 +331,45 @@ function exportSingleCategory() {
  * Einzelne Kategorie importieren
  */
 function importSingleCategory(event) {
-    closeMenu();
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
+    readImportFile(event, text => {
+        let rawData;
         try {
-            const categoryData = JSON.parse(e.target.result);
-
-            if (!validateSingleCategory(categoryData)) {
-                throw new Error('Ungültige Kategorie-Datei');
-            }
-
-            const category             = categoryData.category;
-            const originalCategoryKey  = categoryData.originalCategoryKey;
-
-            let existingCategoryKey = null;
-            let conflictingKey      = null;
-
-            for (const [key, existingCategory] of Object.entries(linkCategories)) {
-                if (existingCategory.title === category.title) {
-                    existingCategoryKey = key;
-                    break;
-                }
-            }
-
-            if (!existingCategoryKey && originalCategoryKey && linkCategories[originalCategoryKey]) {
-                conflictingKey = originalCategoryKey;
-            }
-
-            if (existingCategoryKey || conflictingKey) {
-                showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey);
-            } else {
-                importCategoryDirectly(categoryData);
-            }
-
+            rawData = JSON.parse(text);
         } catch (e) {
-            console.error('Import error:', e);
-            showMessage('Fehler beim Importieren: Ungültige Kategorie-Datei', 'error');
+            showMessage('Fehler beim Importieren: Datei ist kein gültiges JSON', 'error');
+            return;
         }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+
+        const checked = validateSingleCategory(rawData);
+        if (checked.error) {
+            showMessage({ title: '❌ Ungültige Kategorie-Datei', content: checked.error }, 'error');
+            return;
+        }
+
+        const categoryData        = checked.data;
+        const category            = categoryData.category;
+        const originalCategoryKey = categoryData.originalCategoryKey;
+
+        let existingCategoryKey = null;
+        let conflictingKey      = null;
+
+        for (const [key, existingCategory] of Object.entries(linkCategories)) {
+            if (existingCategory.title === category.title) {
+                existingCategoryKey = key;
+                break;
+            }
+        }
+
+        if (!existingCategoryKey && originalCategoryKey && Object.hasOwn(linkCategories, originalCategoryKey)) {
+            conflictingKey = originalCategoryKey;
+        }
+
+        if (existingCategoryKey || conflictingKey) {
+            showCategoryImportConflictDialog(categoryData, existingCategoryKey, conflictingKey);
+        } else {
+            importCategoryDirectly(categoryData);
+        }
+    });
 }
 
 /**
@@ -387,26 +391,24 @@ function showCategoryImportConflictDialog(categoryData, existingCategoryKey, con
     if (confirm(`${message}\n\nWie möchten Sie fortfahren?\n\nOK = Links zur bestehenden Kategorie hinzufügen\nAbbrechen = Neue Kategorie mit anderem Namen erstellen`)) {
         const targetKey = existingCategoryKey || conflictingKey;
         const existingUrls = new Set(
-            linkCategories[targetKey].links.map(l => l.url.trim().toLowerCase())
+            linkCategories[targetKey].links.map(l => exactUrlKey(l.url))
         );
 
         let added = 0;
         let skipped = 0;
         category.links.forEach(link => {
-            if (link.favorite === undefined) link.favorite = false;
-            if (existingUrls.has(link.url.trim().toLowerCase())) {
+            if (existingUrls.has(exactUrlKey(link.url))) {
                 skipped++;
             } else {
                 linkCategories[targetKey].links.push(link);
-                existingUrls.add(link.url.trim().toLowerCase());
+                existingUrls.add(exactUrlKey(link.url));
                 added++;
             }
         });
 
         sortCategoriesEmptyLast();
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
+        if (!saveConfig(true)) { pendingCategoryImport = null; return; }
+        refreshViews();
         const skipNote = skipped > 0 ? ` (${skipped} Duplikat${skipped > 1 ? 'e' : ''} übersprungen)` : '';
         showMessage(`${added} Link${added !== 1 ? 's' : ''} zur Kategorie "${conflictingCategory.title}" hinzugefügt${skipNote}`, added > 0 ? 'success' : 'warning');
     } else {
@@ -424,12 +426,8 @@ function showCategoryImportConflictDialog(categoryData, existingCategoryKey, con
  * Kategorie direkt importieren
  */
 function importCategoryDirectly(categoryData) {
-    const category            = categoryData.category;
-    const newCategoryKey      = uniqueKey(category.title, k => !!linkCategories[k]);
-
-    category.links.forEach(link => {
-        if (link.favorite === undefined) link.favorite = false;
-    });
+    const category       = categoryData.category;
+    const newCategoryKey = uniqueKey(category.title, k => Object.hasOwn(linkCategories, k));
 
     linkCategories[newCategoryKey] = {
         title:     category.title,
@@ -441,41 +439,32 @@ function importCategoryDirectly(categoryData) {
     categoryOrder.push(newCategoryKey);
 
     sortCategoriesEmptyLast();
-    saveConfig(true);
-    renderCategories();
+    if (!saveConfig(true)) return;
+    refreshViews();
     populateCategorySelect();
-    updateFavoritesCount();
 
     showMessage(`Kategorie "${category.title}" mit ${category.links.length} Links erfolgreich importiert`, 'success');
 }
 
 /**
- * Einzelne Kategorie validieren
+ * Einzelne Kategorie prüfen (verändert categoryData nicht)
+ * @returns {{data: {category: object, originalCategoryKey: string}}|{error: string}}
  */
 function validateSingleCategory(categoryData) {
-    if (typeof categoryData !== 'object' || categoryData === null) return false;
-    if (categoryData.type !== 'single_category') return false;
-    if (!categoryData.category || typeof categoryData.category !== 'object') return false;
-
-    const category = categoryData.category;
-    if (!category.title || !Array.isArray(category.links)) return false;
-
-    if (!category.icon)                        category.icon = '📁';
-    if (category.collapsed === undefined)      category.collapsed = false;
-
-    for (const link of category.links) {
-        if (!link.title || !link.url) return false;
-        if (!isSafeUrl(link.url)) return false;
-        if (!link.description)        link.description = 'Keine Beschreibung';
-        if (!link.icon)               link.icon = '🔗';
-        if (link.favorite === undefined) link.favorite = false;
-        if (link.priority !== undefined) {
-            link.favorite = link.priority;
-            delete link.priority;
-        }
+    if (!isPlainObject(categoryData) || categoryData.type !== 'single_category') {
+        return { error: 'Die Datei ist kein Kategorie-Export.' };
     }
+    const res = normalizeCategory(categoryData.category, '');
+    if (res.error) return { error: res.error };
+    if (res.category.links.length > DATA_LIMITS.linksTotal) return { error: 'Zu viele Links' };
 
-    return true;
+    const key = categoryData.originalCategoryKey;
+    return {
+        data: {
+            category:            res.category,
+            originalCategoryKey: typeof key === 'string' && isSafeKey(key) ? key : ''
+        }
+    };
 }
 
 // -----------------------------------------------------------------------
@@ -490,7 +479,8 @@ function exportConfig() {
     try {
         const tab     = tabsList.find(t => t.id === activeTabId) || { label: activeTabId };
         const filename = `meine-links-${sanitizeFilename(tab.label)}.json`;
-        downloadJSON(config, filename);
+        // Immer der aktuell angezeigte Stand – nicht eine evtl. veraltete config-Referenz
+        downloadJSON(getActiveConfigSnapshot(), filename);
         showMessage('Konfiguration erfolgreich exportiert', 'success');
     } catch (e) {
         showMessage('Fehler beim Exportieren der Konfiguration', 'error');
@@ -498,59 +488,36 @@ function exportConfig() {
 }
 
 /**
- * Konfiguration aus JSON importieren
+ * Konfiguration aus JSON importieren.
+ * Die Datei wird vollständig geprüft; erst nach erfolgreichem Speichern wird
+ * der aktive Tab ersetzt. Ein abgelehnter Import ändert weder Speicher noch Ansicht.
  */
 function importConfig(event) {
-    closeMenu();
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
+    readImportFile(event, text => {
+        let parsed;
         try {
-            const importedConfig = JSON.parse(e.target.result);
-
-            if (!validateConfig(importedConfig)) {
-                throw new Error('Ungültige Konfiguration');
-            }
-
-            if (confirm('Möchten Sie die aktuelle Konfiguration ersetzen?')) {
-                if (importedConfig.categories) {
-                    config        = importedConfig;
-                    linkCategories = config.categories;
-                    categoryOrder  = config.categoryOrder || Object.keys(linkCategories);
-                } else {
-                    linkCategories = importedConfig;
-                    categoryOrder  = Object.keys(linkCategories);
-                    config        = { categories: linkCategories, categoryOrder };
-                }
-
-                addFavoritesSupportToLinks();
-
-                Object.keys(linkCategories).forEach(key => {
-                    if (linkCategories[key].collapsed === undefined) {
-                        linkCategories[key].collapsed = false;
-                    }
-                });
-
-                const existingKeys = Object.keys(linkCategories);
-                const missingKeys  = existingKeys.filter(k => !categoryOrder.includes(k));
-                if (missingKeys.length > 0) categoryOrder = [...categoryOrder, ...missingKeys];
-                categoryOrder = categoryOrder.filter(k => linkCategories[k]);
-
-                sortCategoriesEmptyLast();
-                saveConfig(true);
-                renderCategories();
-                updateFavoritesCount();
-                showMessage('Konfiguration erfolgreich importiert', 'success');
-            }
+            parsed = JSON.parse(text);
         } catch (e) {
-            console.error('Import error:', e);
-            showMessage('Fehler beim Importieren: Ungültige JSON-Datei', 'error');
+            showMessage('Fehler beim Importieren: Datei ist kein gültiges JSON', 'error');
+            return;
         }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+
+        const res = normalizeConfig(parsed);
+        if (!res.ok) {
+            showMessage({ title: '❌ Import abgelehnt – ungültige Konfiguration', content: res.error }, 'error');
+            return;
+        }
+
+        if (activeTabId === 'favorites') {
+            showMessage('Bitte zuerst den Tab wählen, der ersetzt werden soll.', 'warning');
+            return;
+        }
+        if (!confirm('Möchten Sie die aktuelle Konfiguration ersetzen?')) return;
+
+        if (!writeTabConfig(activeTabId, res.config)) return;
+        refreshViews();
+        showMessage('Konfiguration erfolgreich importiert', 'success');
+    });
 }
 
 // -----------------------------------------------------------------------
@@ -760,34 +727,37 @@ function generateDefaultConfigJS(tabObj, cfgObj) {
             links:     category.links.map(link => {
                 totalLinks++;
                 if (link.favorite) totalFavorites++;
-                return {
-                    title:       link.title,
-                    url:         link.url,
-                    description: link.description || '',
-                    icon:        link.icon || '🔗',
-                    favorite:    link.favorite || false,
-                    pinned:      link.pinned || false
-                };
+                return serializeLink(link);
             })
         };
     });
 
+    // Registry-Schlüssel eindeutig halten: zwei Tabs mit gleichem Namen dürfen sich
+    // beim Wiederherstellen nicht gegenseitig überschreiben. Maßgeblich für den Tab
+    // sind die Felder id und label, nicht der Schlüssel.
+    const tabId = typeof tab.id === 'string' && isSafeKey(tab.id) ? tab.id : '';
     return `/**
  * ========================================================================
- * STANDARD-KONFIGURATION: ${tab.label.toUpperCase().replace(/\*\//g, '* /')}
+ * STANDARD-KONFIGURATION: ${String(tab.label).toUpperCase().replace(/\*\//g, '* /')}
  * ========================================================================
  * Generiert am: ${new Date().toLocaleString('de-DE')}
  * Kategorien: ${order.length}
  * Links gesamt: ${totalLinks}
  * Favoriten: ${totalFavorites}
  *
- * Tab wird automatisch aus dem Dateinamen erkannt.
  * Datei in Config/ ablegen + Dateinamen in Config/tabs.js eintragen → Tab erscheint automatisch.
  * ========================================================================
  */
 (function() {
     if (!window.DYNAMIC_CONFIGS) window.DYNAMIC_CONFIGS = {};
-    window.DYNAMIC_CONFIGS[${JSON.stringify(tab.label)}] = {
+    var label = ${JSON.stringify(tab.label)};
+    var key = label;
+    for (var i = 2; key === '__proto__' || Object.prototype.hasOwnProperty.call(window.DYNAMIC_CONFIGS, key); i++) {
+        key = label + ' #' + i;
+    }
+    window.DYNAMIC_CONFIGS[key] = {
+        id:     ${JSON.stringify(tabId)},
+        label:  label,
         icon:   ${JSON.stringify(tab.icon)},
         hidden: ${tab.hidden ? 'true' : 'false'},
         config: ${JSON.stringify(cleanedConfig, null, 8)}
@@ -961,10 +931,6 @@ function exportAllDefaultConfigs() {
     if (exportableTabs.length === 0) {
         showMessage('Keine Tabs zum Exportieren vorhanden.', 'error');
         return;
-    }
-
-    if (activeTabId && activeTabId !== 'favorites') {
-        saveConfig(true);
     }
 
     const files = [];
@@ -1161,16 +1127,13 @@ let _bmData = null;
  * File-Input Handler für Browser-Lesezeichen
  */
 function importBrowserBookmarks(event) {
-    closeMenu();
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
+    readImportFile(event, text => {
         try {
-            const parsed = _bmParse(e.target.result);
+            const parsed = _bmParse(text);
             if (parsed.folders.length === 0 && parsed.rootLinks.length === 0) {
-                showMessage('Keine Lesezeichen in der Datei gefunden.', 'error');
+                showMessage(parsed.skipped > 0
+                    ? `Keine importierbaren Lesezeichen gefunden (${parsed.skipped} ohne http(s)-Adresse übersprungen).`
+                    : 'Keine Lesezeichen in der Datei gefunden.', 'error');
                 return;
             }
             _bmData = parsed;
@@ -1179,22 +1142,33 @@ function importBrowserBookmarks(event) {
             console.error('Bookmark parse error:', err);
             showMessage('Fehler beim Lesen der Lesezeichen-Datei', 'error');
         }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+    });
 }
 
+// Ordner, die Browser beim Export als technische Hülle anlegen (nicht vom Nutzer).
+// Sie werden übersprungen, ihre Inhalte rücken eine Ebene nach oben.
+const _BM_BROWSER_CONTAINERS = new Set([
+    'bookmarks bar', 'bookmarks toolbar', 'favorites bar', 'other bookmarks', 'mobile bookmarks',
+    'other favorites', 'bookmarks menu',
+    'lesezeichenleiste', 'lesezeichen-symbolleiste', 'favoritenleiste', 'weitere lesezeichen',
+    'andere lesezeichen', 'mobile lesezeichen', 'weitere favoriten', 'lesezeichen-menü'
+]);
+
+const _BM_MAX_DEPTH = 50;
+
 /**
- * Netscape Bookmark HTML → { rootLinks, folders } parsen
+ * Netscape Bookmark HTML → { rootLinks, folders, skipped } parsen.
+ * Nur http(s)-Links werden übernommen (gleiche Regel wie überall), der Rest gezählt.
  */
 function _bmParse(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     let folderId = 0;
+    let skipped  = 0;
 
-    function parseDL(dl) {
+    function parseDL(dl, depth) {
         const result = { directLinks: [], children: [] };
-        if (!dl) return result;
+        if (!dl || depth > _BM_MAX_DEPTH) return result;
 
         let node = dl.firstElementChild;
         while (node) {
@@ -1212,23 +1186,31 @@ function _bmParse(html) {
                             node    = childDL; // Geschwister-DL im outer Loop überspringen
                         }
                     }
-                    const child = parseDL(childDL);
+                    const child = parseDL(childDL, depth + 1);
+                    const name  = h3.textContent.trim() || 'Ordner';
                     result.children.push({
                         id:          'bm_f' + (folderId++),
-                        name:        h3.textContent.trim() || 'Ordner',
+                        name,
+                        // Browser-Hülle: Lesezeichenleiste/"Weitere Lesezeichen" o.ä.
+                        isContainer: h3.hasAttribute('personal_toolbar_folder') ||
+                                     h3.hasAttribute('unfiled_bookmarks_folder') ||
+                                     _BM_BROWSER_CONTAINERS.has(name.toLowerCase()),
                         directLinks: child.directLinks,
                         children:    child.children
                     });
                 } else if (a) {
-                    const href = a.getAttribute('href');
-                    if (href && !href.startsWith('place:') && !href.startsWith('javascript:')) {
+                    const href = (a.getAttribute('href') || '').trim();
+                    if (isSafeUrl(href)) {
                         result.directLinks.push({
-                            title:       a.textContent.trim() || 'Ohne Titel',
+                            title:       (a.textContent.trim() || 'Ohne Titel').slice(0, DATA_LIMITS.title),
                             url:         href,
                             description: '',
                             icon:        '🔗',
-                            favorite:    false
+                            favorite:    false,
+                            pinned:      false
                         });
+                    } else {
+                        skipped++;
                     }
                 }
             }
@@ -1238,18 +1220,22 @@ function _bmParse(html) {
     }
 
     const rootDL = doc.querySelector('dl');
-    if (!rootDL) return { rootLinks: [], folders: [] };
-    const root = parseDL(rootDL);
+    if (!rootDL) return { rootLinks: [], folders: [], skipped };
+    const root = parseDL(rootDL, 0);
 
-    // Browser-Exporte haben immer eine Wrapper-Ebene (Favoritenleiste, Mozilla Firefox,
-    // Weitere Lesezeichen, Bookmarks bar, …). Diese überspringen: Level-1 wird Tab-Ebene.
-    const flatFolders = [];
+    // Nur echte Browser-Hüllen überspringen – vom Nutzer angelegte Ordner der
+    // obersten Ebene bleiben erhalten und werden zur Tab-Ebene.
+    const flatFolders   = [];
     const flatRootLinks = [...root.directLinks];
-    root.children.forEach(browserContainer => {
-        flatRootLinks.push(...browserContainer.directLinks);
-        flatFolders.push(...browserContainer.children);
+    root.children.forEach(folder => {
+        if (folder.isContainer) {
+            flatRootLinks.push(...folder.directLinks);
+            flatFolders.push(...folder.children);
+        } else {
+            flatFolders.push(folder);
+        }
     });
-    return { rootLinks: flatRootLinks, folders: flatFolders };
+    return { rootLinks: flatRootLinks, folders: flatFolders, skipped };
 }
 
 /**
@@ -1414,6 +1400,14 @@ function _bmRenderStats(data) {
         </div>`;
     }
 
+    if (data.skipped > 0) {
+        html += `
+        <div class="bm-stat-item" title="Nur Adressen mit http:// oder https:// werden übernommen (z.B. keine javascript:-, ftp:- oder place:-Einträge)">
+            <span class="bm-stat-value" style="color:#ff8080;">${data.skipped}</span>
+            <span class="bm-stat-label">Übersprungen</span>
+        </div>`;
+    }
+
     document.getElementById('bmStats').innerHTML = html;
 }
 
@@ -1452,7 +1446,7 @@ function _bmRenderTree(data) {
                             if(t)t.textContent=this.value||'📂';">
             <div class="emoji-trigger" id="bmIconTrigger_${topFolder.id}"
                  onclick="_bmToggleIconPicker('bmIconTrigger_${topFolder.id}','${inputId}')"
-                 title="Icon wählen">${savedIcon}</div>
+                 title="Icon wählen">${_bmEsc(savedIcon)}</div>
             <div class="emoji-picker" id="${inputId}Picker">
                 <div class="emoji-picker-header">
                     <input type="text" class="emoji-search" placeholder="Emoji suchen..."
@@ -1659,41 +1653,53 @@ function closeBookmarkImportModal() {
 function confirmBookmarkImport() {
     if (!_bmData) return;
     let totalLinks = 0, newTabCount = 0, mergeTabCount = 0;
+    const previousTabs = tabsList.slice();
 
-    // Schritt 1: Tab-Ziele vorberechnen — Custom-Namen dедuplizieren
-    const newTabCache  = {}; // customName → tabId
-    const mergedTabIds = new Set();
-    const folderTabMap    = {}; // folderId → tabId
-    const folderTabConfig = {}; // tabId → config (geteilt bei gleichem Custom-Namen)
+    // Map statt Objekt: Ordner-/Tab-Namen wie "__proto__" sind Nutzerdaten
+    const newTabCache     = new Map(); // customName → tabId
+    const mergedTabIds    = new Set();
+    const folderTabMap    = new Map(); // folderId → tabId
+    const folderTabConfig = new Map(); // tabId → config (geteilt bei gleichem Custom-Namen)
 
+    const newTab = (name, icon) => {
+        const id = _bmMakeTab(name, icon);
+        folderTabConfig.set(id, { categories: {}, categoryOrder: [] });
+        newTabCount++;
+        return id;
+    };
+    const existingTab = tabId => {
+        if (!tabsList.some(t => t.id === tabId)) return null;
+        if (!folderTabConfig.has(tabId)) {
+            folderTabConfig.set(tabId, getTabConfigById(tabId) || { categories: {}, categoryOrder: [] });
+        }
+        return tabId;
+    };
+
+    // Schritt 1: Tab-Ziele vorberechnen — Custom-Namen deduplizieren
     _bmData.folders.forEach(topFolder => {
         const choice = window._bmTabChoices[topFolder.id] || 'new';
         let tabId;
         if (choice === 'new') {
             const customName = (window._bmTabNames[topFolder.id] || '').trim() || topFolder.name;
             const customIcon = (window._bmTabIcons[topFolder.id] || '').trim() || '📂';
-            if (!newTabCache[customName]) {
-                newTabCache[customName] = _bmMakeTab(customName, customIcon);
-                newTabCount++;
-            }
-            tabId = newTabCache[customName];
-            if (!folderTabConfig[tabId]) folderTabConfig[tabId] = { categories: {}, categoryOrder: [] };
+            if (!newTabCache.has(customName)) newTabCache.set(customName, newTab(customName, customIcon));
+            tabId = newTabCache.get(customName);
         } else {
-            tabId = choice;
+            tabId = existingTab(choice);
+            if (!tabId) return;
             if (!mergedTabIds.has(tabId)) {
                 mergedTabIds.add(tabId);
                 mergeTabCount++;
-                const existing = getTabConfigById(tabId);
-                folderTabConfig[tabId] = existing ? JSON.parse(JSON.stringify(existing)) : { categories: {}, categoryOrder: [] };
             }
         }
-        folderTabMap[topFolder.id] = tabId;
+        folderTabMap.set(topFolder.id, tabId);
     });
 
     // Schritt 2: Kategorien + Links in die (gemeinsamen) Configs eintragen
     _bmData.folders.forEach(topFolder => {
-        const tabId    = folderTabMap[topFolder.id];
-        const tabConfig = folderTabConfig[tabId];
+        const tabId = folderTabMap.get(topFolder.id);
+        if (!tabId) return;
+        const tabConfig = folderTabConfig.get(tabId);
 
         // Direkte Links im Top-Ordner → eigene Kategorie mit Ordner-Name
         if (topFolder.directLinks.length > 0) {
@@ -1709,44 +1715,39 @@ function confirmBookmarkImport() {
         });
     });
 
-    // Schritt 3: Alle Configs speichern
-    Object.entries(folderTabConfig).forEach(([tabId, config]) => {
-        localStorage.setItem('linkConfig_' + tabId, JSON.stringify(config));
-    });
-
     // Root-Links
     if (_bmData.rootLinks.length > 0 && window._bmRootTabChoice) {
         let tabId;
         if (window._bmRootTabChoice === 'new') {
             const customName = (window._bmRootTabName || '').trim() || 'Importiert';
             // Prüfen ob dieser Name schon durch regulären Import angelegt wurde
-            const existing = newTabCache[customName];
-            if (existing) {
-                tabId = existing;
-            } else {
-                tabId = _bmMakeTab(customName);
-                newTabCount++;
-            }
+            tabId = newTabCache.get(customName) || newTab(customName);
         } else {
-            tabId = window._bmRootTabChoice;
+            tabId = existingTab(window._bmRootTabChoice);
         }
-        let tabConfig = folderTabConfig[tabId] || getTabConfigById(tabId);
-        tabConfig = tabConfig ? JSON.parse(JSON.stringify(tabConfig)) : { categories: {}, categoryOrder: [] };
-        const catKey  = _bmMakeCat('Importiert', '📥', tabConfig);
-        _bmData.rootLinks.forEach(link => { tabConfig.categories[catKey].links.push({...link}); totalLinks++; });
-        localStorage.setItem('linkConfig_' + tabId, JSON.stringify(tabConfig));
+        if (tabId) {
+            const tabConfig = folderTabConfig.get(tabId);
+            const catKey    = _bmMakeCat('Importiert', '📥', tabConfig);
+            _bmData.rootLinks.forEach(link => { tabConfig.categories[catKey].links.push({...link}); totalLinks++; });
+        }
     }
 
-    saveTabsList();
+    // Schritt 3: Alle Configs und die Tab-Liste gemeinsam speichern
+    if (!writeTabConfigs(folderTabConfig, { tabs: true })) {
+        tabsList = previousTabs;
+        return;
+    }
+
+    const skipped = _bmData.skipped || 0;
     renderTabBar();
     loadTabConfigById(activeTabId);
-    renderCategories();
-    updateFavoritesCount();
+    refreshViews();
     closeBookmarkImportModal();
 
     const info = [];
     if (newTabCount  > 0) info.push(`${newTabCount} neue${newTabCount === 1 ? 'r' : ''} Tab`);
     if (mergeTabCount > 0) info.push(`${mergeTabCount} Tab${mergeTabCount === 1 ? '' : 's'} ergänzt`);
+    if (skipped > 0) info.push(`${skipped} ohne http(s)-Adresse übersprungen`);
 
     showMessage({ title: `✅ ${totalLinks} Links importiert`, content: info.join(' · ') }, 'success');
 }
@@ -1767,7 +1768,7 @@ function _bmMakeCat(name, icon, cfg) {
     for (const [k, cat] of Object.entries(cfg.categories)) {
         if (cat.title === name) return k;
     }
-    const key = uniqueKey(name, k => !!cfg.categories[k], 'importiert');
+    const key = uniqueKey(name, k => Object.hasOwn(cfg.categories, k), 'importiert');
     cfg.categories[key] = { title: name, icon: icon || '📁', collapsed: false, links: [] };
     if (!cfg.categoryOrder) cfg.categoryOrder = [];
     cfg.categoryOrder.push(key);
@@ -1776,7 +1777,9 @@ function _bmMakeCat(name, icon, cfg) {
 
 /** Neuen Tab anlegen und zu tabsList hinzufügen */
 function _bmMakeTab(name, icon) {
-    const id = uniqueKey(name, k => k === 'favorites' || tabsList.some(t => t.id === k), 'importiert');
+    // Auch IDs aus Config-Dateien meiden, sonst erbt der neue Tab deren Default-Inhalt
+    const dynamicIds = getDynamicConfigTabIds().map(t => t.id);
+    const id = uniqueKey(name, k => k === 'favorites' || tabsList.some(t => t.id === k) || dynamicIds.includes(k), 'importiert');
     tabsList.push({ id, label: name, icon: icon || '📂' });
     return id;
 }
@@ -1802,31 +1805,26 @@ function _collectAllLinks() {
     if (typeof tabsList === 'undefined') return result;
 
     tabsList.forEach(tab => {
-        try {
-            const raw = localStorage.getItem('linkConfig_' + tab.id);
-            if (!raw) return;
-            const config = JSON.parse(raw);
-            if (!config || !config.categories) return;
+        const cfg = getTabConfigById(tab.id);
+        if (!cfg) return;
 
-            Object.entries(config.categories).forEach(([catKey, cat]) => {
-                if (!Array.isArray(cat.links)) return;
-                cat.links.forEach((link, idx) => {
-                    if (!link.url || typeof link.url !== 'string') return;
-                    result.push({
-                        tabId:         tab.id,
-                        tabLabel:      tab.label,
-                        categoryKey:   catKey,
-                        categoryTitle: cat.title || catKey,
-                        linkIndex:     idx,
-                        title:         link.title || link.url,
-                        url:           link.url,
-                        icon:          link.icon || '',
-                        description:   link.description || '',
-                        normalizedUrl: link.url.trim().toLowerCase()
-                    });
+        Object.entries(cfg.categories).forEach(([catKey, cat]) => {
+            cat.links.forEach((link, idx) => {
+                result.push({
+                    tabId:         tab.id,
+                    tabLabel:      tab.label,
+                    categoryKey:   catKey,
+                    categoryTitle: cat.title || catKey,
+                    linkIndex:     idx,
+                    title:         link.title || link.url,
+                    url:           link.url,
+                    icon:          link.icon || '',
+                    description:   link.description || '',
+                    // Nur exakt gleiche Zieladressen gelten als Duplikat (Pfad/Query bleiben case-sensitiv)
+                    normalizedUrl: exactUrlKey(link.url)
                 });
             });
-        } catch (e) { /* defekten Tab überspringen */ }
+        });
     });
     return result;
 }
@@ -1837,9 +1835,7 @@ function _collectAllLinks() {
  */
 function openDuplicatesModal() {
     closeMenu();
-
-    const existing = document.getElementById('duplicatesModal');
-    if (existing) existing.remove();
+    closeDuplicatesModal();
 
     const allLinks = _collectAllLinks();
 
@@ -1880,6 +1876,7 @@ function openDuplicatesModal() {
                             data-tab="${_bmEsc(link.tabId)}"
                             data-cat="${_bmEsc(link.categoryKey)}"
                             data-idx="${link.linkIndex}"
+                            data-url="${_bmEsc(link.url)}"
                             data-group="${gIdx}"
                             ${isChecked ? 'checked' : ''}
                             style="margin-top:4px; cursor:pointer; accent-color:#ff6b6b; flex-shrink:0;">
@@ -1929,7 +1926,7 @@ function openDuplicatesModal() {
                 <h2><span class="modal-emoji">🔍</span> Duplikate prüfen</h2>
                 ${bodyHtml}
                 <div class="form-buttons" style="margin-top:20px; justify-content:flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('duplicatesModal').remove()">
+                    <button type="button" class="btn btn-secondary" onclick="closeDuplicatesModal()">
                         ${hasGroups ? 'Abbrechen' : 'Schließen'}
                     </button>
                     ${hasGroups ? `<button type="button" class="btn btn-danger-confirm" onclick="deleteCheckedDuplicates()" style="padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid rgba(220,53,69,0.6); transition:all 0.2s ease;">
@@ -1949,17 +1946,29 @@ function openDuplicatesModal() {
         });
     });
 
-    const handleEsc = (e) => {
-        if (e.key === 'Escape') {
-            const m = document.getElementById('duplicatesModal');
-            if (m) { m.remove(); document.removeEventListener('keydown', handleEsc); }
-        }
+    _dupEscHandler = (e) => {
+        if (e.key === 'Escape') closeDuplicatesModal();
     };
-    document.addEventListener('keydown', handleEsc);
+    document.addEventListener('keydown', _dupEscHandler);
+}
+
+let _dupEscHandler = null;
+
+/**
+ * Duplikat-Dialog schließen (inkl. Escape-Listener)
+ */
+function closeDuplicatesModal() {
+    const modal = document.getElementById('duplicatesModal');
+    if (modal) modal.remove();
+    if (_dupEscHandler) {
+        document.removeEventListener('keydown', _dupEscHandler);
+        _dupEscHandler = null;
+    }
 }
 
 /**
  * Löscht alle im Duplikat-Dialog angehakten Links.
+ * Alle betroffenen Tabs werden gemeinsam gespeichert; gezählt wird erst danach.
  */
 function deleteCheckedDuplicates() {
     const checkboxes = [...document.querySelectorAll('#duplicatesModal input[type="checkbox"]:checked')];
@@ -1968,49 +1977,40 @@ function deleteCheckedDuplicates() {
         return;
     }
 
-    // Sammeln, nach Tab gruppieren, Indizes absteigend sortieren
-    const byTab = {};
+    // Sammeln und nach Tab → Kategorie gruppieren (Map: Tab-/Kategorie-Namen sind Nutzerdaten)
+    const byTab = new Map();
     checkboxes.forEach(cb => {
-        const tabId   = cb.dataset.tab;
-        const catKey  = cb.dataset.cat;
-        const idx     = parseInt(cb.dataset.idx);
-        if (!byTab[tabId]) byTab[tabId] = {};
-        if (!byTab[tabId][catKey]) byTab[tabId][catKey] = [];
-        byTab[tabId][catKey].push(idx);
+        const tabId  = cb.dataset.tab;
+        const catKey = cb.dataset.cat;
+        if (!byTab.has(tabId)) byTab.set(tabId, new Map());
+        const cats = byTab.get(tabId);
+        if (!cats.has(catKey)) cats.set(catKey, []);
+        cats.get(catKey).push({ idx: parseInt(cb.dataset.idx, 10), url: cb.dataset.url });
     });
 
-    let totalDeleted = 0;
+    const changed = new Map();
+    let toDelete = 0, stale = 0;
 
-    Object.entries(byTab).forEach(([tabId, categories]) => {
-        try {
-            const raw = localStorage.getItem('linkConfig_' + tabId);
-            if (!raw) return;
-            const config = JSON.parse(raw);
-
-            Object.entries(categories).forEach(([catKey, indices]) => {
-                if (!config.categories[catKey]) return;
-                // Absteigend sortieren, damit Indizes beim Splicen stabil bleiben
-                indices.sort((a, b) => b - a);
-                indices.forEach(i => {
-                    config.categories[catKey].links.splice(i, 1);
-                    totalDeleted++;
-                });
+    byTab.forEach((categories, tabId) => {
+        const cfg = getTabConfigById(tabId);
+        if (!cfg) return;
+        categories.forEach((entries, catKey) => {
+            const cat = Object.hasOwn(cfg.categories, catKey) ? cfg.categories[catKey] : null;
+            if (!cat) { stale += entries.length; return; }
+            // Absteigend, damit Indizes beim Splicen stabil bleiben; URL als Kontrolle
+            entries.sort((a, b) => b.idx - a.idx).forEach(({ idx, url }) => {
+                if (!cat.links[idx] || cat.links[idx].url !== url) { stale++; return; }
+                cat.links.splice(idx, 1);
+                toDelete++;
             });
-
-            localStorage.setItem('linkConfig_' + tabId, JSON.stringify(config));
-
-            // Laufzeit-State des aktiven Tabs synchronisieren
-            if (tabId === activeTabId) {
-                linkCategories = config.categories;
-                categoryOrder  = config.categoryOrder || Object.keys(config.categories);
-            }
-        } catch (e) {
-            console.error('Fehler beim Löschen in Tab', tabId, e);
-        }
+        });
+        changed.set(tabId, cfg);
     });
 
-    document.getElementById('duplicatesModal').remove();
-    renderCategories();
-    updateFavoritesCount();
-    showMessage(`${totalDeleted} Duplikat${totalDeleted !== 1 ? 'e' : ''} gelöscht.`, 'success');
+    if (!writeTabConfigs(changed)) return;
+
+    closeDuplicatesModal();
+    refreshViews();
+    const staleNote = stale > 0 ? ` (${stale} inzwischen geändert, übersprungen)` : '';
+    showMessage(`${toDelete} Duplikat${toDelete !== 1 ? 'e' : ''} gelöscht${staleNote}.`, stale > 0 ? 'warning' : 'success');
 }

@@ -2,3 +2,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Lokale Audit-Unterlagen (nicht veröffentlichen)
+/Audit/

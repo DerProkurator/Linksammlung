@@ -211,7 +211,7 @@ function handleCategoryDrop(e) {
                     categoryOrder.splice(newIndex + 1, 0, movedKey);
                 }
 
-                saveConfig(true);
+                if (!saveConfig(true)) return false;
                 renderCategories();
 
                 requestAnimationFrame(() => {
@@ -312,7 +312,6 @@ function handleLinkDragStart(e) {
         if (document.body.contains(linkClone)) document.body.removeChild(linkClone);
     }, 100);
 
-    showEmptyCategories();
     e.stopPropagation();
 }
 
@@ -471,9 +470,10 @@ function handleLinkDrop(e) {
             }
 
             cleanupAllTemporaryElements();
-            saveConfig(true);
-            renderCategories();
-            showMessage(`Link "${linkToMove.title}" neu positioniert`, 'success');
+            if (saveConfig(true)) {
+                refreshViews();
+                showMessage(`Link "${linkToMove.title}" neu positioniert`, 'success');
+            }
         }
 
         removeAllDragOverClasses(this);
@@ -551,6 +551,11 @@ function handleCategoryLinkDrop(e) {
             cleanupAllTemporaryElements();
             this.classList.remove('link-drag-over');
 
+            // Verschieben sofort abschließen; über eine leer gewordene Quelle wird danach entschieden
+            sortCategoriesEmptyLast();
+            if (!saveConfig(true)) return false;
+            refreshViews();
+
             if (sourceCategory.links.length === 0) {
                 showEmptyCategoryModal({
                     action:           'move',
@@ -561,9 +566,6 @@ function handleCategoryLinkDrop(e) {
                 });
             } else {
                 showMessage(`Link "${linkToMove.title}" von "${sourceCategory.title}" zu "${linkCategories[targetCategoryKey].title}" verschoben`, 'success');
-                sortCategoriesEmptyLast();
-                saveConfig(true);
-                renderCategories();
             }
         } else {
             this.classList.remove('link-drag-over');
@@ -620,65 +622,10 @@ function removeDropIndicator(element) {
 }
 
 // -----------------------------------------------------------------------
-// TEMPORÄRE LEERE KATEGORIEN (während Link-Drag)
+// AUFRÄUMEN
 // -----------------------------------------------------------------------
-
-function showEmptyCategories() {
-    if (isLinkDragActive) return;
-    cleanupAllTemporaryElements();
-    isLinkDragActive   = true;
-    tempEmptyCategories = [];
-
-    categoryOrder.forEach(key => {
-        const category = linkCategories[key];
-        if (category && category.links.length === 0) {
-            tempEmptyCategories.push(key);
-        }
-    });
-
-    if (tempEmptyCategories.length > 0) {
-        addEmptyCategoriesToDom();
-    }
-}
-
-function hideEmptyCategories() {
-    if (!isLinkDragActive) return;
-    cleanupAllTemporaryElements();
-}
-
-function addEmptyCategoriesToDom() {
-    const categoriesWrapper = document.querySelector('.categories-wrapper');
-    if (!categoriesWrapper) return;
-
-    const emptyGridSection = document.createElement('div');
-    emptyGridSection.className = 'categories-grid-section empty-categories-section';
-
-    tempEmptyCategories.forEach(key => {
-        const category = linkCategories[key];
-        if (!category) return;
-
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category empty-category';
-        categoryDiv.setAttribute('data-category-key', key);
-
-        const categoryHeader = document.createElement('div');
-        categoryHeader.className = 'category-header';
-
-        const categoryTitle = document.createElement('h2');
-        categoryTitle.className = 'category-title';
-        categoryTitle.innerHTML = `<span class="category-icon">${esc(category.icon)}</span> ${esc(category.title)}`;
-
-        categoryHeader.appendChild(categoryTitle);
-        categoryDiv.appendChild(categoryHeader);
-
-        makeCategoryDroppable(categoryDiv, key);
-        emptyGridSection.appendChild(categoryDiv);
-    });
-
-    if (tempEmptyCategories.length > 0) {
-        categoriesWrapper.appendChild(emptyGridSection);
-    }
-}
+// Leere Kategorien werden von renderCategories() regulär (als .empty-category)
+// gerendert und sind damit normale Drop-Ziele – keine temporären Elemente mehr.
 
 function cleanupDragAndDrop() {
     cleanupAllTemporaryElements();
@@ -695,12 +642,7 @@ function cleanupDragAndDrop() {
 }
 
 function cleanupAllTemporaryElements() {
-    document.querySelectorAll('.category.empty-category').forEach(el => el.remove());
-    document.querySelectorAll('.empty-categories-section').forEach(el => el.remove());
     document.querySelectorAll('.scroll-zone').forEach(el => el.remove());
-
-    isLinkDragActive    = false;
-    tempEmptyCategories = [];
 
     if (autoScrollInterval) {
         clearInterval(autoScrollInterval);
@@ -834,9 +776,10 @@ function handleTouchEnd(e) {
         categoryOrder.splice(draggedIndex, 1);
         categoryOrder.splice(targetIndex, 0, draggedCategoryKey);
 
-        saveConfig(true);
-        renderCategories();
-        showMessage('Kategorie-Reihenfolge aktualisiert', 'success');
+        if (saveConfig(true)) {
+            renderCategories();
+            showMessage('Kategorie-Reihenfolge aktualisiert', 'success');
+        }
     }
 
     draggedElement.classList.remove('dragging');

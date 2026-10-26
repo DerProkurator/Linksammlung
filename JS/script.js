@@ -26,11 +26,18 @@ function setupFormHandlers() {
     document.getElementById('linkForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const title       = document.getElementById('linkTitle').value;
-        const url         = document.getElementById('linkUrl').value;
-        const description = document.getElementById('linkDescription').value;
-        const icon        = document.getElementById('linkIcon').value.trim() || '🔗';
-        const favorite    = document.getElementById('linkFavorite').checked;
+        const checked = normalizeLink({
+            title:       document.getElementById('linkTitle').value,
+            url:         document.getElementById('linkUrl').value,
+            description: document.getElementById('linkDescription').value,
+            icon:        document.getElementById('linkIcon').value,
+            favorite:    document.getElementById('linkFavorite').checked
+        });
+        if (checked.error) {
+            alert('Link kann nicht gespeichert werden:\n' + checked.error + '\n\nErlaubt sind nur Adressen mit http:// oder https://');
+            return;
+        }
+        const { title, url, description, icon, favorite } = checked.link;
 
         // Bearbeitung aus der Link-Übersicht (kann jeden Tab betreffen)
         if (overviewEditTarget) {
@@ -42,25 +49,23 @@ function setupFormHandlers() {
             const { categoryKey, linkIndex } = currentEditingLink;
             const existingPinned = linkCategories[categoryKey].links[linkIndex].pinned || false;
             linkCategories[categoryKey].links[linkIndex] = { title, url, description, icon, favorite, pinned: existingPinned };
-            saveConfig(true);
+            if (!saveConfig(true)) return;
             showMessage('Link erfolgreich bearbeitet', 'success');
-            renderCategories();
-            updateFavoritesCount();
+            refreshViews();
             closeModal();
         } else {
             const category = document.getElementById('linkCategory').value;
 
-            if (!category) {
+            if (!category || !linkCategories[category]) {
                 alert('Bitte wähle eine Kategorie aus!');
                 return;
             }
 
-            linkCategories[category].links.push({ title, url, description, icon, favorite });
+            linkCategories[category].links.push({ title, url, description, icon, favorite, pinned: false });
             sortCategoriesEmptyLast();
-            saveConfig(true);
+            if (!saveConfig(true)) return;
             showMessage('Link erfolgreich hinzugefügt', 'success');
-            renderCategories();
-            updateFavoritesCount();
+            refreshViews();
             closeModal();
         }
     });
@@ -69,13 +74,18 @@ function setupFormHandlers() {
     document.getElementById('categoryForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const title = document.getElementById('categoryTitle').value;
+        const title = document.getElementById('categoryTitle').value.trim();
         const icon  = document.getElementById('categoryIcon').value.trim() || '📁';
+
+        if (!title) {
+            alert('Bitte einen Kategorie-Namen eingeben!');
+            return;
+        }
 
         if (isCategoryEditMode && currentEditingCategory) {
             linkCategories[currentEditingCategory].title = title;
             linkCategories[currentEditingCategory].icon  = icon;
-            saveConfig(true);
+            if (!saveConfig(true)) return;
             showMessage('Kategorie erfolgreich bearbeitet', 'success');
         } else {
             if (categoryTitleExists(linkCategories, title)) {
@@ -83,18 +93,17 @@ function setupFormHandlers() {
                 return;
             }
 
-            const categoryKey = uniqueKey(title, k => !!linkCategories[k]);
+            const categoryKey = uniqueKey(title, k => Object.hasOwn(linkCategories, k));
 
             linkCategories[categoryKey] = { title, icon, collapsed: false, links: [] };
             categoryOrder.push(categoryKey);
             sortCategoriesEmptyLast();
-            saveConfig(true);
+            if (!saveConfig(true)) return;
             showMessage('Kategorie erfolgreich erstellt', 'success');
         }
 
-        renderCategories();
+        refreshViews();
         populateCategorySelect();
-        updateFavoritesCount();
         closeCategoryModal();
     });
 
@@ -165,17 +174,6 @@ function setupGlobalEventListeners() {
             }
         }
     };
-
-    // Drag-Cleanup: temporäre leere Kategorien bereinigen wenn außerhalb geklickt
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.drag-handle') &&
-            !event.target.closest('.link-drag-handle') &&
-            !event.target.closest('.category.empty-category')) {
-            if (document.querySelectorAll('.category.empty-category').length > 0) {
-                cleanupAllTemporaryElements();
-            }
-        }
-    });
 
     // Escape-Taste: alle offenen Overlays schließen
     document.addEventListener('keydown', function(event) {
@@ -274,18 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupGlobalEventListeners();
 
     }, 100);
-
-    // Link-Drag-Handler nach kurzer Verzögerung einrichten
-    setTimeout(() => {
-        document.querySelectorAll('.link-drag-handle').forEach(handle => {
-            handle.addEventListener('dragstart', function(e) {
-                return handleLinkDragStart.call(this, e);
-            });
-            handle.addEventListener('dragend', function(e) {
-                return handleLinkDragEnd.call(this, e);
-            });
-        });
-    }, 500);
 });
 
 // ========================================================================

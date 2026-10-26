@@ -65,6 +65,7 @@ function updateFavoritesList() {
                 if (link.favorite) {
                     favorites.push({
                         ...link,
+                        tabId:         activeTabId,
                         categoryKey,
                         categoryTitle: category.title,
                         categoryIcon:  category.icon,
@@ -74,18 +75,18 @@ function updateFavoritesList() {
             });
         });
     } else {
-        // Im Favoriten-Tab: alle Tabs aggregieren
+        // Im Favoriten-Tab: alle Tabs aggregieren (Herkunfts-Tab merken!)
         tabsList.forEach(tab => {
             const tabCfg = getTabConfigById(tab.id);
             if (!tabCfg) return;
-            const order = tabCfg.categoryOrder || Object.keys(tabCfg.categories || {});
-            order.forEach(key => {
-                const cat = (tabCfg.categories || {})[key];
+            tabCfg.categoryOrder.forEach(key => {
+                const cat = tabCfg.categories[key];
                 if (!cat) return;
                 cat.links.forEach((link, idx) => {
                     if (link.favorite) {
                         favorites.push({
                             ...link,
+                            tabId:         tab.id,
                             categoryKey:   key,
                             categoryTitle: cat.title,
                             categoryIcon:  cat.icon,
@@ -132,7 +133,7 @@ function updateFavoritesList() {
         const removeBtn = el.querySelector('.favorite-item-remove');
         removeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            removeFavorite(favorite.categoryKey, favorite.linkIndex);
+            removeFavorite(favorite.tabId, favorite.categoryKey, favorite.linkIndex, favorite.url);
         });
 
         el.addEventListener('click', () => {
@@ -173,19 +174,27 @@ function updateFavoritesCount() {
 }
 
 /**
- * Favorit aus Sidebar entfernen
+ * Favorit aus Sidebar entfernen – immer im Herkunfts-Tab des Links.
+ * url dient als Kontrolle, dass der Index noch auf denselben Link zeigt.
  */
-function removeFavorite(categoryKey, linkIndex) {
-    if (linkCategories[categoryKey] && linkCategories[categoryKey].links[linkIndex]) {
-        const link = linkCategories[categoryKey].links[linkIndex];
-        link.favorite = false;
+function removeFavorite(tabId, categoryKey, linkIndex, url) {
+    const isActive = tabId === activeTabId;
+    const cfg  = isActive ? { categories: linkCategories } : getTabConfigById(tabId);
+    const cat  = cfg && Object.hasOwn(cfg.categories, categoryKey) ? cfg.categories[categoryKey] : null;
+    const link = cat && cat.links[linkIndex];
 
-        saveConfig(true);
-        updateFavoritesCount();
-        renderCategories();
-
-        showMessage(`"${link.title}" aus Favoriten entfernt`, 'success');
+    if (!link || link.url !== url) {
+        refreshViews();
+        showMessage('Der Favorit wurde zwischenzeitlich geändert – Liste wurde aktualisiert.', 'warning');
+        return;
     }
+
+    link.favorite = false;
+    const saved = isActive ? saveConfig(true) : writeTabConfig(tabId, cfg);
+    if (!saved) return;
+
+    refreshViews();
+    showMessage(`"${link.title}" aus Favoriten entfernt`, 'success');
 }
 
 /**
@@ -202,12 +211,11 @@ function toggleLinkFavorite() {
     const action = link.favorite ? 'zu Favoriten hinzugefügt' : 'aus Favoriten entfernt';
     const icon   = link.favorite ? '⭐' : '☆';
 
-    saveConfig(true);
-    updateFavoritesCount();
-    renderCategories();
+    hideContextMenu();
+    if (!saveConfig(true)) return;
+    refreshViews();
 
     showMessage(`${icon} "${link.title}" ${action}`, 'success');
-    hideContextMenu();
 }
 
 /**

@@ -48,22 +48,22 @@ function deleteLink() {
     const category = linkCategories[categoryKey];
 
     if (confirm(`Möchten Sie den Link "${link.title}" wirklich löschen?`)) {
+        // Löschen sofort abschließen; ob eine leer gewordene Kategorie bleibt,
+        // ist eine eigene, spätere Entscheidung (Abbrechen = Kategorie behalten)
         linkCategories[categoryKey].links.splice(linkIndex, 1);
-
-        if (category.links.length === 0) {
-            showEmptyCategoryModal({
-                action:           'delete',
-                linkTitle:        link.title,
-                sourceTitle:      category.title,
-                sourceCategoryKey: categoryKey
-            });
-        } else {
-            sortCategoriesEmptyLast();
-            showMessage('Link erfolgreich gelöscht', 'success');
-            saveConfig(true);
-            renderCategories();
-            updateFavoritesCount();
-            updatePinnedBar();
+        sortCategoriesEmptyLast();
+        if (saveConfig(true)) {
+            refreshViews();
+            if (category.links.length === 0) {
+                showEmptyCategoryModal({
+                    action:            'delete',
+                    linkTitle:         link.title,
+                    sourceTitle:       category.title,
+                    sourceCategoryKey: categoryKey
+                });
+            } else {
+                showMessage('Link erfolgreich gelöscht', 'success');
+            }
         }
     }
 
@@ -154,8 +154,7 @@ function confirmMoveLink() {
 
     if (!targetTabId) return;
 
-    const targetCfg = getTabConfigById(targetTabId);
-    if (!targetCfg) { showMessage('Ziel-Tab nicht gefunden', 'error'); return; }
+    const targetCfg = getTabConfigById(targetTabId) || { categories: {}, categoryOrder: [] };
 
     let targetCatKey = targetCatVal;
 
@@ -163,27 +162,25 @@ function confirmMoveLink() {
         const newName = document.getElementById('moveLinkNewCatName').value.trim();
         if (!newName) { showMessage('Bitte Kategorie-Namen eingeben', 'warning'); return; }
         // Eindeutigen Key generieren
-        const key = uniqueKey(newName, k => !!targetCfg.categories[k]);
+        const key = uniqueKey(newName, k => Object.hasOwn(targetCfg.categories, k));
         targetCfg.categories[key] = { title: newName, icon: '📁', collapsed: false, links: [] };
-        if (!targetCfg.categoryOrder) targetCfg.categoryOrder = [];
         targetCfg.categoryOrder.push(key);
         targetCatKey = key;
     }
 
-    if (!targetCfg.categories[targetCatKey]) {
+    if (!Object.hasOwn(targetCfg.categories, targetCatKey)) {
         showMessage('Ziel-Kategorie nicht gefunden', 'error'); return;
     }
 
-    // Link kopieren → Ziel einfügen
-    const link = { ...linkCategories[categoryKey].links[linkIndex] };
+    // Quelle und Ziel als Kopien ändern und gemeinsam speichern
+    const sourceCfg = getActiveConfigSnapshot();
+    const sourceCat = sourceCfg.categories[categoryKey];
+    if (!sourceCat || !sourceCat.links[linkIndex]) { closeMoveLinkModal(); return; }
+    const [link] = sourceCat.links.splice(linkIndex, 1);
     targetCfg.categories[targetCatKey].links.push(link);
-    localStorage.setItem('linkConfig_' + targetTabId, JSON.stringify(targetCfg));
 
-    // Link aus Quelle entfernen
-    linkCategories[categoryKey].links.splice(linkIndex, 1);
-    saveConfig(true);
-    renderCategories();
-    updateFavoritesCount();
+    if (!writeTabConfigs([[targetTabId, targetCfg], [activeTabId, sourceCfg]])) return;
+    refreshViews();
 
     closeMoveLinkModal();
     const targetTab = tabsList.find(t => t.id === targetTabId);

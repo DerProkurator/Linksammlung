@@ -29,9 +29,11 @@ function renderCategories() {
     const bentoGrid = document.createElement('div');
     bentoGrid.className = 'bento-grid';
 
+    // Leere Kategorien gehören dazu: nur so lassen sie sich bearbeiten, löschen,
+    // per "+" befüllen und als Drop-Ziel für Links nutzen
     categoryOrder.forEach(categoryKey => {
         const category = linkCategories[categoryKey];
-        if (category && category.links.length > 0) {
+        if (category) {
             bentoGrid.appendChild(createCategoryElement(categoryKey, category));
         }
     });
@@ -44,13 +46,25 @@ function renderCategories() {
 }
 
 /**
+ * Alle datenabhängigen Ansichten nach einer Änderung aktualisieren
+ * (Hauptansicht bzw. Favoriten-Tab, Favoriten-Zähler/-Sidebar, Pin-Leiste)
+ */
+function refreshViews() {
+    renderCategories();
+    updateFavoritesCount();
+    updatePinnedBar();
+}
+
+/**
  * Kategorie-Element erstellen
  */
 function createCategoryElement(categoryKey, category) {
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'category';
 
-    if (category.collapsed) {
+    if (category.links.length === 0) {
+        categoryDiv.classList.add('empty-category');
+    } else if (category.collapsed) {
         categoryDiv.classList.add('collapsed');
     } else if (category.links.length >= 10) {
         categoryDiv.classList.add('tile-lg');
@@ -89,7 +103,12 @@ function createCategoryElement(categoryKey, category) {
     const linkGrid = document.createElement('div');
     linkGrid.className = 'link-grid';
 
-    if (!category.collapsed) {
+    if (category.links.length === 0) {
+        const hint = document.createElement('div');
+        hint.className   = 'empty-category-hint';
+        hint.textContent = 'Noch keine Links – „+“ klicken oder einen Link hierher ziehen';
+        linkGrid.appendChild(hint);
+    } else if (!category.collapsed) {
         category.links.forEach((link, linkIndex) => {
             const linkElement = document.createElement('div');
             linkElement.className = 'link-item draggable' + (link.favorite ? ' favorite' : '');
@@ -269,34 +288,27 @@ function handleEmptyCategoryDecision(shouldDelete) {
     if (!pendingEmptyCategoryData) return;
 
     const data = pendingEmptyCategoryData;
+    closeEmptyCategoryModal();
 
-    if (shouldDelete) {
+    // Der Link selbst ist zu diesem Zeitpunkt bereits gelöscht/verschoben und gespeichert.
+    // Hier wird nur noch über die leere Kategorie entschieden.
+    const category = linkCategories[data.sourceCategoryKey];
+    if (shouldDelete && category && category.links.length === 0) {
         delete linkCategories[data.sourceCategoryKey];
         categoryOrder = categoryOrder.filter(k => k !== data.sourceCategoryKey);
+        if (!saveConfig(true)) return;
+        refreshViews();
 
         const msg = data.action === 'move'
             ? `Link verschoben und leere Kategorie "${data.sourceTitle}" gelöscht`
             : `Link gelöscht und leere Kategorie "${data.sourceTitle}" entfernt`;
         showMessage(msg, 'success');
     } else {
-        sortCategoriesEmptyLast();
-
         const msg = data.action === 'move'
             ? `Link verschoben - leere Kategorie "${data.sourceTitle}" beibehalten`
             : `Link gelöscht - leere Kategorie "${data.sourceTitle}" beibehalten`;
         showMessage(msg, 'success');
-
-        setTimeout(() => {
-            showMessage({
-                title:   '💡 Hinweis zu leeren Kategorien',
-                content: `Die Kategorie "${data.sourceTitle}" ist leer und kann bei Drag & Drop zu visuellen Problemen führen. Sie können jederzeit neue Links hinzufügen oder die Kategorie über Rechtsklick löschen.`
-            }, 'warning');
-        }, 1000);
     }
-
-    saveConfig(true);
-    renderCategories();
-    closeEmptyCategoryModal();
 }
 
 // -----------------------------------------------------------------------
@@ -364,7 +376,7 @@ function showMessage(message, type) {
  * Beschreibungs-Modus beim Start aus localStorage laden und anwenden
  */
 function loadDescriptionMode() {
-    const mode = localStorage.getItem('linkDescriptionMode') || 'visible';
+    const mode = storageGet('linkDescriptionMode') || 'visible';
     applyDescriptionMode(mode);
 }
 
@@ -384,10 +396,9 @@ function applyDescriptionMode(mode) {
  * Zwischen sichtbar und Hover-Tooltip umschalten
  */
 function toggleDescriptionMode() {
-    const current = localStorage.getItem('linkDescriptionMode') || 'visible';
+    const current = storageGet('linkDescriptionMode') || 'visible';
     const next    = current === 'visible' ? 'tooltip' : 'visible';
-    localStorage.setItem('linkDescriptionMode', next);
-    applyDescriptionMode(next);
+    if (storageSet('linkDescriptionMode', next)) applyDescriptionMode(next);
 }
 
 /**

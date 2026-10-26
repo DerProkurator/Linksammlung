@@ -11,7 +11,7 @@
 function toggleCategoryCollapsed(categoryKey) {
     if (linkCategories[categoryKey]) {
         linkCategories[categoryKey].collapsed = !linkCategories[categoryKey].collapsed;
-        saveConfig(true);
+        if (!saveConfig(true)) return;
         renderCategories();
 
         const category = linkCategories[categoryKey];
@@ -45,7 +45,7 @@ function collapseAllCategories() {
     });
 
     if (changedCount > 0) {
-        saveConfig(true);
+        if (!saveConfig(true)) return;
         renderCategories();
         showMessage(`Alle ${changedCount} Kategorien zugeklappt`, 'success');
     } else {
@@ -68,7 +68,7 @@ function expandAllCategories() {
     });
 
     if (changedCount > 0) {
-        saveConfig(true);
+        if (!saveConfig(true)) return;
         renderCategories();
         showMessage(`Alle ${changedCount} Kategorien aufgeklappt`, 'success');
     } else {
@@ -120,10 +120,10 @@ function deleteCategory() {
         delete linkCategories[currentContextCategory];
         categoryOrder = categoryOrder.filter(k => k !== currentContextCategory);
 
-        saveConfig(true);
-        renderCategories();
-        updateFavoritesCount();
-        showMessage('Kategorie erfolgreich gelöscht', 'success');
+        if (saveConfig(true)) {
+            refreshViews();
+            showMessage('Kategorie erfolgreich gelöscht', 'success');
+        }
     }
 
     hideContextMenu();
@@ -201,33 +201,41 @@ function confirmMoveCategory() {
     const targetTabId = document.getElementById('moveCategoryTargetTab').value;
     if (!targetTabId) return;
 
-    const targetCfg = getTabConfigById(targetTabId);
-    if (!targetCfg) { showMessage('Ziel-Tab nicht gefunden', 'error'); return; }
+    const targetCfg = getTabConfigById(targetTabId) || { categories: {}, categoryOrder: [] };
 
-    const category = linkCategories[_moveCategorySource];
+    const sourceKey = _moveCategorySource;
+    const category  = linkCategories[sourceKey];
+    if (!category) { closeMoveCategoryModal(); return; }
+    const copy = JSON.parse(JSON.stringify(category));
 
-    // Wenn Key im Ziel bereits existiert: Links zusammenführen
-    if (targetCfg.categories[_moveCategorySource]) {
-        targetCfg.categories[_moveCategorySource].links.push(...category.links);
+    // Zusammenführen nur bei gleichem Titel und nur auf ausdrücklichen Wunsch –
+    // ein gleicher technischer Key allein sagt nichts über die Kategorie aus.
+    const needle       = category.title.trim().toLowerCase();
+    const sameTitleKey = Object.keys(targetCfg.categories)
+        .find(k => targetCfg.categories[k].title.trim().toLowerCase() === needle);
+    let merged = false;
+
+    if (sameTitleKey && confirm(`Im Ziel-Tab gibt es bereits die Kategorie „${targetCfg.categories[sameTitleKey].title}".\n\nOK = Links dort anhängen (zusammenführen)\nAbbrechen = als eigene Kategorie übernehmen`)) {
+        targetCfg.categories[sameTitleKey].links.push(...copy.links);
+        merged = true;
     } else {
-        targetCfg.categories[_moveCategorySource] = { ...category, links: [...category.links] };
-        if (!targetCfg.categoryOrder) targetCfg.categoryOrder = Object.keys(targetCfg.categories);
-        if (!targetCfg.categoryOrder.includes(_moveCategorySource)) {
-            targetCfg.categoryOrder.push(_moveCategorySource);
-        }
+        const targetKey = Object.hasOwn(targetCfg.categories, sourceKey)
+            ? uniqueKey(category.title, k => Object.hasOwn(targetCfg.categories, k))
+            : sourceKey;
+        targetCfg.categories[targetKey] = copy;
+        targetCfg.categoryOrder.push(targetKey);
     }
-    localStorage.setItem('linkConfig_' + targetTabId, JSON.stringify(targetCfg));
 
-    // Kategorie aus Quelle entfernen
-    delete linkCategories[_moveCategorySource];
-    categoryOrder = categoryOrder.filter(k => k !== _moveCategorySource);
+    // Quelle (aktiver Tab) ohne die Kategorie – beide Tabs gemeinsam speichern
+    const sourceCfg = getActiveConfigSnapshot();
+    delete sourceCfg.categories[sourceKey];
+    sourceCfg.categoryOrder = sourceCfg.categoryOrder.filter(k => k !== sourceKey);
 
-    saveConfig(true);
-    renderCategories();
-    updateFavoritesCount();
+    if (!writeTabConfigs([[targetTabId, targetCfg], [activeTabId, sourceCfg]])) return;
+    refreshViews();
 
     const targetTab = tabsList.find(t => t.id === targetTabId);
-    showMessage(`„${category.icon} ${category.title}" nach „${targetTab?.label}" verschoben`, 'success');
+    showMessage(`„${category.icon} ${category.title}" nach „${targetTab?.label}" ${merged ? 'verschoben und zusammengeführt' : 'verschoben'}`, 'success');
 
     closeMoveCategoryModal();
 }

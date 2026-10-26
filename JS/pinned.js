@@ -19,18 +19,18 @@ function updatePinnedBar() {
         if (tab.id === 'favorites') return;
         const cfg = getTabConfigById(tab.id);
         if (!cfg) return;
-        const order = cfg.categoryOrder || Object.keys(cfg.categories || {});
-        order.forEach(key => {
-            const cat = (cfg.categories || {})[key];
+        cfg.categoryOrder.forEach(key => {
+            const cat = cfg.categories[key];
             if (!cat) return;
-            cat.links.forEach(link => {
+            cat.links.forEach((link, linkIndex) => {
                 if (link.pinned) {
                     pinned.push({
                         ...link,
                         tabId:       tab.id,
                         tabLabel:    tab.label,
                         tabIcon:     tab.icon,
-                        categoryKey: key
+                        categoryKey: key,
+                        linkIndex
                     });
                 }
             });
@@ -71,7 +71,7 @@ function updatePinnedBar() {
 
         chip.querySelector('.pinned-chip-unpin').addEventListener('click', (e) => {
             e.stopPropagation();
-            unpinLink(p.tabId, p.categoryKey, p.url);
+            unpinLink(p.tabId, p.categoryKey, p.linkIndex, p.url);
         });
 
         scroll.appendChild(chip);
@@ -82,31 +82,27 @@ function updatePinnedBar() {
 }
 
 /**
- * Link anhand von tabId + categoryKey + url aus dem Pin lösen
- * (url als stabiler Identifier, da linkIndex sich durch Sortierung ändern kann)
+ * Pin eines Links lösen – adressiert über tabId + categoryKey + linkIndex.
+ * Die URL ist nicht eindeutig (gleiche URL kann mehrfach vorkommen) und dient
+ * nur als Kontrolle, dass der Index noch auf denselben Link zeigt.
  */
-function unpinLink(tabId, categoryKey, url) {
-    const cfg = getTabConfigById(tabId);
-    if (!cfg) return;
-    const cat = (cfg.categories || {})[categoryKey];
-    if (!cat) return;
+function unpinLink(tabId, categoryKey, linkIndex, url) {
+    const isActive = tabId === activeTabId;
+    const cfg  = isActive ? { categories: linkCategories } : getTabConfigById(tabId);
+    const cat  = cfg && Object.hasOwn(cfg.categories, categoryKey) ? cfg.categories[categoryKey] : null;
+    const link = cat && cat.links[linkIndex];
 
-    const link = cat.links.find(l => l.url === url);
-    if (!link) return;
-
-    link.pinned = false;
-    localStorage.setItem('linkConfig_' + tabId, JSON.stringify(cfg));
-
-    // Aktiver Tab: In-Memory-State ebenfalls aktualisieren
-    if (tabId === activeTabId && linkCategories[categoryKey]) {
-        const activeLink = linkCategories[categoryKey].links.find(l => l.url === url);
-        if (activeLink) {
-            activeLink.pinned = false;
-            renderCategories();
-        }
+    if (!link || link.url !== url || !link.pinned) {
+        refreshViews();
+        showMessage('Der Link wurde zwischenzeitlich geändert – Pin-Leiste wurde aktualisiert.', 'warning');
+        return;
     }
 
-    updatePinnedBar();
+    link.pinned = false;
+    const saved = isActive ? saveConfig(true) : writeTabConfig(tabId, cfg);
+    if (!saved) return;
+
+    refreshViews();
     showMessage(`📍 „${link.title}" losgelöst`, 'success');
 }
 
@@ -124,11 +120,10 @@ function toggleLinkPinned() {
     const action = link.pinned ? 'angepinnt' : 'losgelöst';
     const icon   = link.pinned ? '📌' : '📍';
 
-    saveConfig(true);
-    updatePinnedBar();
-    renderCategories();
-    showMessage(`${icon} „${link.title}" ${action}`, 'success');
     hideContextMenu();
+    if (!saveConfig(true)) return;
+    refreshViews();
+    showMessage(`${icon} „${link.title}" ${action}`, 'success');
 }
 
 /**

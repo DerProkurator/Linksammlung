@@ -169,7 +169,7 @@ function performSearch(query) {
     };
 
     // Tabs durchsuchen — je nach Scope-Einstellung
-    const scope = localStorage.getItem('searchScope') || 'all';
+    const scope = storageGet('searchScope') || 'all';
     const tabsToSearch = (scope === 'current' && activeTabId !== 'favorites')
         ? tabsList.filter(t => t.id === activeTabId)
         : tabsList;
@@ -218,9 +218,9 @@ function calculateRelevanceScore(link, query) {
  * Suche-Scope zwischen "alle Tabs" und "aktiver Tab" wechseln
  */
 function toggleSearchScope() {
-    const current = localStorage.getItem('searchScope') || 'all';
+    const current = storageGet('searchScope') || 'all';
     const next    = current === 'all' ? 'current' : 'all';
-    localStorage.setItem('searchScope', next);
+    storageSet('searchScope', next);
     _updateSearchScopeBtn();
     if (currentSearchQuery) performSearch(currentSearchQuery);
 }
@@ -231,7 +231,7 @@ function toggleSearchScope() {
 function _updateSearchScopeBtn() {
     const btn = document.getElementById('searchScopeBtn');
     if (!btn) return;
-    const scope = localStorage.getItem('searchScope') || 'all';
+    const scope = storageGet('searchScope') || 'all';
     btn.title     = scope === 'all' ? 'Alle Tabs durchsuchen (klicken: nur aktiver Tab)' : 'Nur aktiver Tab (klicken: alle Tabs)';
     btn.textContent = scope === 'all' ? '🌐' : '📄';
     btn.classList.toggle('active', scope === 'current');

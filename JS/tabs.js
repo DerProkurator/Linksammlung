@@ -17,13 +17,15 @@ let tabContextMenuTabId = null;
  */
 function loadTabsList() {
     try {
-        const saved = localStorage.getItem('linkTabs');
+        const saved = storageGet('linkTabs');
         if (saved) {
             const data = JSON.parse(saved);
-            tabsList = Array.isArray(data.tabs) && data.tabs.length > 0
-                ? data.tabs
-                : buildDefaultTabsFromConfigs();
-            activeTabId = data.activeTab || (tabsList[0] && tabsList[0].id) || 'allgemein';
+            const tabs = _normalizeTabs(data && data.tabs);
+            tabsList = tabs.length > 0 ? tabs : buildDefaultTabsFromConfigs();
+            const active = data && data.activeTab;
+            activeTabId = (active === 'favorites' || tabsList.some(t => t.id === active))
+                ? active
+                : ((tabsList[0] && tabsList[0].id) || 'allgemein');
         } else {
             tabsList = buildDefaultTabsFromConfigs();
             activeTabId = (tabsList[0] && tabsList[0].id) || 'allgemein';
@@ -37,13 +39,55 @@ function loadTabsList() {
 }
 
 /**
- * Tab-Liste in localStorage speichern
+ * Gespeicherte Tab-Liste prüfen. Einträge ohne ID werden verworfen, doppelte IDs
+ * entfernt. Unsichere IDs (z.B. "__proto__") bekommen eine neue ID; deren
+ * gespeicherte Config wird dabei auf den neuen Schlüssel umgezogen.
  */
-function saveTabsList() {
-    localStorage.setItem('linkTabs', JSON.stringify({
+function _normalizeTabs(rawTabs) {
+    if (!Array.isArray(rawTabs)) return [];
+    const result = [];
+    const isTaken = k => k === 'favorites' || result.some(t => t.id === k) || rawTabs.some(t => t && t.id === k);
+
+    rawTabs.forEach(t => {
+        if (!isPlainObject(t) || typeof t.id !== 'string' || !t.id) return;
+        if (result.some(r => r.id === t.id) || t.id === 'favorites') return;
+
+        const label = typeof t.label === 'string' && t.label.trim() ? t.label : t.id;
+        let id = t.id;
+        if (!isSafeKey(id)) {
+            const newId = uniqueKey(label, isTaken, 'tab');
+            const raw   = storageGet('linkConfig_' + id);
+            const moved = raw === null || storageTransaction([
+                { key: 'linkConfig_' + newId, value: raw },
+                { key: 'linkConfig_' + id,    value: null }
+            ]);
+            if (!moved) return;
+            console.warn('Tab-ID umbenannt:', id, '→', newId);
+            id = newId;
+        }
+        result.push({
+            id,
+            label,
+            icon:   typeof t.icon === 'string' && t.icon ? t.icon : '📋',
+            hidden: t.hidden === true
+        });
+    });
+    return result;
+}
+
+function _tabsListJSON() {
+    return JSON.stringify({
         tabs: tabsList.map(t => ({ id: t.id, label: t.label, icon: t.icon, hidden: t.hidden || false })),
         activeTab: activeTabId
-    }));
+    });
+}
+
+/**
+ * Tab-Liste in localStorage speichern
+ * @returns {boolean}
+ */
+function saveTabsList() {
+    return storageSet('linkTabs', _tabsListJSON());
 }
 
 // -----------------------------------------------------------------------
@@ -56,12 +100,8 @@ function saveTabsList() {
 function switchTab(tabId) {
     if (tabId === activeTabId) return;
 
-    // Aktuellen Tab still speichern bevor gewechselt wird,
-    // damit renderFavoritesTab() stets aktuelle Daten aus localStorage liest
-    if (activeTabId && activeTabId !== 'favorites') {
-        saveConfig(true);
-    }
-
+    // Kein Speichern beim Wechsel: jede Änderung wird sofort gespeichert. Ein erneutes
+    // Speichern würde Änderungen anderer Fenster mit dem alten Stand überschreiben.
     activeTabId = tabId;
 
     // Echte Tab-Config laden (nicht Favoriten – die sind dynamisch)
@@ -248,7 +288,7 @@ function _showHiddenTabsMenu(anchor, hiddenTabs) {
         item.title = 'Einblenden';
         item.addEventListener('click', () => {
             tab.hidden = false;
-            saveTabsList();
+            if (!saveTabsList()) tab.hidden = true;
             renderTabBar();
             menu.remove();
         });
@@ -274,6 +314,10 @@ function toggleTabVisibilityFromContext() {
     const tab = tabsList.find(t => t.id === tabId);
     if (!tab) return;
     tab.hidden = !tab.hidden;
+    if (!saveTabsList()) {
+        tab.hidden = !tab.hidden;
+        return;
+    }
 
     // DYNAMIC_CONFIGS synchronisieren, damit Export den aktuellen Wert hat
     const dynCfgs = window.DYNAMIC_CONFIGS || {};
@@ -285,7 +329,6 @@ function toggleTabVisibilityFromContext() {
         const visible = tabsList.find(t => !t.hidden);
         if (visible) switchTab(visible.id);
     }
-    saveTabsList();
     renderTabBar();
 }
 
@@ -307,22 +350,21 @@ function deleteTabFromContext() {
 
     if (!confirm(`Tab "${tab.icon} ${tab.label}" und alle enthaltenen Links wirklich löschen?`)) return;
 
-    // Config aus localStorage entfernen
-    localStorage.removeItem('linkConfig_' + tabId);
-
-    // Tab aus Liste entfernen
+    // Tab-Liste und Config gemeinsam ändern – bei Fehler alten Zustand behalten
+    const previousTabs   = tabsList;
+    const previousActive = activeTabId;
     tabsList = tabsList.filter(t => t.id !== tabId);
+    if (activeTabId === tabId) activeTabId = tabsList[0].id;
 
-    // Falls aktiver Tab gelöscht → zum ersten Tab wechseln
-    if (activeTabId === tabId) {
-        activeTabId = tabsList[0].id;
-        loadTabConfigById(activeTabId);
+    if (!writeTabConfigs([], { remove: [tabId], tabs: true })) {
+        tabsList    = previousTabs;
+        activeTabId = previousActive;
+        return;
     }
 
-    saveTabsList();
+    if (previousActive === tabId) loadTabConfigById(activeTabId);
     renderTabBar();
-    renderCategories();
-    updateFavoritesCount();
+    refreshViews();
 
     showMessage(`Tab "${tab.label}" gelöscht`, 'success');
 
@@ -406,17 +448,20 @@ function confirmMergeTab() {
         }
     });
 
-    localStorage.setItem('linkConfig_' + targetTabId, JSON.stringify(targetCfg));
-    localStorage.removeItem('linkConfig_' + sourceTabId);
-
+    const previousTabs   = tabsList;
+    const previousActive = activeTabId;
     tabsList = tabsList.filter(t => t.id !== sourceTabId);
     if (activeTabId === sourceTabId) activeTabId = targetTabId;
 
-    saveTabsList();
+    if (!writeTabConfigs([[targetTabId, targetCfg]], { remove: [sourceTabId], tabs: true })) {
+        tabsList    = previousTabs;
+        activeTabId = previousActive;
+        return;
+    }
+
     renderTabBar();
     loadTabConfigById(activeTabId);
-    renderCategories();
-    updateFavoritesCount();
+    refreshViews();
 
     closeMergeTabModal();
 
@@ -471,11 +516,13 @@ function confirmAddTab() {
     const newTab = { id: tabId, label, icon };
     tabsList.push(newTab);
 
-    // Leere Config anlegen
+    // Leere Config und Tab-Eintrag gemeinsam anlegen
     const emptyConfig = { categories: {}, categoryOrder: [] };
-    localStorage.setItem('linkConfig_' + tabId, JSON.stringify(emptyConfig));
+    if (!writeTabConfigs([[tabId, emptyConfig]], { tabs: true })) {
+        tabsList = tabsList.filter(t => t !== newTab);
+        return;
+    }
 
-    saveTabsList();
     closeAddTabModal();
 
     // Zum neuen Tab wechseln
@@ -536,10 +583,14 @@ function confirmRenameTab() {
     const tab = tabsList.find(t => t.id === tabId);
     if (!tab) return;
 
+    const previous = { label: tab.label, icon: tab.icon };
     tab.label = label;
     tab.icon  = icon;
 
-    saveTabsList();
+    if (!saveTabsList()) {
+        Object.assign(tab, previous);
+        return;
+    }
     renderTabBar();
     closeRenameTabModal();
 

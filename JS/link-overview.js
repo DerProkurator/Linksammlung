@@ -27,16 +27,11 @@ const _ovCollator = new Intl.Collator('de', { sensitivity: 'base', numeric: true
 // -----------------------------------------------------------------------
 
 /**
- * Config eines Tabs für die Übersicht – beim aktiven Tab die Live-Daten
+ * Config eines Tabs für die Übersicht – immer eine Kopie (beim aktiven Tab der Live-Stand)
  */
 function _ovGetTabData(tabId) {
-    if (tabId === activeTabId) {
-        return { categories: linkCategories, categoryOrder: categoryOrder };
-    }
-    const cfg = getTabConfigById(tabId);
-    if (!cfg || !cfg.categories) return null;
-    if (!Array.isArray(cfg.categoryOrder)) cfg.categoryOrder = Object.keys(cfg.categories);
-    return cfg;
+    if (tabId === activeTabId) return getActiveConfigSnapshot();
+    return getTabConfigById(tabId);
 }
 
 /**
@@ -83,31 +78,30 @@ function _ovCollectRows() {
 }
 
 /**
- * Daten eines Tabs ändern und speichern.
- * mutator(cfg) bekommt { categories, categoryOrder } und darf beides verändern.
+ * Mehrere Tabs als Einheit ändern und speichern.
+ * mutator(cfgs) bekommt eine Map tabId → Kopie { categories, categoryOrder } und darf
+ * diese verändern; gibt er false zurück, wird nichts gespeichert. Gespeichert wird in
+ * einem Schritt – schlägt ein Teil fehl, bleiben alle Tabs beim alten Stand.
+ * @returns {boolean} true wenn gespeichert wurde
  */
-function _ovMutateTab(tabId, mutator) {
-    const cfg = _ovGetTabData(tabId);
-    if (!cfg) return false;
-
-    mutator(cfg);
-
-    if (tabId === activeTabId) {
-        linkCategories = cfg.categories;
-        categoryOrder  = cfg.categoryOrder.filter(k => linkCategories[k]);
-        sortCategoriesEmptyLast();
-        saveConfig(true);
-    } else {
-        cfg.categoryOrder = cfg.categoryOrder.filter(k => cfg.categories[k]);
-        try {
-            localStorage.setItem('linkConfig_' + tabId, JSON.stringify(cfg));
-        } catch (e) {
-            console.error('Fehler beim Speichern von Tab', tabId, e);
-            showMessage('Fehler beim Speichern', 'error');
-            return false;
-        }
+function _ovMutateTabs(tabIds, mutator) {
+    const cfgs = new Map();
+    for (const tabId of new Set(tabIds)) {
+        const cfg = _ovGetTabData(tabId);
+        if (!cfg) return false;
+        cfgs.set(tabId, cfg);
     }
-    return true;
+
+    if (mutator(cfgs) === false) return false;
+
+    cfgs.forEach(cfg => {
+        cfg.categoryOrder = cfg.categoryOrder.filter(k => Object.hasOwn(cfg.categories, k));
+    });
+    return writeTabConfigs(cfgs);
+}
+
+function _ovMutateTab(tabId, mutator) {
+    return _ovMutateTabs([tabId], cfgs => mutator(cfgs.get(tabId)));
 }
 
 /**
@@ -124,7 +118,7 @@ function _ovAfterChange() {
  * Prüft, ob die Zeile noch auf denselben Link zeigt (Schutz gegen veraltete Indizes)
  */
 function _ovResolveLink(cfg, row) {
-    const cat = cfg.categories[row.categoryKey];
+    const cat = Object.hasOwn(cfg.categories, row.categoryKey) ? cfg.categories[row.categoryKey] : null;
     const link = cat && cat.links[row.linkIndex];
     return (link && (link.url || '') === row.url) ? link : null;
 }
@@ -777,13 +771,15 @@ function _ovHandleTableClick(e) {
  * Favorit umschalten
  */
 function _ovToggleFavorite(row) {
-    let changed = false;
-    _ovMutateTab(row.tabId, cfg => {
+    let found = false;
+    const saved = _ovMutateTab(row.tabId, cfg => {
         const link = _ovResolveLink(cfg, row);
-        if (link) { link.favorite = !link.favorite; changed = true; }
+        if (!link) return false;
+        link.favorite = !link.favorite;
+        found = true;
     });
-    if (!changed) return _ovStale();
-    _ovAfterChange();
+    if (!found) return _ovStale();
+    if (saved) _ovAfterChange();
 }
 
 /**
@@ -792,13 +788,13 @@ function _ovToggleFavorite(row) {
 function _ovDelete(row) {
     if (!confirm(`Möchten Sie den Link "${row.title}" wirklich löschen?\n\nTab: ${row.tabLabel} · Kategorie: ${row.categoryTitle}`)) return;
 
-    let deleted = false;
-    _ovMutateTab(row.tabId, cfg => {
+    let found = false;
+    const saved = _ovMutateTab(row.tabId, cfg => {
         const link = _ovResolveLink(cfg, row);
-        if (!link) return;
+        if (!link) return false;
         const cat = cfg.categories[row.categoryKey];
         cat.links.splice(row.linkIndex, 1);
-        deleted = true;
+        found = true;
 
         if (cat.links.length === 0 &&
             confirm(`Die Kategorie "${cat.title}" ist jetzt leer.\n\nSoll die leere Kategorie ebenfalls gelöscht werden?`)) {
@@ -806,7 +802,8 @@ function _ovDelete(row) {
         }
     });
 
-    if (!deleted) return _ovStale();
+    if (!found) return _ovStale();
+    if (!saved) return;
     showMessage(`Link "${row.title}" gelöscht`, 'success');
     _ovAfterChange();
 }
@@ -845,16 +842,17 @@ function saveOverviewLinkEdit(values) {
     const target = overviewEditTarget;
     if (!target) return;
 
-    let saved = false;
-    _ovMutateTab(target.tabId, cfg => {
+    let found = false;
+    const saved = _ovMutateTab(target.tabId, cfg => {
         const link = _ovResolveLink(cfg, target);
-        if (!link) return;
+        if (!link) return false;
         Object.assign(link, values);   // pinned und sonstige Felder bleiben erhalten
-        saved = true;
+        found = true;
     });
 
+    if (!found) { closeModal(); return _ovStale(); }
+    if (!saved) return;   // Dialog bleibt offen, Eingaben gehen nicht verloren
     closeModal();
-    if (!saved) return _ovStale();
     showMessage('Link erfolgreich bearbeitet', 'success');
     _ovAfterChange();
 }
@@ -866,11 +864,10 @@ function _ovJumpTo(row) {
     closeLinkOverview();
     switchTab(row.tabId);
 
-    const cat = linkCategories[row.categoryKey];
+    const cat = Object.hasOwn(linkCategories, row.categoryKey) ? linkCategories[row.categoryKey] : null;
     if (cat && cat.collapsed) {
         cat.collapsed = false;
-        saveConfig(true);
-        renderCategories();
+        if (saveConfig(true)) renderCategories();
     }
 
     requestAnimationFrame(() => {
@@ -1030,24 +1027,25 @@ function _ovAskDeleteEmptied(emptied) {
 }
 
 /**
- * Ausgewählte Links aus ihren Tabs entfernen
+ * Ausgewählte Links aus den übergebenen Tab-Kopien entfernen (speichert nicht)
+ * @param {Map<string, object>} cfgs – tabId → Kopie (aus _ovMutateTabs)
  * @returns {Array<object>} die entfernten Link-Objekte (in ursprünglicher Reihenfolge)
  */
-function _ovRemoveRows(rows, deleteCats) {
+function _ovRemoveRows(rows, deleteCats, cfgs) {
     const removed = [];
     _ovGroupByTab(rows).forEach((cats, tabId) => {
-        _ovMutateTab(tabId, cfg => {
-            cats.forEach((list, catKey) => {
-                const cat = cfg.categories[catKey];
-                if (!cat) return;
-                const valid = list.filter(r => _ovResolveLink(cfg, r)).sort((a, b) => a.linkIndex - b.linkIndex);
-                valid.forEach(r => removed.push(cat.links[r.linkIndex]));
-                // absteigend splicen, damit Indizes stabil bleiben
-                [...valid].reverse().forEach(r => cat.links.splice(r.linkIndex, 1));
-                if (cat.links.length === 0 && deleteCats.has(tabId + '\u0000' + catKey)) {
-                    delete cfg.categories[catKey];
-                }
-            });
+        const cfg = cfgs.get(tabId);
+        if (!cfg) return;
+        cats.forEach((list, catKey) => {
+            const cat = Object.hasOwn(cfg.categories, catKey) ? cfg.categories[catKey] : null;
+            if (!cat) return;
+            const valid = list.filter(r => _ovResolveLink(cfg, r)).sort((a, b) => a.linkIndex - b.linkIndex);
+            valid.forEach(r => removed.push(cat.links[r.linkIndex]));
+            // absteigend splicen, damit Indizes stabil bleiben
+            [...valid].reverse().forEach(r => cat.links.splice(r.linkIndex, 1));
+            if (cat.links.length === 0 && deleteCats.has(tabId + '\u0000' + catKey)) {
+                delete cfg.categories[catKey];
+            }
         });
     });
     return removed;
@@ -1055,15 +1053,18 @@ function _ovRemoveRows(rows, deleteCats) {
 
 function _ovBulkFavorite(value) {
     const rows = _ovSelectedRows();
+    const byTab = _ovGroupByTab(rows);
     let count = 0;
-    _ovGroupByTab(rows).forEach((cats, tabId) => {
-        _ovMutateTab(tabId, cfg => {
+    const saved = _ovMutateTabs([...byTab.keys()], cfgs => {
+        byTab.forEach((cats, tabId) => {
+            const cfg = cfgs.get(tabId);
             cats.forEach(list => list.forEach(r => {
                 const link = _ovResolveLink(cfg, r);
                 if (link && !!link.favorite !== value) { link.favorite = value; count++; }
             }));
         });
     });
+    if (!saved) return;
     showMessage(`${count} Link${count !== 1 ? 's' : ''} ${value ? 'als Favorit gesetzt' : 'aus Favoriten entfernt'}`, 'success');
     _ovAfterChange();
 }
@@ -1077,7 +1078,11 @@ function _ovBulkDelete() {
     if (!confirm(`${rows.length} Link${rows.length !== 1 ? 's' : ''} wirklich löschen?\n\n${preview}`)) return;
 
     const deleteCats = _ovAskDeleteEmptied(_ovCategoriesEmptiedBy(rows));
-    const removed = _ovRemoveRows(rows, deleteCats);
+    let removed = [];
+    const saved = _ovMutateTabs([..._ovGroupByTab(rows).keys()], cfgs => {
+        removed = _ovRemoveRows(rows, deleteCats, cfgs);
+    });
+    if (!saved) return;
 
     _ovSelected.clear();
     showMessage(`${removed.length} Link${removed.length !== 1 ? 's' : ''} gelöscht`, 'success');
@@ -1178,19 +1183,32 @@ function _ovConfirmMove() {
 
     const target = { tabId, categoryKey: catKey };
     const deleteCats = _ovAskDeleteEmptied(_ovCategoriesEmptiedBy(rows, target));
-    const moved = _ovRemoveRows(rows, deleteCats);
 
+    // Quelle(n) und Ziel werden auf Kopien geändert und in EINEM Schritt gespeichert:
+    // Schlägt das Speichern fehl, bleibt jeder Link an seinem alten Platz.
     let targetTitle = newTitle;
-    _ovMutateTab(tabId, cfg => {
+    let moved = [];
+    const sourceTabIds = [..._ovGroupByTab(rows).keys()];
+    const saved = _ovMutateTabs([...sourceTabIds, tabId], cfgs => {
+        moved = _ovRemoveRows(rows, deleteCats, cfgs);
+        if (!moved.length) return false;
+
+        const cfg = cfgs.get(tabId);
         if (catKey === '__new__') {
-            catKey = uniqueKey(newTitle, k => !!cfg.categories[k]);
+            catKey = uniqueKey(newTitle, k => Object.hasOwn(cfg.categories, k));
             cfg.categories[catKey] = { title: newTitle, icon: '📁', collapsed: false, links: [] };
             cfg.categoryOrder.push(catKey);
         }
-        const cat = cfg.categories[catKey];
+        const cat = Object.hasOwn(cfg.categories, catKey) ? cfg.categories[catKey] : null;
+        if (!cat) return false;
         targetTitle = cat.title;
         cat.links.push(...moved);
     });
+
+    if (!saved) {
+        if (!moved.length) _ovStale();
+        return;
+    }
 
     const tab = tabsList.find(t => t.id === tabId);
     _ovSelected.clear();

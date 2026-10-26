@@ -24,34 +24,23 @@ class ExtendedWelcomeLoader {
     }
 
     /**
-     * Prüft, ob eine lokale Konfiguration im Browser existiert.
-     * Unterstützt altes Format (linkConfig) und neues Tab-Format (linkConfig_*).
+     * Prüft, ob die Sammlung in diesem Browser bereits eingerichtet ist.
+     * Eingerichtet = Erststart abgeschlossen (linkSetupDone) oder irgendein gespeicherter
+     * Tab-Stand (linkConfig_*) – auch eine bewusst leere Sammlung zählt.
+     * Altes Format (linkConfig) wird beim nächsten loadConfig() migriert.
      * linkTabs wird bewusst NICHT geprüft, da es beim ersten Start automatisch angelegt wird.
      */
     hasLocalConfig() {
         try {
-            // Neues Tab-Format: linkConfig_<tabId> (v3.0)
-            // Mindestens einer dieser Keys muss Kategorien enthalten
+            if (localStorage.getItem('linkSetupDone')) return true;
+
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key && key.startsWith('linkConfig_')) {
-                    const raw = localStorage.getItem(key);
-                    if (raw && raw.trim() !== '') {
-                        const parsed = JSON.parse(raw);
-                        if (parsed && typeof parsed === 'object' && parsed.categories &&
-                            Object.keys(parsed.categories).length > 0) {
-                            return true;
-                        }
-                    }
-                }
+                if (key && key.startsWith('linkConfig_') && localStorage.getItem(key)) return true;
             }
 
-            // Altes Format (linkConfig) — wird beim nächsten loadConfig() migriert
             const localConfig = localStorage.getItem('linkConfig');
-            if (localConfig && localConfig.trim() !== '') {
-                const parsed = JSON.parse(localConfig);
-                return parsed && typeof parsed === 'object' && parsed.categories;
-            }
+            if (localConfig && localConfig.trim() !== '') return true;
 
         } catch (error) {
             console.log('⚠️ Fehler beim Prüfen der lokalen Konfiguration:', error);
@@ -241,24 +230,28 @@ class ExtendedWelcomeLoader {
         }
 
         // ESC-Taste Support
-        const handleEscapeKey = (event) => {
+        this.escapeHandler = (event) => {
             if (event.key === 'Escape') {
                 this.closeWelcomeDialog();
                 this.useDefaultConfig(); // Fallback bei ESC
-                document.removeEventListener('keydown', handleEscapeKey);
             }
         };
-        document.addEventListener('keydown', handleEscapeKey);
+        document.addEventListener('keydown', this.escapeHandler);
 
     }
 
     /**
-     * Schließt den Willkommensdialog
+     * Schließt den Willkommensdialog (inkl. ESC-Listener, sonst würde ein späteres
+     * ESC erneut die Standard-Konfiguration laden)
      */
     closeWelcomeDialog() {
         const modal = document.getElementById('welcomeModal');
         if (modal) {
             modal.remove();
+        }
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
         }
     }
 
@@ -302,6 +295,11 @@ class ExtendedWelcomeLoader {
             const configLoaded = window.loadConfig();
             const hasDynamicConfigs = typeof window.DYNAMIC_CONFIGS !== 'undefined' &&
                 Object.keys(window.DYNAMIC_CONFIGS).length > 0;
+
+            // Auswahl dauerhaft speichern – sonst erscheint der Dialog beim nächsten Start erneut
+            if (typeof window.persistInitialSetup === 'function' && !window.persistInitialSetup()) return;
+            if (typeof window.renderTabBar === 'function') window.renderTabBar();
+            if (typeof window.refreshViews === 'function') window.refreshViews();
 
             if (configLoaded || hasDynamicConfigs) {
                 this.showStatusMessage({
