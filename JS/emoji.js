@@ -222,8 +222,8 @@ function searchEmojis(query, pickerId) {
             const emojiItem = document.createElement('div');
             emojiItem.className = 'emoji-item';
             emojiItem.innerHTML = `
-                ${emojiData.emoji}
-                <div class="emoji-tooltip">${emojiData.name}</div>
+                ${esc(emojiData.emoji)}
+                <div class="emoji-tooltip">${esc(emojiData.name)}</div>
             `;
             emojiItem.onclick = () => selectEmoji(emojiData.emoji, inputId);
             gridContainer.appendChild(emojiItem);

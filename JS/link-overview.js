@@ -341,7 +341,12 @@ function openLinkOverview() {
     const modal = document.getElementById('linkOverviewModal');
     modal.addEventListener('click', e => { if (e.target === modal) closeLinkOverview(); });
 
-    document.getElementById('ovFilter').addEventListener('input', _ovRender);
+    // Filter entprellt: bei großen Sammlungen nicht bei jedem Tastendruck neu zeichnen
+    let filterTimer = null;
+    document.getElementById('ovFilter').addEventListener('input', () => {
+        clearTimeout(filterTimer);
+        filterTimer = setTimeout(_ovRender, 120);
+    });
     document.getElementById('ovTabFilter').addEventListener('change', () => {
         _ovFillCategoryFilter();
         _ovRender();
