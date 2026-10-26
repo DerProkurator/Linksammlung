@@ -5,3 +5,6 @@ desktop.ini
 
 # Lokale Audit-Unterlagen (nicht veröffentlichen)
 /Audit/
+
+# Lokale Regressionstests (nicht veröffentlichen)
+/Tests/

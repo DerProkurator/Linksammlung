@@ -27,16 +27,6 @@ Die Konfiguration wird im `localStorage` des Browsers gespeichert. Eigene Links,
 
 Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration (Factory-Reset-Basis). `Config/Demo_config-*.js` sind zusätzliche Beispiel-Tabs, die beim Erststart geladen werden. Welche Config-Dateien geladen werden, steht in `Config/tabs.js` (Reihenfolge = Tab-Reihenfolge). Neue Tabs: Config-Datei nach dem gleichen Schema in `Config/` ablegen und den Dateinamen in `Config/tabs.js` eintragen — `Linksammlung.html` muss dafür nicht geändert werden. Der Export „Alle Default-Configs“ liefert eine fertige `tabs.js` gleich mit.
 
-## Tests
-
-`Tests/regression.cjs` startet Edge bzw. Chrome headless mit einem temporären Profil und prüft Datenintegrität, Import/Export, Speicherfehler, parallele Fenster und Tastaturbedienung:
-
-```
-node Tests/regression.cjs
-```
-
-Voraussetzung: Node.js ≥ 22. Anderer Browserpfad über die Umgebungsvariable `LINKSAMMLUNG_BROWSER`.
-
 ## Lizenz
 
 MIT — siehe [`LICENSE`](LICENSE). Private und berufliche Nutzung, Anpassung und Weitergabe sind frei.
