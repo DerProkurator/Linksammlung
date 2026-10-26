@@ -6,12 +6,12 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 
 1. Repository klonen oder herunterladen
 2. `Linksammlung.html` im Browser öffnen
-3. Beim ersten Start erscheint ein Willkommensdialog — "Standard-Konfiguration verwenden" lädt die mitgelieferten Demo-Tabs
+3. Beim ersten Start erscheint ein Willkommensdialog — „Mitgelieferte Links verwenden“ lädt die Demo-Tabs
 
 ## Features
 
 - Kategorien & Links frei anlegen, bearbeiten, per Drag & Drop sortieren
-- Favoriten-Sidebar für schnellen Zugriff
+- Favoriten-Sidebar und angepinnte Links (Schnellzugriffsleiste oben) für schnellen Zugriff
 - Volltextsuche über alle Links
 - Link-Übersicht: alle Links aller Tabs als alphabetische Tabelle, mit Filter und Erkennung ähnlicher Links
 - Emoji-Picker für Icons (inkl. Länderflaggen)
@@ -26,6 +26,10 @@ Eine browser-basierte Link-Sammlung für schnellen Zugriff auf Websites, Tools u
 Die Konfiguration wird im `localStorage` des Browsers gespeichert. Eigene Links, Kategorien und Tabs lassen sich direkt in der App hinzufügen — nichts muss im Code geändert werden.
 
 Für Entwickler: `Config/default-config.js` enthält die Standard-Konfiguration (Factory-Reset-Basis). `Config/Demo_config-*.js` sind zusätzliche Beispiel-Tabs, die beim Erststart geladen werden. Welche Config-Dateien geladen werden, steht in `Config/tabs.js` (Reihenfolge = Tab-Reihenfolge). Neue Tabs: Config-Datei nach dem gleichen Schema in `Config/` ablegen und den Dateinamen in `Config/tabs.js` eintragen — `Linksammlung.html` muss dafür nicht geändert werden. Der Export „Alle Default-Configs“ liefert eine fertige `tabs.js` gleich mit.
+
+## Änderungen
+
+Was sich mit welcher Version geändert hat, steht im [CHANGELOG](https://github.com/DerProkurator/Linksammlung/blob/main/CHANGELOG.md).
 
 ## Lizenz
 

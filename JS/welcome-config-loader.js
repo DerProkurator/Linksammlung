@@ -114,102 +114,40 @@ class ExtendedWelcomeLoader {
 
         const configStatus = this.determineConfigSource();
         const hasDefaultConfig = configStatus.hasDefaultConfig;
-        
-        // Verschiedene Nachrichten je nach verfügbarer Standard-Config
-        const configInfoSection = hasDefaultConfig ? `
-            <div style="margin-bottom: 25px; padding: 20px; background: rgba(46, 204, 113, 0.1); border-radius: 12px; border: 1px solid rgba(46, 204, 113, 0.3);">
-                <div style="font-size: 1.1em; margin-bottom: 15px; color: #2ecc71;">
-                    <strong>✅ Standard-Konfiguration verfügbar</strong>
-                </div>
-                <div style="color: #d0d0d0; line-height: 1.5; font-size: 14px; margin-bottom: 15px;">
-                    Es wurde eine Standard-Konfiguration im Config-Verzeichnis gefunden. Sie haben folgende Optionen:
-                </div>
-                <div style="color: #2ecc71; font-size: 13px; line-height: 1.4;">
-                    <strong>💡 Empfehlung:</strong> Verwenden Sie die Standard-Konfiguration als Ausgangsbasis und passen Sie diese nach Ihren Wünschen an.
-                </div>
-            </div>
-        ` : `
-            <div style="margin-bottom: 25px; padding: 20px; background: rgba(255, 193, 7, 0.1); border-radius: 12px; border: 1px solid rgba(255, 193, 7, 0.3);">
-                <div style="font-size: 1.1em; margin-bottom: 15px; color: #ffc107;">
-                    <strong>⚠️ Keine Standard-Konfiguration gefunden</strong>
-                </div>
-                <div style="color: #d0d0d0; line-height: 1.5; font-size: 14px; margin-bottom: 15px;">
-                    Es wurde keine Standard-Konfiguration im Config-Verzeichnis gefunden. Sie haben folgende Optionen:
-                </div>
-                <div style="color: #ffc107; font-size: 13px; line-height: 1.4;">
-                    <strong>💡 Hinweis:</strong> Falls verfügbar, laden Sie eine vorhandene JSON-Konfiguration. Andernfalls wird eine einfache Grundkonfiguration erstellt.
-                </div>
-            </div>
-        `;
 
-        const defaultConfigButton = hasDefaultConfig ? `
-            <button type="button" class="btn btn-primary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
-                <span>🌟</span> Standard-Konfiguration aus Config-Verzeichnis verwenden
-            </button>
-        ` : `
-            <button type="button" class="btn btn-secondary" id="useDefaultBtn" style="padding: 16px 24px; font-size: 16px;">
-                <span>🔧</span> Einfache Grundkonfiguration erstellen
-            </button>
-        `;
+        // Ohne Config-Dateien gibt es nur die eingebaute Grundkonfiguration
+        const defaultLabel = hasDefaultConfig
+            ? '<span>🌟</span> Mitgelieferte Links verwenden'
+            : '<span>🔧</span> Mit Grundkonfiguration starten';
 
-        // Modal HTML erstellen mit dynamischen Inhalten
         const modalHTML = `
             <div class="modal" id="welcomeModal" style="display: block;">
-                <div class="modal-content" style="max-width: 600px;">
-                    <h2 style="text-align: center; margin-bottom: 25px; line-height: 1.4; color: #40e0d0; font-size: 1.8em;">
-                        <span class="modal-emoji">🚀</span> Willkommen zu Ihrer Linksammlung!
+                <div class="modal-content" style="max-width: 480px;">
+                    <h2 style="text-align: center; margin-bottom: 12px; color: #40e0d0;">
+                        <span class="modal-emoji">🚀</span> Willkommen!
                     </h2>
-                    
-                    ${configInfoSection}
+                    <p style="text-align: center; color: #d0d0d0; font-size: 14px; line-height: 1.5; margin-bottom: 22px;">
+                        Womit soll die Linksammlung starten?
+                    </p>
 
-                    <div style="margin-bottom: 25px; padding: 20px; background: rgba(64, 224, 208, 0.1); border-radius: 12px; border: 1px solid rgba(64, 224, 208, 0.3);">
-                        <div style="color: #40e0d0; font-size: 13px; line-height: 1.6;">
-                            <strong>✨ Features (v3.7):</strong><br>
-                            • <strong>Multi-Tab-System</strong> – Tabs aus Config/-Dateien, Liste in Config/tabs.js (keine HTML-Änderung nötig)<br>
-                            • <strong>Favoriten-Tab</strong> – Alle markierten Links aus allen Tabs auf einen Blick<br>
-                            • <strong>Angepinnte Links</strong> – Tab-übergreifende Schnellzugriffsleiste oben (📌 Rechtsklick auf Link)<br>
-                            • <strong>Bento-Grid-Layout</strong> – Kacheln skalieren automatisch nach Link-Anzahl<br>
-                            • <strong>Globale Suche</strong> – Alle Tabs gleichzeitig durchsuchen (Strg+K)<br>
-                            • <strong>Link-Übersicht</strong> – Alle Links als alphabetische Tabelle, inkl. Erkennung ähnlicher Links und Mehrfachauswahl<br>
-                            • <strong>Rechtsklick-Menü</strong> – Links/Kategorien bearbeiten, löschen, verschieben, anpinnen<br>
-                            • <strong>Tab-Kontextmenü</strong> – Rechtsklick auf Tab: umbenennen, ausblenden, zusammenführen<br>
-                            • <strong>Emoji-Picker</strong> – Icons für Links, Kategorien und Tabs, inkl. Länderflaggen<br>
-                            • <strong>Import / Export</strong> – Vollständige Config, einzelne Kategorie oder einzelner Link – mit Prüfung vor dem Übernehmen<br>
-                            • <strong>Tastaturbedienung</strong> – Links/Kategorien per Tab, Enter, Kontextmenü-Taste; Sortieren mit Alt+Pfeiltasten<br>
-                            • <strong>Standard zurücksetzen</strong> – Stellt Config, Icon und Tab-Reihenfolge aus der Default-Config wieder her
-                        </div>
-                    </div>
-
-                    <div class="form-buttons" style="display: flex; flex-direction: column; gap: 15px;">
-                        <button type="button" class="${hasDefaultConfig ? 'btn btn-secondary' : 'btn btn-primary'}" id="loadJsonBtn" style="padding: 16px 24px; font-size: 16px;">
-                            <span>📂</span> Bestehende Konfiguration aus JSON-Datei laden
+                    <div class="form-buttons" style="display: flex; flex-direction: column; gap: 12px;">
+                        <button type="button" class="btn btn-primary" id="useDefaultBtn" style="padding: 14px 20px; font-size: 15px;">
+                            ${defaultLabel}
                         </button>
-
-                        ${defaultConfigButton}
-
-                        <div style="text-align: center; margin-top: 15px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 10px; border: 1px solid rgba(255, 193, 7, 0.3);">
-                            <div style="color: #ffd54f; font-size: 14px; margin-bottom: 8px;">
-                                <strong>💾 Datenspeicherung</strong>
-                            </div>
-                            <div style="color: rgba(255, 255, 255, 0.9); font-size: 12px; line-height: 1.4;">
-                                Die Konfiguration wird lokal im Browser gespeichert.<br>
-                                Über das Menü (☰) jederzeit exportieren, importieren oder zurücksetzen.
-                            </div>
-                        </div>
-
-                        <div style="text-align: center; margin-top: 8px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.07);">
-                            <div style="color: rgba(200, 200, 200, 0.55); font-size: 11px; line-height: 1.5;">
-                                💡 <strong style="color: rgba(200,200,200,0.7);">Diesen Dialog dauerhaft deaktivieren:</strong><br>
-                                <code style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;">JS/welcome-config-loader.js</code> löschen oder umbenennen.<br>
-                                Beim nächsten Erststart werden die Default-Configs aus <code style="font-size: 10px; background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;">Config/</code> direkt geladen.
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-secondary" id="loadJsonBtn" style="padding: 14px 20px; font-size: 15px;">
+                            <span>📂</span> Backup laden (JSON-Datei)
+                        </button>
                     </div>
+
+                    <p style="margin-top: 22px; color: rgba(220, 220, 220, 0.7); font-size: 12px; line-height: 1.6; text-align: center;">
+                        Alles wird nur lokal in diesem Browser gespeichert.<br>
+                        Menü über <strong>＋</strong> unten rechts · Bearbeiten per Rechtsklick · Suche mit <strong>Strg+K</strong><br>
+                        <a href="Nutzeranleitung.html" target="_blank" rel="noopener noreferrer" style="color: #40e0d0;">Nutzeranleitung öffnen</a>
+                    </p>
                 </div>
             </div>
         `;
 
-        // Modal zum DOM hinzufügen
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         // Event Listener hinzufügen
@@ -276,7 +214,7 @@ class ExtendedWelcomeLoader {
     showImportFallbackMessage() {
         this.showStatusMessage({
             title: '⚠️ Import-Dialog nicht verfügbar',
-            content: 'Bitte verwenden Sie das Menü (⚙️ → Konfiguration laden) um eine JSON-Datei zu importieren.'
+            content: 'Bitte über das Menü (＋ → Konfiguration laden) eine JSON-Datei importieren.'
         }, 'warning');
         
         // Fallback auf Standard-Konfiguration
@@ -303,45 +241,20 @@ class ExtendedWelcomeLoader {
             if (typeof window.refreshViews === 'function') window.refreshViews();
 
             if (configLoaded || hasDynamicConfigs) {
-                this.showStatusMessage({
-                    title: '🌟 Standard-Konfiguration geladen',
-                    content: 'Die Default-Konfiguration wurde geladen. Tabs, Links und Kategorien sind bereit — jetzt anpassen oder per Rechtsklick bearbeiten.'
-                }, 'success');
+                this.showStatusMessage('🌟 Mitgelieferte Links geladen', 'success');
             } else if (hasDefaultConfig) {
                 // Standard-Config ist da, aber keine DYNAMIC_CONFIGS und kein localStorage
                 this.showStatusMessage({
-                    title: '⚠️ Problem beim Laden der Standard-Konfiguration',
-                    content: 'Es gab ein Problem beim Laden der Standard-Konfiguration. Fallback wird verwendet.'
+                    title: '⚠️ Standard-Konfiguration nicht ladbar',
+                    content: 'Es wird die eingebaute Grundkonfiguration verwendet.'
                 }, 'warning');
             } else {
-                // Keine Standard-Config verfügbar → Fallback verwendet
-                this.showStatusMessage({
-                    title: '🔧 Grundkonfiguration erstellt',
-                    content: 'Eine einfache Grundkonfiguration wurde erstellt. Sie können jederzeit neue Kategorien und Links hinzufügen oder eine JSON-Konfiguration importieren.'
-                }, 'info');
+                this.showStatusMessage('🔧 Grundkonfiguration erstellt', 'info');
             }
         } else {
             console.error('❌ loadConfig-Funktion nicht verfügbar');
             this.showStatusMessage('❌ Konfigurationssystem nicht verfügbar', 'error');
         }
-    }
-
-    /**
-     * Zeigt Konfigurationsstatus an (nur für lokale Konfigurationen)
-     */
-    showConfigStatus() {
-        const status = this.determineConfigSource();
-        
-        // Nur Status zeigen wenn lokale Konfiguration geladen wurde
-        if (status.source === 'local') {
-            setTimeout(() => {
-                this.showStatusMessage({
-                    title: '✅ Lokale Konfiguration erfolgreich geladen',
-                    content: 'Ihre gespeicherte Konfiguration wurde aus dem Browser-Speicher geladen.'
-                }, 'success');
-            }, 1000);
-        }
-        // Für alle anderen Fälle wird der Welcome-Dialog angezeigt
     }
 
     /**
@@ -365,12 +278,9 @@ class ExtendedWelcomeLoader {
                 // Bestimme Konfigurationsquelle
                 const configStatus = this.determineConfigSource();
                 
+                // Normaler Start (lokale Config vorhanden): bewusst ohne Meldung
                 if (configStatus.showWelcome) {
-                    // Zeige Welcome-Dialog
                     setTimeout(() => this.showWelcomeDialog(), 800);
-                } else {
-                    // Normale Initialisierung mit Status-Anzeige (nur für lokale Config)
-                    this.showConfigStatus();
                 }
                 
             } else {
