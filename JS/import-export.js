@@ -1187,7 +1187,7 @@ function _bmParse(html) {
                         }
                     }
                     const child = parseDL(childDL, depth + 1);
-                    const name  = h3.textContent.trim() || 'Ordner';
+                    const name  = (h3.textContent.trim() || 'Ordner').slice(0, DATA_LIMITS.title);
                     result.children.push({
                         id:          'bm_f' + (folderId++),
                         name,
@@ -1200,7 +1200,8 @@ function _bmParse(html) {
                     });
                 } else if (a) {
                     const href = (a.getAttribute('href') || '').trim();
-                    if (isSafeUrl(href)) {
+                    // Gleiche Regeln wie beim JSON-Import, damit jeder Export wieder importierbar ist
+                    if (isSafeUrl(href) && href.length <= DATA_LIMITS.url) {
                         result.directLinks.push({
                             title:       (a.textContent.trim() || 'Ohne Titel').slice(0, DATA_LIMITS.title),
                             url:         href,
