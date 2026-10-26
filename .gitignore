@@ -3,8 +3,5 @@
 Thumbs.db
 desktop.ini
 
-# Lokale Audit-Unterlagen (nicht veröffentlichen)
-/Audit/
-
-# Lokale Regressionstests (nicht veröffentlichen)
-/Tests/
+# Nur lokal benötigte Dateien (Audits, Tests, Notizen) – nie veröffentlichen
+/Lokal/

@@ -13,3 +13,11 @@ Bei **jedem Commit** die Versionsnummer anpassen (Schema `MAJOR.MINOR.PATCH`):
 - **Major**: nur nach Rücksprache.
 
 Die aktuelle Version steht im Footer von `Linksammlung.html`.
+
+## Lokale Dateien
+
+Alles, was nur lokal gebraucht wird (Audits, Tests, Notizen), gehört in den Ordner
+`Lokal/` – er steht in der `.gitignore` und wird nie veröffentlicht.
+
+- Regressionstests: `node Lokal/Tests/regression.cjs` (aus dem Projektverzeichnis)
+- Audits: `Lokal/Audit/<Datum>/`
