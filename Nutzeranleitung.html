@@ -289,7 +289,7 @@
         <li><a href="#bearbeiten">Bearbeiten, Löschen &amp; Verschieben</a></li>
         <li><a href="#tabs">Tabs verwalten</a></li>
         <li><a href="#suche">Suche</a></li>
-        <li><a href="#favoriten">Favoriten</a></li>
+        <li><a href="#favoriten">Favoriten &amp; angepinnte Links</a></li>
         <li><a href="#sortieren">Reihenfolge &amp; Drag&amp;Drop</a></li>
         <li><a href="#ansicht">Ansichtsoptionen</a></li>
         <li><a href="#import-export">Import &amp; Export (Backup)</a></li>
@@ -321,11 +321,14 @@
 <ul>
     <li><strong>Multi-Tab-System</strong> — mehrere Themen-Tabs (z.&nbsp;B. Arbeit, Gaming, News)</li>
     <li><strong>Kategorien &amp; Links</strong> — Links nach Thema gruppieren</li>
-    <li><strong>Favoriten-Sidebar</strong> — Lieblingslinks immer schnell erreichbar</li>
+    <li><strong>Favoriten</strong> — Lieblingslinks aus allen Tabs in Sidebar und Favoriten-Tab</li>
+    <li><strong>Angepinnte Links</strong> — wichtigste Links als Schnellzugriffsleiste ganz oben</li>
     <li><strong>Globale Suche</strong> — alle Links auf einmal durchsuchen</li>
-    <li><strong>Drag &amp; Drop</strong> — Links und Kategorien per Maus umsortieren</li>
+    <li><strong>Link-Übersicht</strong> — alle Links als alphabetische Tabelle, mit Mehrfachauswahl und Erkennung ähnlicher Links</li>
+    <li><strong>Drag &amp; Drop</strong> — Links und Kategorien per Maus oder Tastatur umsortieren</li>
     <li><strong>Import &amp; Export</strong> — Konfiguration sichern und auf anderen Geräten wiederherstellen</li>
     <li><strong>Browser-Lesezeichen importieren</strong> — bestehende Favoriten übernehmen</li>
+    <li><strong>Tastaturbedienung</strong> — alle wichtigen Funktionen auch ohne Maus</li>
     <li><strong>Kein Konto, kein Cloud-Dienst</strong> — alles bleibt lokal auf deinem Gerät</li>
 </ul>
 </section>
@@ -357,14 +360,17 @@
         <th>Wann sinnvoll?</th>
     </tr>
     <tr>
-        <td>📂 <strong>Konfiguration aus JSON laden</strong></td>
+        <td>📂 <strong>Bestehende Konfiguration aus JSON-Datei laden</strong></td>
         <td>Du hast eine Backup-Datei (<code>.json</code>) von einem anderen Gerät.</td>
     </tr>
     <tr>
-        <td>🌟 <strong>Standard-Konfiguration verwenden</strong></td>
-        <td>Erster Start ohne Backup — lädt die mitgelieferten Demo-Links als Startpunkt.</td>
+        <td>🌟 <strong>Standard-Konfiguration aus Config-Verzeichnis verwenden</strong></td>
+        <td>Erster Start ohne Backup — lädt die mitgelieferten Links aus dem Ordner <code>Config/</code> als Startpunkt.
+            Liegen dort keine Config-Dateien, heißt der Button <em>🔧 Einfache Grundkonfiguration erstellen</em>.</td>
     </tr>
 </table>
+<p>Die Wahl wird gespeichert: Der Dialog erscheint danach nicht wieder – auch dann nicht,
+   wenn du später alle Kategorien löschst.</p>
 
 <div class="info">
     <strong>ℹ️ Hinweis zur Datenspeicherung</strong>
@@ -381,7 +387,7 @@
 <section id="oberflaeche" class="page-break">
 <h2>3. Oberfläche im Überblick</h2>
 
-<p>Die Benutzeroberfläche besteht aus vier Hauptbereichen:</p>
+<p>Die Benutzeroberfläche besteht aus diesen Bereichen:</p>
 
 <table>
     <tr>
@@ -390,24 +396,39 @@
         <th>Funktion</th>
     </tr>
     <tr>
+        <td>⭐ <strong>Favoriten-Button</strong></td>
+        <td>Oben links</td>
+        <td>Favoriten-Sidebar öffnen/schließen; die Zahl zeigt die Anzahl der Favoriten</td>
+    </tr>
+    <tr>
+        <td>📌 <strong>Pin-Leiste</strong></td>
+        <td>Oben, rechts neben dem ⭐-Button</td>
+        <td>Angepinnte Links aus allen Tabs (nur sichtbar, wenn etwas angepinnt ist)</td>
+    </tr>
+    <tr>
         <td>🔍 <strong>Suchleiste</strong></td>
-        <td>Oben, mittig</td>
-        <td>Links schnell finden — auch per <kbd>Strg</kbd>+<kbd>K</kbd></td>
+        <td>Unter der Überschrift</td>
+        <td>Links schnell finden — auch per <kbd>Strg</kbd>+<kbd>K</kbd>; daneben der 🌐-Schalter für den Suchbereich</td>
     </tr>
     <tr>
         <td>📋 <strong>Tab-Leiste</strong></td>
         <td>Unter der Suchleiste</td>
-        <td>Zwischen Themen-Tabs wechseln</td>
+        <td>Zwischen Themen-Tabs wechseln; am Ende ＋ für einen neuen Tab und ggf. 👁️ für ausgeblendete Tabs</td>
     </tr>
     <tr>
-        <td>⭐ <strong>Favoriten-Button</strong></td>
-        <td>Oben links (fest)</td>
-        <td>Favoriten-Sidebar öffnen/schließen</td>
+        <td>📝 <strong>Beschreibungen</strong></td>
+        <td>Unter der Tab-Leiste</td>
+        <td>Beschreibungen immer oder nur beim Darüberfahren anzeigen</td>
     </tr>
     <tr>
         <td>➕ <strong>Menü-Button</strong></td>
         <td>Unten rechts (fest)</td>
-        <td>Hauptmenü: Links/Kategorien/Tabs hinzufügen, Import/Export</td>
+        <td>Hauptmenü: Hinzufügen, Ansicht, Import/Export, Verwaltung</td>
+    </tr>
+    <tr>
+        <td>💬 <strong>Meldungen</strong></td>
+        <td>Oben rechts (wischen herein)</td>
+        <td>Bestätigungen, Hinweise und Fehler; verschwinden von selbst — ein <strong>Klick schließt sie sofort</strong></td>
     </tr>
 </table>
 
@@ -429,6 +450,8 @@
 
 <ul>
     <li><strong>Linksklick</strong> auf eine Link-Kachel → öffnet die Seite in einem neuen Tab.</li>
+    <li><strong>Per Tastatur:</strong> Kachel mit <kbd>Tab</kbd> ansteuern und <kbd>↵</kbd> drücken.</li>
+    <li><strong>Angepinnte Links</strong> öffnest du mit einem Klick direkt in der Pin-Leiste oben — egal, welcher Tab gerade aktiv ist.</li>
     <li><strong>Beschreibung</strong> — erscheint entweder immer oder nur beim Hover (einstellbar, siehe <a href="#ansicht">Abschnitt 11</a>).</li>
     <li>Das <strong>Emoji-Icon</strong> links auf der Kachel ist das individuelle Symbol des Links.</li>
 </ul>
@@ -481,12 +504,16 @@
 <h3>Link-Kontextmenü (Rechtsklick auf eine Link-Kachel)</h3>
 <table>
     <tr><th>Option</th><th>Funktion</th></tr>
-    <tr><td>⭐ Als Favorit setzen</td><td>Link zur Favoriten-Sidebar hinzufügen/entfernen</td></tr>
+    <tr><td>⭐ Als Favorit setzen</td><td>Link zu den Favoriten hinzufügen/entfernen</td></tr>
+    <tr><td>📌 Anpinnen</td><td>Link in die Pin-Leiste oben aufnehmen (bei angepinnten Links steht hier <em>📍 Losgelöst (unpin)</em>)</td></tr>
     <tr><td>✏️ Bearbeiten</td><td>Titel, URL, Beschreibung oder Icon ändern</td></tr>
     <tr><td>🔀 In Tab verschieben</td><td>Link in einen anderen Tab und/oder eine andere Kategorie verschieben</td></tr>
     <tr><td>📤 Exportieren</td><td>Diesen einzelnen Link als JSON-Datei speichern</td></tr>
     <tr><td>🗑️ Löschen</td><td>Link dauerhaft entfernen</td></tr>
 </table>
+<p>Löschst oder verschiebst du den <strong>letzten Link</strong> einer Kategorie, ist die Aktion sofort gespeichert.
+   Anschließend fragt die App, ob die leere Kategorie <em>behalten</em> oder <em>gelöscht</em> werden soll —
+   schließt du die Frage einfach, bleibt die leere Kategorie bestehen.</p>
 
 <h3>Kategorie-Kontextmenü (Rechtsklick auf den Kategorie-Titel)</h3>
 <table>
@@ -560,8 +587,7 @@
 
 <h3>Neuen Tab erstellen</h3>
 <ol class="steps">
-    <li>Klicke auf den <strong>+ Button</strong> unten rechts.</li>
-    <li>Am Ende der Tab-Leiste befindet sich ein <strong>＋-Button</strong> — klicke ihn.</li>
+    <li>Klicke auf den <strong>＋-Button</strong> am Ende der Tab-Leiste.</li>
     <li>Gib dem Tab einen Namen und optional ein Emoji-Icon.</li>
     <li>Klicke <strong>Tab erstellen</strong>.</li>
 </ol>
@@ -578,7 +604,9 @@
 <div class="info">
     <strong>ℹ️ Ausgeblendete Tabs</strong>
     Ausgeblendete Tabs erscheinen nicht mehr in der Leiste, aber ihr Inhalt geht
-    nicht verloren. Du kannst sie über das Menü jederzeit wieder einblenden.
+    nicht verloren. Am Ende der Tab-Leiste zeigt <strong>👁️ und eine Zahl</strong>, wie viele Tabs
+    ausgeblendet sind — ein Klick darauf listet sie auf, dort kannst du sie wieder öffnen.
+    Ausgeblendet ist kein Schutz: Die Links bleiben in Suche und Link-Übersicht auffindbar.
 </div>
 
 <h3>Spezial-Tab: Favoriten</h3>
@@ -593,13 +621,11 @@
 <section id="suche">
 <h2>8. Suche</h2>
 
-<h3>Schnellsuche in der Suchleiste</h3>
-<p>Die Suchleiste oben filtert Links des aktuell sichtbaren Tabs in Echtzeit.</p>
-
-<h3>Globale Suche mit Strg+K</h3>
+<h3>Suchen</h3>
 <ol class="steps">
-    <li>Drücke <kbd>Strg</kbd>+<kbd>K</kbd> (oder klicke in die Suchleiste, bis das große Suchfenster erscheint).</li>
-    <li>Tippe einen Suchbegriff — <strong>alle Tabs</strong> werden gleichzeitig durchsucht.</li>
+    <li>Drücke <kbd>Strg</kbd>+<kbd>K</kbd> oder klicke in die Suchleiste — es öffnet sich das Suchfenster.</li>
+    <li>Tippe einen Suchbegriff — gesucht wird in Titel, Beschreibung und URL, standardmäßig in <strong>allen Tabs</strong>.
+        Jeder Treffer zeigt, aus welchem Tab und welcher Kategorie er stammt.</li>
     <li>Navigiere mit <kbd>↑</kbd> / <kbd>↓</kbd> durch die Ergebnisse.</li>
     <li>Drücke <kbd>↵</kbd> (Enter), um den markierten Link zu öffnen.</li>
     <li>Drücke <kbd>Esc</kbd>, um die Suche zu schließen.</li>
@@ -607,27 +633,41 @@
 
 <h3>Suchbereich umschalten</h3>
 <p>Neben der Suchleiste gibt es einen <strong>🌐-Button</strong>. Er steuert, ob die
-   Suche alle Tabs oder nur den aktiven Tab durchsucht — per Klick umschalten.</p>
+   Suche alle Tabs oder nur den aktiven Tab durchsucht — per Klick umschalten.
+   Die Einstellung bleibt gespeichert.</p>
 </section>
 
 <!-- =============================================
      9. FAVORITEN
      ============================================= -->
 <section id="favoriten">
-<h2>9. Favoriten</h2>
+<h2>9. Favoriten &amp; angepinnte Links</h2>
 
 <p>Favoriten sind Links, die du als besonders wichtig markierst. Du kannst
-   auf alle Favoriten jederzeit über die Sidebar zugreifen.</p>
+   auf alle Favoriten jederzeit über die Sidebar oder den Favoriten-Tab zugreifen.</p>
 
 <h3>Link als Favorit markieren</h3>
 <ul>
     <li><strong>Beim Hinzufügen:</strong> Haken bei „Als Favorit setzen" setzen.</li>
-    <li><strong>Nachträglich:</strong> Rechtsklick auf den Link → <em>⭐ Als Favorit setzen</em>.</li>
+    <li><strong>Nachträglich:</strong> Rechtsklick auf den Link → <em>⭐ Als Favorit setzen</em>,
+        oder in der <a href="#bearbeiten">Link-Übersicht</a> auf ☆ klicken.</li>
 </ul>
 
 <h3>Favoriten-Sidebar öffnen</h3>
 <p>Klicke auf den <strong>⭐-Button</strong> oben links. Die Sidebar schiebt sich von links herein
-   und zeigt alle Favoriten-Links. Die Zahl auf dem Button zeigt die aktuelle Anzahl.</p>
+   und zeigt alle Favoriten-Links aus allen Tabs. Die Zahl auf dem Button zeigt die aktuelle Anzahl.
+   Über das ✕ an einem Eintrag entfernst du den Favoriten-Status genau dieses Links.</p>
+
+<h3>Angepinnte Links (Pin-Leiste)</h3>
+<p>Für die Links, die du ständig brauchst, gibt es die <strong>Pin-Leiste</strong> ganz oben neben dem ⭐-Button.
+   Sie ist in jedem Tab sichtbar.</p>
+<ul>
+    <li><strong>Anpinnen:</strong> Rechtsklick auf den Link → <em>📌 Anpinnen</em>.</li>
+    <li><strong>Öffnen:</strong> Klick auf den Eintrag in der Pin-Leiste.</li>
+    <li><strong>Lösen:</strong> Auf das <strong>✕</strong> am Eintrag klicken oder erneut Rechtsklick → <em>📍 Losgelöst (unpin)</em>.</li>
+</ul>
+<p>Die Pin-Leiste aktualisiert sich automatisch, wenn du einen angepinnten Link umbenennst,
+   verschiebst oder mitsamt Kategorie bzw. Tab löschst.</p>
 </section>
 
 <!-- =============================================
@@ -656,9 +696,10 @@
 
 <div class="tip">
     <strong>💡 Hinweis</strong>
-    Links können nur innerhalb ihrer Kategorie umsortiert werden.
-    Um einen Link in eine andere Kategorie oder einen anderen Tab zu verschieben,
-    nutze das Rechtsklick-Menü → <em>🔀 In Tab verschieben</em>.
+    Ziehst du einen Link auf eine <strong>andere Kategorie</strong> desselben Tabs, wird er dorthin
+    verschoben — auch in leere Kategorien. Um einen Link in einen <strong>anderen Tab</strong> zu verschieben,
+    nutze das Rechtsklick-Menü → <em>🔀 In Tab verschieben</em> oder die Mehrfachauswahl in der
+    <a href="#bearbeiten">Link-Übersicht</a>.
 </div>
 </section>
 
@@ -706,7 +747,8 @@
     </tr>
     <tr>
         <td>📤 Einzelnen Link exportieren</td>
-        <td>Rechtsklick auf einen Link → <em>Exportieren</em> — speichert nur diesen einen Link.</td>
+        <td>Rechtsklick auf einen Link → <em>Exportieren</em> — speichert nur diesen einen Link
+            (inkl. Favoriten- und Pin-Status).</td>
     </tr>
     <tr>
         <td>📤 Kategorie exportieren</td>
@@ -926,6 +968,8 @@
     <li>Rechtsklick auf einen Link oder Kategorie-Titel für alle Bearbeitungsoptionen.</li>
     <li>Rechtsklick auf einen Tab für Umbenennen, Ausblenden oder Zusammenführen.</li>
     <li>Die Zahl am ⭐-Button zeigt sofort, wie viele Favoriten du hast.</li>
+    <li>Meldungen oben rechts stören? Einfach <strong>draufklicken</strong> — sie verschwinden sofort.</li>
+    <li>Häufig genutzte Links mit <em>📌 Anpinnen</em> in die Pin-Leiste legen — dann sind sie aus jedem Tab mit einem Klick erreichbar.</li>
     <li>Kategorien lassen sich durch Klick auf den Titel auf- und zuklappen — praktisch bei vielen Links.</li>
     <li>Link vergessen? <em>Menü → 📋 Alle Links (Übersicht)</em> listet alles alphabetisch über alle Tabs hinweg.</li>
     <li>Der Suchbereich-Schalter (🌐) neben der Suchleiste wechselt zwischen Tab-Suche und Globalsuche.</li>

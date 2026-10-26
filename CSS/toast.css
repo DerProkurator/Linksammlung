@@ -17,11 +17,14 @@
     word-wrap: break-word;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
+    pointer-events: none;   /* ausgeblendet: keine Klicks abfangen */
 }
 
 .status-message.show {
     transform: translateX(0);
     opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;        /* Klick schließt die Nachricht */
 }
 
 .status-success {

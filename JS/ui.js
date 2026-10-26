@@ -407,12 +407,21 @@ function closeMenu() {
 // STATUS-NACHRICHTEN (TOASTS)
 // -----------------------------------------------------------------------
 
+// Timer der aktuell angezeigten Nachricht – eine neue Nachricht ersetzt sie,
+// damit der Ausblend-Timer einer älteren nicht die neue vorzeitig schließt
+let _statusShowTimer = null;
+let _statusHideTimer = null;
+
 /**
- * Status-Nachricht / Toast anzeigen
+ * Status-Nachricht / Toast anzeigen (Klick auf die Nachricht schließt sie sofort)
  */
 function showMessage(message, type) {
     const messageEl = document.getElementById('statusMessage');
+    clearTimeout(_statusShowTimer);
+    clearTimeout(_statusHideTimer);
     messageEl.className = `status-message status-${type}`;
+    messageEl.title     = 'Klicken zum Schließen';
+    messageEl.onclick   = hideMessage;
 
     if (typeof message === 'object') {
         messageEl.classList.add('important');
@@ -424,10 +433,19 @@ function showMessage(message, type) {
         messageEl.textContent = message;
     }
 
-    setTimeout(() => messageEl.classList.add('show'), 100);
+    _statusShowTimer = setTimeout(() => messageEl.classList.add('show'), 100);
 
     const duration = messageEl.classList.contains('important') ? 15000 : 3000;
-    setTimeout(() => messageEl.classList.remove('show'), duration);
+    _statusHideTimer = setTimeout(hideMessage, duration);
+}
+
+/**
+ * Status-Nachricht sofort ausblenden
+ */
+function hideMessage() {
+    clearTimeout(_statusShowTimer);
+    clearTimeout(_statusHideTimer);
+    document.getElementById('statusMessage').classList.remove('show');
 }
 
 // -----------------------------------------------------------------------
