@@ -3,7 +3,7 @@
 // ========================================================================
 // Link-Übersicht: alle Links aller Tabs als sortierbare Tabelle
 // (alphabetisch, A–Z-Sprungleiste, Filter, Bearbeiten/Löschen,
-// "Hinspringen" und Erkennung ähnlicher Links)
+// "Hinspringen", Erkennung ähnlicher Links und Mehrfachauswahl)
 // Abhängig von: config.js, tabs.js, links.js, ui.js, favorites.js, pinned.js
 // ========================================================================
 
@@ -16,6 +16,9 @@ let _ovSortDir   = 1;            // 1 = aufsteigend, -1 = absteigend
 let _ovMode      = 'list';       // 'list' | 'similar'
 let _ovFocusRow  = null;         // Zeilen-Index für "Ähnlich zu …"-Filter
 let _ovKeyHandler = null;
+let _ovSelected  = new Set();    // uids der ausgewählten Links
+let _ovVisible   = [];           // Zeilen-Indizes in Anzeige-Reihenfolge (für Shift-Klick)
+let _ovLastClick = null;         // zuletzt angeklickte Zeile (Bereichsauswahl)
 
 const _ovCollator = new Intl.Collator('de', { sensitivity: 'base', numeric: true });
 
@@ -41,6 +44,7 @@ function _ovGetTabData(tabId) {
  */
 function _ovCollectRows() {
     const rows = [];
+    const seen = new Map();   // für stabile uid: n-tes Vorkommen derselben URL in einer Kategorie
     tabsList.forEach(tab => {
         if (tab.id === 'favorites') return;
         const cfg = _ovGetTabData(tab.id);
@@ -52,7 +56,11 @@ function _ovCollectRows() {
             if (!cat || !Array.isArray(cat.links)) return;
             cat.links.forEach((link, linkIndex) => {
                 const url = typeof link.url === 'string' ? link.url : '';
+                const base = tab.id + '\u0000' + catKey + '\u0000' + url;
+                const nth = (seen.get(base) || 0) + 1;
+                seen.set(base, nth);
                 rows.push({
+                    uid:           base + '\u0000' + nth,
                     tabId:         tab.id,
                     tabLabel:      tab.label,
                     tabIcon:       tab.icon || '📋',
@@ -296,6 +304,8 @@ function openLinkOverview() {
 
     _ovMode = 'list';
     _ovFocusRow = null;
+    _ovSelected = new Set();
+    _ovLastClick = null;
 
     const tabOptions = tabsList
         .filter(t => t.id !== 'favorites')
@@ -324,6 +334,7 @@ function openLinkOverview() {
                     <div class="ov-stats" id="ovStats"></div>
                     <div class="ov-focus" id="ovFocus"></div>
                 </div>
+                <div class="ov-bulk" id="ovBulk"></div>
                 <div class="ov-body">
                     <div class="ov-table-wrap" id="ovTableWrap"></div>
                     <div class="ov-az" id="ovAz"></div>
@@ -343,6 +354,7 @@ function openLinkOverview() {
     });
     document.getElementById('ovCatFilter').addEventListener('change', _ovRender);
     document.getElementById('ovTableWrap').addEventListener('click', _ovHandleTableClick);
+    document.getElementById('ovBulk').addEventListener('click', _ovHandleBulkClick);
     document.getElementById('ovAz').addEventListener('click', _ovHandleAzClick);
 
     // ESC: nur die Übersicht schließen, wenn kein Link-Modal darüber liegt.
@@ -350,6 +362,8 @@ function openLinkOverview() {
     _ovKeyHandler = (e) => {
         if (e.key !== 'Escape') return;
         if (document.getElementById('linkModal').style.display === 'block') return;
+        const movePanel = document.getElementById('ovMovePanel');
+        if (movePanel) { movePanel.remove(); e.stopPropagation(); return; }
         closeLinkOverview();
     };
     document.addEventListener('keydown', _ovKeyHandler, true);
@@ -378,6 +392,9 @@ function _ovReload() {
     _ovRows    = _ovCollectRows();
     _ovSimilar = null;
     _ovFocusRow = null;
+    _ovLastClick = null;
+    const uids = new Set(_ovRows.map(r => r.uid));
+    _ovSelected = new Set([..._ovSelected].filter(u => uids.has(u)));
     _ovFillCategoryFilter();
     _ovRender();
 }
@@ -531,7 +548,8 @@ function _ovRowHtml(i, showBadge) {
     const pinTag = r.pinned ? ' <span class="ov-pin" title="Angepinnt">📌</span>' : '';
 
     return `
-        <tr data-row="${i}">
+        <tr data-row="${i}"${_ovSelected.has(r.uid) ? ' class="ov-selected"' : ''}>
+            <td class="ov-col-sel"><input type="checkbox" class="ov-sel" data-row="${i}"${_ovSelected.has(r.uid) ? ' checked' : ''} title="Auswählen (Shift = Bereich)"></td>
             <td class="ov-col-icon">${esc(r.icon)}</td>
             <td class="ov-col-title">
                 <div class="ov-title-cell">
@@ -566,8 +584,12 @@ function _ovHeadHtml(sortable) {
         const arrow = _ovSortCol === col ? (_ovSortDir === 1 ? ' ▲' : ' ▼') : '';
         return `<th class="${cls} ov-sortable${_ovSortCol === col ? ' sorted' : ''}" onclick="sortLinkOverview('${col}')">${label}${arrow}</th>`;
     };
+    const selAll = sortable
+        ? `<input type="checkbox" class="ov-sel-all" title="Alle angezeigten auswählen"${_ovAllVisibleSelected() ? ' checked' : ''}>`
+        : '';
     return `
         <thead><tr>
+            <th class="ov-col-sel">${selAll}</th>
             ${th(null, '', 'ov-col-icon')}
             ${th('title', 'Name', 'ov-col-title')}
             ${th('url', 'URL', 'ov-col-url')}
@@ -579,7 +601,7 @@ function _ovHeadHtml(sortable) {
         </tr></thead>`;
 }
 
-const _OV_COLS = 8;
+const _OV_COLS = 9;
 
 /**
  * Tabelle, Statistik und A–Z-Leiste zeichnen
@@ -612,17 +634,21 @@ function _ovRender() {
     if (total === 0) {
         wrap.innerHTML = '<div class="ov-empty">Noch keine Links vorhanden.</div>';
         az.innerHTML = '';
+        _ovRenderBulk();
         return;
     }
 
     if (_ovMode === 'similar') {
+        _ovVisible = [];
         wrap.innerHTML = _ovSimilarHtml(new Set(filtered));
+        _ovRenderBulk();
         az.innerHTML = '';
         az.style.display = 'none';
         return;
     }
 
     const sorted = _ovSort(filtered);
+    _ovVisible = sorted;
     const byLetter = _ovSortCol === 'title';
     const letters = new Set();
     let body = '';
@@ -643,6 +669,8 @@ function _ovRender() {
     wrap.innerHTML = sorted.length
         ? `<table class="ov-table">${_ovHeadHtml(true)}<tbody>${body}</tbody></table>`
         : '<div class="ov-empty">Keine Links passen zum Filter.</div>';
+
+    _ovRenderBulk();
 
     // A–Z-Leiste (nur bei Sortierung nach Name)
     if (byLetter && sorted.length) {
@@ -687,7 +715,7 @@ function _ovSimilarHtml(allowed) {
                 ? domain[g[0]]
                 : sec.key === 'url' ? _ovShortUrl(_ovRows[g[0]].url) : _ovRows[g[0]].title;
             body += `<tr class="ov-group-row"><td colspan="${_OV_COLS}">${esc(label)} <span class="ov-group-count">${g.length} Links</span></td></tr>`;
-            g.forEach(i => { body += _ovRowHtml(i, false); });
+            g.forEach(i => { body += _ovRowHtml(i, false); _ovVisible.push(i); });
         });
 
         html += `
@@ -714,6 +742,15 @@ function _ovHandleAzClick(e) {
 }
 
 function _ovHandleTableClick(e) {
+    if (e.target.classList.contains('ov-sel-all')) {
+        _ovToggleAllVisible(e.target.checked);
+        return;
+    }
+    if (e.target.classList.contains('ov-sel')) {
+        _ovToggleSelect(parseInt(e.target.dataset.row, 10), e.target.checked, e.shiftKey);
+        return;
+    }
+
     const btn = e.target.closest('[data-ov-action]');
     if (!btn || btn.disabled) return;
     const i = parseInt(btn.dataset.row, 10);
@@ -853,4 +890,311 @@ function _ovJumpTo(row) {
 function _ovStale() {
     showMessage('Der Link wurde zwischenzeitlich geändert – Übersicht wurde neu geladen.', 'warning');
     _ovReload();
+}
+
+// -----------------------------------------------------------------------
+// MEHRFACHAUSWAHL
+// -----------------------------------------------------------------------
+
+function _ovAllVisibleSelected() {
+    const vis = _ovFilteredIndices();
+    return vis.length > 0 && vis.every(i => _ovSelected.has(_ovRows[i].uid));
+}
+
+/**
+ * Einzelne Zeile (de)selektieren; mit Shift den Bereich seit dem letzten Klick
+ */
+function _ovToggleSelect(i, checked, shift) {
+    let range = [i];
+    if (shift && _ovLastClick !== null) {
+        const a = _ovVisible.indexOf(_ovLastClick);
+        const b = _ovVisible.indexOf(i);
+        if (a !== -1 && b !== -1) range = _ovVisible.slice(Math.min(a, b), Math.max(a, b) + 1);
+    }
+    range.forEach(k => {
+        if (checked) _ovSelected.add(_ovRows[k].uid);
+        else         _ovSelected.delete(_ovRows[k].uid);
+    });
+    _ovLastClick = i;
+    _ovSyncSelectionUi();
+}
+
+/**
+ * Alle aktuell angezeigten (gefilterten) Zeilen (de)selektieren
+ */
+function _ovToggleAllVisible(checked) {
+    _ovFilteredIndices().forEach(i => {
+        if (checked) _ovSelected.add(_ovRows[i].uid);
+        else         _ovSelected.delete(_ovRows[i].uid);
+    });
+    _ovSyncSelectionUi();
+}
+
+/**
+ * Checkboxen/Zeilen-Markierung aktualisieren ohne komplettes Neuzeichnen (Scroll-Position bleibt)
+ */
+function _ovSyncSelectionUi() {
+    document.querySelectorAll('#ovTableWrap tr[data-row]').forEach(tr => {
+        const sel = _ovSelected.has(_ovRows[+tr.dataset.row].uid);
+        tr.classList.toggle('ov-selected', sel);
+        const cb = tr.querySelector('.ov-sel');
+        if (cb) cb.checked = sel;
+    });
+    const all = document.querySelector('#ovTableWrap .ov-sel-all');
+    if (all) all.checked = _ovAllVisibleSelected();
+    _ovRenderBulk();
+}
+
+function _ovSelectedRows() {
+    return _ovRows.filter(r => _ovSelected.has(r.uid));
+}
+
+/**
+ * Aktionsleiste für die Auswahl
+ */
+function _ovRenderBulk() {
+    const bar = document.getElementById('ovBulk');
+    if (!bar) return;
+    const n = _ovSelected.size;
+    if (n === 0) {
+        bar.innerHTML = '';
+        bar.classList.remove('active');
+        return;
+    }
+    bar.classList.add('active');
+    bar.innerHTML = `
+        <span class="ov-bulk-count">${n} ausgewählt</span>
+        <button type="button" data-bulk="fav-on">⭐ Favorit setzen</button>
+        <button type="button" data-bulk="fav-off">☆ Favorit entfernen</button>
+        <button type="button" data-bulk="move">🔀 Verschieben</button>
+        <button type="button" data-bulk="delete" class="danger">🗑️ Löschen</button>
+        <button type="button" data-bulk="clear" class="ov-bulk-clear">Auswahl aufheben</button>`;
+}
+
+function _ovHandleBulkClick(e) {
+    const b = e.target.closest('button[data-bulk]');
+    if (!b) return;
+    switch (b.dataset.bulk) {
+        case 'fav-on':  _ovBulkFavorite(true); break;
+        case 'fav-off': _ovBulkFavorite(false); break;
+        case 'move':    _ovOpenMovePanel(); break;
+        case 'delete':  _ovBulkDelete(); break;
+        case 'clear':
+            _ovSelected.clear();
+            _ovSyncSelectionUi();
+            break;
+    }
+}
+
+/**
+ * Ausgewählte Zeilen nach Tab → Kategorie gruppieren
+ */
+function _ovGroupByTab(rows) {
+    const byTab = new Map();
+    rows.forEach(r => {
+        if (!byTab.has(r.tabId)) byTab.set(r.tabId, new Map());
+        const cats = byTab.get(r.tabId);
+        if (!cats.has(r.categoryKey)) cats.set(r.categoryKey, []);
+        cats.get(r.categoryKey).push(r);
+    });
+    return byTab;
+}
+
+/**
+ * Welche Kategorien würden durch Entfernen der Auswahl leer?
+ * @returns {Array<{tabId, tabLabel, categoryKey, categoryTitle}>}
+ */
+function _ovCategoriesEmptiedBy(rows, exclude) {
+    const result = [];
+    _ovGroupByTab(rows).forEach((cats, tabId) => {
+        cats.forEach((list, catKey) => {
+            if (exclude && exclude.tabId === tabId && exclude.categoryKey === catKey) return;
+            const total = _ovRows.filter(r => r.tabId === tabId && r.categoryKey === catKey).length;
+            if (list.length === total) {
+                result.push({ tabId, tabLabel: list[0].tabLabel, categoryKey: catKey, categoryTitle: list[0].categoryTitle });
+            }
+        });
+    });
+    return result;
+}
+
+/**
+ * Einmalig nachfragen, ob leer werdende Kategorien gelöscht werden sollen
+ * @returns {Set<string>} "tabId\0categoryKey" der zu löschenden Kategorien
+ */
+function _ovAskDeleteEmptied(emptied) {
+    if (!emptied.length) return new Set();
+    const list = emptied.map(c => `• ${c.categoryTitle} (${c.tabLabel})`).join('\n');
+    const ok = confirm(`Folgende Kategorie${emptied.length !== 1 ? 'n werden' : ' wird'} dadurch leer:\n\n${list}\n\nLeere Kategorien ebenfalls löschen?`);
+    return ok ? new Set(emptied.map(c => c.tabId + '\u0000' + c.categoryKey)) : new Set();
+}
+
+/**
+ * Ausgewählte Links aus ihren Tabs entfernen
+ * @returns {Array<object>} die entfernten Link-Objekte (in ursprünglicher Reihenfolge)
+ */
+function _ovRemoveRows(rows, deleteCats) {
+    const removed = [];
+    _ovGroupByTab(rows).forEach((cats, tabId) => {
+        _ovMutateTab(tabId, cfg => {
+            cats.forEach((list, catKey) => {
+                const cat = cfg.categories[catKey];
+                if (!cat) return;
+                const valid = list.filter(r => _ovResolveLink(cfg, r)).sort((a, b) => a.linkIndex - b.linkIndex);
+                valid.forEach(r => removed.push(cat.links[r.linkIndex]));
+                // absteigend splicen, damit Indizes stabil bleiben
+                [...valid].reverse().forEach(r => cat.links.splice(r.linkIndex, 1));
+                if (cat.links.length === 0 && deleteCats.has(tabId + '\u0000' + catKey)) {
+                    delete cfg.categories[catKey];
+                }
+            });
+        });
+    });
+    return removed;
+}
+
+function _ovBulkFavorite(value) {
+    const rows = _ovSelectedRows();
+    let count = 0;
+    _ovGroupByTab(rows).forEach((cats, tabId) => {
+        _ovMutateTab(tabId, cfg => {
+            cats.forEach(list => list.forEach(r => {
+                const link = _ovResolveLink(cfg, r);
+                if (link && !!link.favorite !== value) { link.favorite = value; count++; }
+            }));
+        });
+    });
+    showMessage(`${count} Link${count !== 1 ? 's' : ''} ${value ? 'als Favorit gesetzt' : 'aus Favoriten entfernt'}`, 'success');
+    _ovAfterChange();
+}
+
+function _ovBulkDelete() {
+    const rows = _ovSelectedRows();
+    if (!rows.length) return;
+
+    const preview = rows.slice(0, 10).map(r => `• ${r.title} (${r.tabLabel} › ${r.categoryTitle})`).join('\n')
+        + (rows.length > 10 ? `\n… und ${rows.length - 10} weitere` : '');
+    if (!confirm(`${rows.length} Link${rows.length !== 1 ? 's' : ''} wirklich löschen?\n\n${preview}`)) return;
+
+    const deleteCats = _ovAskDeleteEmptied(_ovCategoriesEmptiedBy(rows));
+    const removed = _ovRemoveRows(rows, deleteCats);
+
+    _ovSelected.clear();
+    showMessage(`${removed.length} Link${removed.length !== 1 ? 's' : ''} gelöscht`, 'success');
+    _ovAfterChange();
+}
+
+// -----------------------------------------------------------------------
+// MEHRFACHAUSWAHL: VERSCHIEBEN
+// -----------------------------------------------------------------------
+
+function _ovOpenMovePanel() {
+    const existing = document.getElementById('ovMovePanel');
+    if (existing) existing.remove();
+
+    const n = _ovSelected.size;
+    const tabOptions = tabsList
+        .filter(t => t.id !== 'favorites')
+        .map(t => `<option value="${esc(t.id)}"${t.id === activeTabId ? ' selected' : ''}>${esc(t.icon || '📋')} ${esc(t.label)}${t.hidden ? ' (ausgeblendet)' : ''}</option>`)
+        .join('');
+
+    const html = `
+        <div class="ov-move-panel" id="ovMovePanel">
+            <div class="ov-move-box">
+                <div class="ov-move-title">🔀 ${n} Link${n !== 1 ? 's' : ''} verschieben</div>
+                <label>Ziel-Tab</label>
+                <select id="ovMoveTab" class="ov-select">${tabOptions}</select>
+                <label>Ziel-Kategorie</label>
+                <select id="ovMoveCat" class="ov-select"></select>
+                <input type="text" id="ovMoveNewCat" class="ov-filter" placeholder="Name der neuen Kategorie" style="display:none;">
+                <div class="ov-move-buttons">
+                    <button type="button" class="btn btn-secondary" id="ovMoveCancel">Abbrechen</button>
+                    <button type="button" class="btn btn-primary" id="ovMoveConfirm">Verschieben</button>
+                </div>
+            </div>
+        </div>`;
+
+    document.querySelector('#linkOverviewModal .ov-content').insertAdjacentHTML('beforeend', html);
+
+    const panel = document.getElementById('ovMovePanel');
+    panel.addEventListener('click', e => { if (e.target === panel) panel.remove(); });
+    document.getElementById('ovMoveTab').addEventListener('change', _ovFillMoveCategories);
+    document.getElementById('ovMoveCat').addEventListener('change', () => {
+        const isNew = document.getElementById('ovMoveCat').value === '__new__';
+        const input = document.getElementById('ovMoveNewCat');
+        input.style.display = isNew ? '' : 'none';
+        if (isNew) input.focus();
+    });
+    document.getElementById('ovMoveCancel').addEventListener('click', () => panel.remove());
+    document.getElementById('ovMoveConfirm').addEventListener('click', _ovConfirmMove);
+    document.getElementById('ovMoveNewCat').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); _ovConfirmMove(); }
+    });
+
+    _ovFillMoveCategories();
+}
+
+function _ovFillMoveCategories() {
+    const tabId = document.getElementById('ovMoveTab').value;
+    const cfg = _ovGetTabData(tabId);
+    const select = document.getElementById('ovMoveCat');
+    const keys = cfg ? cfg.categoryOrder.filter(k => cfg.categories[k]) : [];
+
+    select.innerHTML = keys.map(k => {
+        const c = cfg.categories[k];
+        return `<option value="${esc(k)}">${esc(c.icon || '📁')} ${esc(c.title || k)}</option>`;
+    }).join('') + '<option value="__new__">➕ Neue Kategorie…</option>';
+
+    const isNew = keys.length === 0;
+    if (isNew) select.value = '__new__';
+    document.getElementById('ovMoveNewCat').style.display = isNew ? '' : 'none';
+}
+
+function _ovConfirmMove() {
+    const tabId = document.getElementById('ovMoveTab').value;
+    let catKey  = document.getElementById('ovMoveCat').value;
+    const newTitle = document.getElementById('ovMoveNewCat').value.trim();
+
+    if (catKey === '__new__' && !newTitle) {
+        showMessage('Bitte einen Namen für die neue Kategorie eingeben', 'warning');
+        document.getElementById('ovMoveNewCat').focus();
+        return;
+    }
+
+    // Neue Kategorie mit vorhandenem Namen → vorhandene nehmen
+    if (catKey === '__new__') {
+        const cfg = _ovGetTabData(tabId);
+        const needle = newTitle.toLowerCase();
+        const match = cfg && Object.keys(cfg.categories).find(k => (cfg.categories[k].title || '').trim().toLowerCase() === needle);
+        if (match) catKey = match;
+    }
+
+    // Links, die schon in der Ziel-Kategorie liegen, bleiben unberührt
+    const rows = _ovSelectedRows().filter(r => !(r.tabId === tabId && r.categoryKey === catKey));
+    if (!rows.length) {
+        showMessage('Die ausgewählten Links liegen bereits in dieser Kategorie', 'warning');
+        return;
+    }
+
+    const target = { tabId, categoryKey: catKey };
+    const deleteCats = _ovAskDeleteEmptied(_ovCategoriesEmptiedBy(rows, target));
+    const moved = _ovRemoveRows(rows, deleteCats);
+
+    let targetTitle = newTitle;
+    _ovMutateTab(tabId, cfg => {
+        if (catKey === '__new__') {
+            catKey = uniqueKey(newTitle, k => !!cfg.categories[k]);
+            cfg.categories[catKey] = { title: newTitle, icon: '📁', collapsed: false, links: [] };
+            cfg.categoryOrder.push(catKey);
+        }
+        const cat = cfg.categories[catKey];
+        targetTitle = cat.title;
+        cat.links.push(...moved);
+    });
+
+    const tab = tabsList.find(t => t.id === tabId);
+    _ovSelected.clear();
+    document.getElementById('ovMovePanel').remove();
+    showMessage(`${moved.length} Link${moved.length !== 1 ? 's' : ''} nach „${tab ? tab.label : tabId} › ${targetTitle}“ verschoben`, 'success');
+    _ovAfterChange();
 }

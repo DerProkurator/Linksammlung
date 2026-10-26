@@ -223,6 +223,7 @@
 }
 
 /* Spalten */
+.ov-col-sel     { width: 30px; text-align: center; }
 .ov-col-icon    { width: 34px; text-align: center; font-size: 1.2em; }
 .ov-col-title   { width: 20%; }
 .ov-col-url     { width: 18%; }
@@ -391,6 +392,131 @@
     padding: 40px;
     text-align: center;
     color: rgba(240, 240, 240, 0.55);
+}
+
+/* Mehrfachauswahl */
+.ov-sel,
+.ov-sel-all {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: #40e0d0;
+    vertical-align: middle;
+}
+
+.ov-table tbody tr.ov-selected {
+    background: rgba(64, 224, 208, 0.12);
+}
+
+.ov-bulk {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(64, 224, 208, 0.08);
+    border: 1px solid rgba(64, 224, 208, 0.35);
+    flex-shrink: 0;
+}
+
+.ov-bulk.active {
+    display: flex;
+}
+
+.ov-bulk-count {
+    color: #40e0d0;
+    font-weight: 600;
+    font-size: 13px;
+    margin-right: 6px;
+}
+
+.ov-bulk button {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(64, 224, 208, 0.35);
+    background: rgba(40, 40, 60, 0.9);
+    color: #f0f0f0;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ov-bulk button:hover {
+    border-color: rgba(64, 224, 208, 0.8);
+    background: rgba(64, 224, 208, 0.15);
+}
+
+.ov-bulk button.danger {
+    border-color: rgba(220, 53, 69, 0.6);
+    background: rgba(220, 53, 69, 0.2);
+}
+
+.ov-bulk button.danger:hover {
+    background: rgba(220, 53, 69, 0.4);
+}
+
+.ov-bulk .ov-bulk-clear {
+    margin-left: auto;
+    background: transparent;
+    border-color: transparent;
+    color: rgba(240, 240, 240, 0.6);
+}
+
+/* Verschieben-Dialog (innerhalb der Übersicht) */
+.ov-move-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 20px;
+}
+
+.ov-move-box {
+    width: 90%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px;
+    border-radius: 16px;
+    background: rgba(25, 25, 40, 0.99);
+    border: 1px solid rgba(64, 224, 208, 0.4);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+}
+
+.ov-move-box label {
+    color: rgba(240, 240, 240, 0.7);
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.ov-move-box .ov-select,
+.ov-move-box .ov-filter {
+    flex: none;
+    width: 100%;
+}
+
+.ov-move-title {
+    color: #40e0d0;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.ov-move-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.ov-move-buttons .btn {
+    padding: 10px 20px;
 }
 
 /* Hervorhebung nach "Im Tab anzeigen" */

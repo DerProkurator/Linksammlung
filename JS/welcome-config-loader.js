@@ -181,7 +181,7 @@ class ExtendedWelcomeLoader {
                             • <strong>Angepinnte Links</strong> – Tab-übergreifende Schnellzugriffsleiste oben (📌 Rechtsklick auf Link)<br>
                             • <strong>Bento-Grid-Layout</strong> – Kacheln skalieren automatisch nach Link-Anzahl<br>
                             • <strong>Globale Suche</strong> – Alle Tabs gleichzeitig durchsuchen (Strg+K)<br>
-                            • <strong>Link-Übersicht</strong> – Alle Links als alphabetische Tabelle, inkl. Erkennung ähnlicher Links<br>
+                            • <strong>Link-Übersicht</strong> – Alle Links als alphabetische Tabelle, inkl. Erkennung ähnlicher Links und Mehrfachauswahl<br>
                             • <strong>Rechtsklick-Menü</strong> – Links/Kategorien bearbeiten, löschen, verschieben, anpinnen<br>
                             • <strong>Tab-Kontextmenü</strong> – Rechtsklick auf Tab: umbenennen, ausblenden, zusammenführen<br>
                             • <strong>Emoji-Picker</strong> – Icons für Links, Kategorien und Tabs, inkl. Länderflaggen<br>
