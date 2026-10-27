@@ -402,7 +402,7 @@ function openMergeTabModal() {
     const targetSel = document.getElementById('mergeTabTarget');
     targetSel.innerHTML = tabsList
         .filter(t => t.id !== tabId && t.id !== 'favorites')
-        .map(t => `<option value="${t.id}">${esc(t.icon)} ${esc(t.label)}</option>`)
+        .map(t => `<option value="${esc(t.id)}">${esc(t.icon)} ${esc(t.label)}</option>`)
         .join('');
 
     if (!targetSel.options.length) {

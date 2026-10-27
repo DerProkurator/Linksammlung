@@ -1470,7 +1470,7 @@ function _bmRenderTree(data) {
         tabsList.forEach(t => {
             const sel     = currentChoice === t.id ? ' selected' : '';
             const warning = t.label.toLowerCase() === topFolder.name.toLowerCase() ? ' ⚠️' : '';
-            html += `<option value="${t.id}"${sel}>→ ${_bmEsc(t.icon)} ${_bmEsc(t.label)}${warning}</option>`;
+            html += `<option value="${_bmEsc(t.id)}"${sel}>→ ${_bmEsc(t.icon)} ${_bmEsc(t.label)}${warning}</option>`;
         });
         html += `</select>`;
 
@@ -1567,7 +1567,7 @@ function _bmRenderRootLinks(data) {
     const cur = window._bmRootTabChoice;
     let opts = `<option value="new"${cur === 'new' ? ' selected' : ''}>📋 Neuer Tab</option>`;
     opts += tabsList.map(t =>
-        `<option value="${t.id}"${cur === t.id ? ' selected' : ''}>${_bmEsc(t.icon)} ${_bmEsc(t.label)}</option>`
+        `<option value="${_bmEsc(t.id)}"${cur === t.id ? ' selected' : ''}>${_bmEsc(t.icon)} ${_bmEsc(t.label)}</option>`
     ).join('');
 
     const savedName = window._bmRootTabName || '';
@@ -1733,7 +1733,19 @@ function confirmBookmarkImport() {
         }
     }
 
-    // Schritt 3: Alle Configs und die Tab-Liste gemeinsam speichern
+    // Schritt 3: Gleiche Grenzen wie beim JSON-Import, sonst wäre das Backup nicht wieder einlesbar
+    for (const [tabId, cfg] of folderTabConfig) {
+        const check = normalizeConfig(cfg);
+        if (!check.ok) {
+            const label = (tabsList.find(t => t.id === tabId) || {}).label || tabId;
+            tabsList = previousTabs;
+            showMessage({ title: '❌ Import abgebrochen – nichts wurde gespeichert',
+                          content: `${check.error} (Tab „${label}“, max. ${DATA_LIMITS.categories} Kategorien / ${DATA_LIMITS.linksTotal} Links je Tab)` }, 'error');
+            return;
+        }
+    }
+
+    // Schritt 4: Alle Configs und die Tab-Liste gemeinsam speichern
     if (!writeTabConfigs(folderTabConfig, { tabs: true })) {
         tabsList = previousTabs;
         return;

@@ -180,7 +180,7 @@ function openMoveCategoryModal() {
     const tabSel = document.getElementById('moveCategoryTargetTab');
     tabSel.innerHTML = tabsList
         .filter(t => t.id !== activeTabId && t.id !== 'favorites')
-        .map(t => `<option value="${t.id}">${esc(t.icon)} ${esc(t.label)}</option>`)
+        .map(t => `<option value="${esc(t.id)}">${esc(t.icon)} ${esc(t.label)}</option>`)
         .join('');
 
     if (!tabSel.options.length) {
