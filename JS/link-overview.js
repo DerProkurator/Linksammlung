@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - LINK-OVERVIEW.JS v3.7
+// LINKSAMMLUNG - LINK-OVERVIEW.JS v3.8
 // ========================================================================
 // Link-Übersicht: alle Links aller Tabs als sortierbare Tabelle
 // (alphabetisch, A–Z-Sprungleiste, Filter, Bearbeiten/Löschen,
@@ -569,7 +569,9 @@ function _ovRowHtml(i, showBadge) {
                         title="${r.favorite ? 'Favorit entfernen' : 'Als Favorit setzen'}">${r.favorite ? '⭐' : '☆'}</button>
             </td>
             <td class="ov-col-actions">
-                <button type="button" class="ov-act" data-ov-action="open" data-row="${i}" title="Öffnen"${safe ? '' : ' disabled'}>🔗</button>
+                ${safe
+                    ? `<a class="ov-act" href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" draggable="false" title="Öffnen (mittlere Maustaste: im Hintergrund)">🔗</a>`
+                    : `<button type="button" class="ov-act" title="Öffnen" disabled>🔗</button>`}
                 <button type="button" class="ov-act" data-ov-action="jump" data-row="${i}" title="Im Tab anzeigen">📍</button>
                 <button type="button" class="ov-act" data-ov-action="edit" data-row="${i}" title="Bearbeiten">✏️</button>
                 <button type="button" class="ov-act danger" data-ov-action="delete" data-row="${i}" title="Löschen">🗑️</button>
@@ -757,9 +759,6 @@ function _ovHandleTableClick(e) {
     if (!row) return;
 
     switch (btn.dataset.ovAction) {
-        case 'open':
-            if (isSafeUrl(row.url)) window.open(row.url, '_blank', 'noopener,noreferrer');
-            break;
         case 'jump':    _ovJumpTo(row); break;
         case 'edit':    _ovEdit(row); break;
         case 'delete':  _ovDelete(row); break;

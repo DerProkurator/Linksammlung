@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - FAVORITES.JS v3.7
+// LINKSAMMLUNG - FAVORITES.JS v3.8
 // ========================================================================
 // Favoriten-Sidebar-System (aktiver Tab)
 // Abhängig von: config.js
@@ -115,10 +115,8 @@ function updateFavoritesList() {
     favorites.sort((a, b) => a.title.localeCompare(b.title));
 
     favorites.forEach(favorite => {
-        const el = document.createElement('div');
+        const el = createLinkAnchor(favorite.url);
         el.className = 'favorite-item';
-        el.setAttribute('role', 'link');
-        el.tabIndex = 0;
         el.innerHTML = `
             <div class="favorite-item-icon">${esc(favorite.icon)}</div>
             <div class="favorite-item-content">
@@ -133,14 +131,12 @@ function updateFavoritesList() {
         `;
 
         const removeBtn = el.querySelector('.favorite-item-remove');
+        shieldFromLink(removeBtn);
         removeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             removeFavorite(favorite.tabId, favorite.categoryKey, favorite.linkIndex, favorite.url);
         });
 
-        el.addEventListener('click', () => {
-            if (isSafeUrl(favorite.url)) window.open(favorite.url, '_blank', 'noopener,noreferrer');
-        });
         favoritesContent.appendChild(el);
     });
 }

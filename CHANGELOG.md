@@ -4,6 +4,10 @@
 Technische Details stehen in den Commit-Nachrichten. Fehlende Versionsnummern
 betrafen nur die Pflege des Repositorys, nicht die App.
 
+## 3.8 — Oktober 2026
+
+- 3.8.0 — Mittlere Maustaste (oder Strg+Klick) öffnet Links im Hintergrund-Tab, wie überall im Browser – auf Kacheln, Favoriten, angepinnten Links, Suchtreffern und in der Link-Übersicht
+
 ## 3.7 — Oktober 2026
 
 - 3.7.6 — Schlankerer Willkommensdialog; beim normalen Start erscheint keine Meldung mehr

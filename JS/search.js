@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - SEARCH.JS v3.7
+// LINKSAMMLUNG - SEARCH.JS v3.8
 // ========================================================================
 // Such-System: STRG+K, globale Suche über alle Tabs, Tab-Badge
 // Abhängig von: config.js, tabs.js
@@ -317,7 +317,7 @@ function renderSearchResults() {
     resultsContainer.innerHTML = '';
 
     searchResults.forEach((result, index) => {
-        const resultElement = document.createElement('div');
+        const resultElement = createLinkAnchor(result.url);
         resultElement.className = 'search-result-item';
         resultElement.setAttribute('data-index', index);
 
@@ -339,9 +339,10 @@ function renderSearchResults() {
             <div class="search-result-url">${esc(result.url)}</div>
         `;
 
-        resultElement.addEventListener('click', () => {
-            openLink(result.url);
-            closeSearchModal();
+        // Öffnen übernimmt der Browser (echter Link). Nur beim normalen Klick
+        // schließt sich die Suche; Strg/Shift+Klick und Mittelklick lassen sie offen.
+        resultElement.addEventListener('click', (e) => {
+            if (!e.ctrlKey && !e.metaKey && !e.shiftKey) closeSearchModal();
         });
 
         resultElement.addEventListener('mouseenter', () => {

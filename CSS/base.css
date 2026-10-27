@@ -14,11 +14,38 @@
 
 /* Sichtbarer Tastaturfokus für klickbare Nicht-Buttons (Links, Menüeinträge, Chips) */
 [role="link"]:focus-visible,
+a.link-item:focus-visible,
+a.favorite-item:focus-visible,
+a.pinned-chip:focus-visible,
+a.search-result-item:focus-visible,
 [role="button"]:focus-visible,
 [role="menuitem"]:focus-visible,
 .modal-content:focus-visible {
     outline: 2px solid #40e0d0;
     outline-offset: 2px;
+}
+
+/* Link-Kacheln, Chips und Suchtreffer sind echte <a>-Links (Mittelklick = Hintergrund-Tab).
+   Aussehen wie zuvor als <div>: keine Unterstreichung, Farbe aus der jeweiligen Klasse */
+a.link-item,
+a.favorite-item,
+a.pinned-chip,
+a.search-result-item,
+a.ov-act {
+    text-decoration: none;
+}
+
+a.favorite-item,
+a.search-result-item {
+    color: inherit;
+}
+
+a.search-result-item {
+    display: block;
+}
+
+a.ov-act {
+    display: inline-block;
 }
 
 body {

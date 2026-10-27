@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - PINNED.JS v3.7
+// LINKSAMMLUNG - PINNED.JS v3.8
 // ========================================================================
 // Angepinnte Links: Tab-übergreifende Leiste unter der Suchleiste.
 // Die Leiste wird nur angezeigt wenn mindestens ein Link angepinnt ist.
@@ -55,10 +55,8 @@ function updatePinnedBar() {
     scroll.appendChild(label);
 
     pinned.forEach(p => {
-        const chip = document.createElement('div');
+        const chip = createLinkAnchor(p.url);
         chip.className = 'pinned-chip';
-        chip.setAttribute('role', 'link');
-        chip.tabIndex = 0;
         chip.title = `${p.title}\n${p.tabIcon} ${p.tabLabel}`;
         chip.innerHTML = `
             <span class="pinned-chip-icon">${esc(p.icon)}</span>
@@ -66,12 +64,9 @@ function updatePinnedBar() {
             <span class="pinned-chip-unpin" title="Losgelöst (unpin)" role="button" tabindex="0" aria-label="Pin lösen">✕</span>
         `;
 
-        chip.addEventListener('click', (e) => {
-            if (e.target.closest('.pinned-chip-unpin')) return;
-            if (isSafeUrl(p.url)) window.open(p.url, '_blank', 'noopener,noreferrer');
-        });
-
-        chip.querySelector('.pinned-chip-unpin').addEventListener('click', (e) => {
+        const unpinBtn = chip.querySelector('.pinned-chip-unpin');
+        shieldFromLink(unpinBtn);
+        unpinBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             unpinLink(p.tabId, p.categoryKey, p.linkIndex, p.url);
         });

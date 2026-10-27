@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - CONFIG.JS v3.7
+// LINKSAMMLUNG - CONFIG.JS v3.8
 // ========================================================================
 // Globale Variablen, Tab-aware Konfiguration laden/speichern, Migration
 // ========================================================================
@@ -148,6 +148,35 @@ function isSafeUrl(url) {
     } catch {
         return false;
     }
+}
+
+/**
+ * Echtes <a>-Element für einen gespeicherten Link erzeugen.
+ * So verhält es sich wie jeder Link im Browser: Klick öffnet einen neuen Tab,
+ * mittlere Maustaste und Strg+Klick öffnen im Hintergrund, Shift+Klick ein neues Fenster.
+ * Unsichere URLs bekommen kein href (bleiben per Tastatur erreichbar, öffnen aber nichts).
+ */
+function createLinkAnchor(url) {
+    const a = document.createElement('a');
+    if (isSafeUrl(url)) {
+        a.href   = url;
+        a.target = '_blank';
+        a.rel    = 'noopener noreferrer';
+    } else {
+        a.setAttribute('role', 'link');
+        a.setAttribute('aria-disabled', 'true');
+        a.tabIndex = 0;
+    }
+    a.draggable = false;   // kein natives Ziehen der URL – Verschieben nur über ⋮⋮
+    return a;
+}
+
+/**
+ * Bedienelement innerhalb eines Links (✕, ⋮⋮): Klick und Mittelklick öffnen den Link nicht
+ */
+function shieldFromLink(el) {
+    el.addEventListener('click',    e => e.preventDefault());
+    el.addEventListener('auxclick', e => e.preventDefault());
 }
 
 /**

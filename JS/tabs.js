@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - TABS.JS v3.7
+// LINKSAMMLUNG - TABS.JS v3.8
 // ========================================================================
 // Tab-System: Storage, Tab-UI, Switching, Favoriten-Tab
 // Abhängig von: config.js
@@ -672,10 +672,8 @@ function renderFavoritesTab() {
         grid.className = 'fav-tab-grid';
 
         tabFavorites.forEach(fav => {
-            const linkEl = document.createElement('div');
+            const linkEl = createLinkAnchor(fav.url);
             linkEl.className = 'link-item favorites-tab-item favorite';
-            linkEl.setAttribute('role', 'link');
-            linkEl.tabIndex = 0;
             linkEl.dataset.description = fav.description || '';
 
             linkEl.innerHTML = `
@@ -687,8 +685,7 @@ function renderFavoritesTab() {
                 <div class="favorites-tab-source">${esc(fav.categoryIcon)} ${esc(fav.categoryTitle)}</div>
             `;
 
-            linkEl.addEventListener('click', () => { if (isSafeUrl(fav.url)) window.open(fav.url, '_blank', 'noopener,noreferrer'); });
-            linkEl.title = `${fav.title}\n↗ Klicken zum Öffnen\n✏️ Bearbeiten im Tab "${fav.tabLabel}"`;
+            linkEl.title = `${fav.title}\n↗ Klicken zum Öffnen · Mittlere Maustaste: im Hintergrund\n✏️ Bearbeiten im Tab "${fav.tabLabel}"`;
 
             grid.appendChild(linkEl);
         });

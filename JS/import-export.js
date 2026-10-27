@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - IMPORT-EXPORT.JS v3.7
+// LINKSAMMLUNG - IMPORT-EXPORT.JS v3.8
 // ========================================================================
 // Import/Export-System: Einzellink, Kategorie, Vollständige Config
 // Abhängig von: config.js, categories.js

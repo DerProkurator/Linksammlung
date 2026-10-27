@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.7)
+ * WELCOME LOADER - MIT CONFIG-PRIORITÄTEN (v3.8)
  * ========================================================================
  *
  * Prioritätsreihenfolge beim Start:

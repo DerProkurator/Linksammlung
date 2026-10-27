@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - DRAG-DROP.JS v3.7
+// LINKSAMMLUNG - DRAG-DROP.JS v3.8
 // ========================================================================
 // Drag & Drop-System: Kategorien und Links verschieben
 // Abhängig von: config.js

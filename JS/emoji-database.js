@@ -1,6 +1,6 @@
 /**
  * ========================================================================
- * EMOJI-DATENBANK FÜR LINKSAMMLUNG v3.7
+ * EMOJI-DATENBANK FÜR LINKSAMMLUNG v3.8
  * ========================================================================
  *
  * Zentrale Emoji-Sammlung für Icon-Picker

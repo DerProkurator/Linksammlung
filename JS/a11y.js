@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - A11Y.JS v3.7
+// LINKSAMMLUNG - A11Y.JS v3.8
 // ========================================================================
 // Tastaturbedienung und Dialog-Semantik – zentral für alle (auch dynamisch
 // erzeugten) Dialoge und Menüs:
@@ -243,5 +243,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================================================
-// ENDE A11Y.JS v3.7
+// ENDE A11Y.JS v3.8
 // ========================================================================

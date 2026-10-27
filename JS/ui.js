@@ -1,5 +1,5 @@
 // ========================================================================
-// LINKSAMMLUNG - UI.JS v3.7
+// LINKSAMMLUNG - UI.JS v3.8
 // ========================================================================
 // Rendering, Modals, Status-Nachrichten, Menü, Kontext-Menüs
 // Abhängig von: config.js, drag-drop.js
@@ -122,15 +122,13 @@ function createCategoryElement(categoryKey, category) {
         linkGrid.appendChild(hint);
     } else if (!category.collapsed) {
         category.links.forEach((link, linkIndex) => {
-            const linkElement = document.createElement('div');
+            const linkElement = createLinkAnchor(link.url);
             linkElement.className = 'link-item draggable' + (link.favorite ? ' favorite' : '');
             linkElement.dataset.description = link.description || '';
             linkElement.dataset.catKey      = categoryKey;
             linkElement.dataset.linkIndex   = linkIndex;
             // Tastatur: Enter öffnet, Kontextmenü-Taste/Shift+F10 öffnet das Menü,
             // Alt+Pfeiltasten verschieben den Link innerhalb der Kategorie
-            linkElement.setAttribute('role', 'link');
-            linkElement.tabIndex = 0;
 
             linkElement.innerHTML = `
                 <div class="link-header">
@@ -141,13 +139,8 @@ function createCategoryElement(categoryKey, category) {
                 <div class="link-drag-handle" title="Link verschieben">⋮⋮</div>
             `;
 
+            // Öffnen übernimmt der Browser (echter Link, siehe createLinkAnchor)
             linkElement.addEventListener('contextmenu', (e) => showContextMenu(e, categoryKey, linkIndex));
-            linkElement.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('link-drag-handle')) {
-                    // isSafeUrl() blockiert javascript: und data: URLs aus der Config (XSS-Schutz)
-                    if (isSafeUrl(link.url)) window.open(link.url, '_blank', 'noopener,noreferrer');
-                }
-            });
 
             linkElement.addEventListener('keydown', (e) => {
                 if (!e.altKey) return;
@@ -161,6 +154,7 @@ function createCategoryElement(categoryKey, category) {
             const lDragHandle = linkElement.querySelector('.link-drag-handle');
             lDragHandle.setAttribute('aria-hidden', 'true');
             lDragHandle.addEventListener('click', (e) => e.stopPropagation());
+            shieldFromLink(lDragHandle);
 
             linkGrid.appendChild(linkElement);
 
