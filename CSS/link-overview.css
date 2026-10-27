@@ -388,6 +388,21 @@
     font-size: 12px;
 }
 
+.ov-sim-status {
+    color: rgba(255, 193, 7, 0.75);
+    margin-left: 6px;
+}
+
+.ov-sim-partial {
+    margin: 12px 12px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    color: #ffc107;
+    font-size: 13px;
+}
+
 .ov-empty {
     padding: 40px;
     text-align: center;

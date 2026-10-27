@@ -10,7 +10,8 @@
 let overviewEditTarget = null;   // { tabId, categoryKey, linkIndex, url } während Bearbeitung aus der Übersicht
 
 let _ovRows      = [];           // alle Links (Rohdaten, mit Kontext)
-let _ovSimilar   = null;         // Ähnlichkeits-Index (lazy, nach jeder Änderung neu)
+let _ovSimilar   = null;         // Ähnlichkeits-Index (im Hintergrund berechnet, null = noch nicht fertig)
+let _ovSimToken  = 0;            // Kennung der laufenden Berechnung (Abbruch bei Schließen/Neuladen)
 let _ovSortCol   = 'title';
 let _ovSortDir   = 1;            // 1 = aufsteigend, -1 = absteigend
 let _ovMode      = 'list';       // 'list' | 'similar'
@@ -158,8 +159,25 @@ function _ovNormTitle(title) {
 
 const _OV_STOPWORDS = new Set(['der', 'die', 'das', 'und', 'oder', 'the', 'and', 'for', 'von', 'mit', 'fuer', 'www', 'http', 'https', 'com', 'de']);
 
+// Obergrenzen für die Ähnlichkeitssuche. Sie läuft in Häppchen im Hintergrund,
+// damit die Übersicht auch bei sehr großen oder präparierten Sammlungen sofort
+// bedienbar bleibt (Rechenaufwand und Speicher sind fest begrenzt).
+const _OV_SIM = {
+    maxTokens:  10,       // Wörter pro Titel, die für den Vergleich zählen
+    bucketMax:  200,      // Wortanfang in mehr Titeln = zu häufig (wie ein Füllwort), kein Vergleichskandidat
+    typoMaxLen: 60,       // Tippfehler-Prüfung nur für Titel bis zu dieser Länge
+    budget:     30e6,     // Rechenbudget für den Namensvergleich (≈ Zeichenvergleiche)
+    rowsPerStep: 500,     // Vorbereitung: Links pro Arbeitsschritt
+    sliceMs:    10        // Rechenzeit pro Häppchen, danach bekommt die Oberfläche wieder Luft
+};
+
 function _ovTokens(normTitle) {
-    return new Set(normTitle.split(' ').filter(t => t.length >= 3 && !_OV_STOPWORDS.has(t)));
+    const tokens = new Set();
+    for (const t of normTitle.split(' ')) {
+        if (t.length >= 3 && !_OV_STOPWORDS.has(t)) tokens.add(t);
+        if (tokens.size >= _OV_SIM.maxTokens) break;
+    }
+    return [...tokens];
 }
 
 /**
@@ -182,107 +200,238 @@ function _ovLevenshtein(a, b, max) {
 }
 
 /**
- * Sind zwei Titel ähnlich? (gleiche Wörter oder Tippfehler-Toleranz)
+ * Sind zwei Titel ähnlich? (gemeinsame Wörter oder Tippfehler-Toleranz)
+ * Rechenaufwand wird in job.cost mitgezählt.
  */
-function _ovTitlesSimilar(a, b) {
+function _ovTitlesSimilar(a, b, job) {
     if (!a.norm || !b.norm) return false;
     if (a.norm === b.norm) return true;
 
     // Wort-Überschneidung (Jaccard; "web" passt auch zu "webmail")
-    if (a.tokens.size && b.tokens.size) {
+    if (a.tokens.length && b.tokens.length) {
+        job.cost += a.tokens.length * b.tokens.length;
         let shared = 0;
-        a.tokens.forEach(t => {
+        for (const t of a.tokens) {
             for (const u of b.tokens) {
                 if (t === u || t.startsWith(u) || u.startsWith(t)) { shared++; break; }
             }
-        });
-        const union = a.tokens.size + b.tokens.size - shared;
+        }
+        const union = a.tokens.length + b.tokens.length - shared;
         if (shared > 0 && shared / union >= 0.5) return true;
     }
 
-    // Tippfehler: ≤ 20 % abweichende Zeichen (ab 5 Zeichen)
+    // Tippfehler: ≤ 20 % abweichende Zeichen (5 bis typoMaxLen Zeichen)
     const len = Math.max(a.norm.length, b.norm.length);
-    if (len < 5) return false;
+    if (len < 5 || len > _OV_SIM.typoMaxLen) return false;
     const max = Math.floor(len * 0.2);
+    if (Math.abs(a.norm.length - b.norm.length) > max) return false;
+    job.cost += a.norm.length * b.norm.length;
     return _ovLevenshtein(a.norm, b.norm, max) <= max;
 }
 
 /**
- * Ähnlichkeits-Index aufbauen:
- *  url[i]    → Indizes mit fast gleicher Adresse
- *  title[i]  → Indizes mit ähnlichem Namen
- *  domain[i] → Indizes mit gleicher Domain
+ * Arbeitspaket für den Ähnlichkeits-Index. step() erledigt jeweils einen kleinen Schritt.
+ *
+ * Ergebnis (job.result) – Gruppen statt Nachbarlisten, Speicher wächst nur linear:
+ *  urlGroups / urlGroupOf[i]       fast gleiche Adresse
+ *  domGroups / domGroupOf[i]       gleiche Domain (mit mindestens zwei verschiedenen Adressen)
+ *  titleGroups / titleGroupOf[i]   ähnlicher Name (zusammenhängende Gruppen)
+ *  partial                         Rechenbudget erschöpft, Namensvergleich unvollständig
  */
-function _ovBuildSimilarity() {
-    const n = _ovRows.length;
-    const loose  = _ovRows.map(r => _ovLooseUrl(r.url));
-    const domain = _ovRows.map(r => _ovDomain(r.url));
-    const titles = _ovRows.map(r => {
-        const norm = _ovNormTitle(r.title);
-        return { norm, tokens: _ovTokens(norm) };
-    });
+function _ovCreateSimilarityJob(rows) {
+    const n = rows.length;
+    const loose  = new Array(n);
+    const domain = new Array(n);
+    const titles = new Array(n);
+    const byLoose = new Map(), byDomain = new Map(), byNorm = new Map(), buckets = new Map();
+    const parent = new Int32Array(n);
+    for (let i = 0; i < n; i++) parent[i] = i;
 
-    const idx = { url: [], title: [], domain: [] };
-    for (let i = 0; i < n; i++) { idx.url[i] = []; idx.title[i] = []; idx.domain[i] = []; }
+    const find = i => {
+        while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+        return i;
+    };
+    const union = (a, b) => { a = find(a); b = find(b); if (a !== b) parent[b] = a; };
+    const push = (map, key, i) => {
+        let list = map.get(key);
+        if (!list) map.set(key, list = []);
+        list.push(i);
+        return list;
+    };
 
-    const byLoose = new Map();
-    const byDomain = new Map();
-    for (let i = 0; i < n; i++) {
-        if (loose[i]) {
-            if (!byLoose.has(loose[i])) byLoose.set(loose[i], []);
-            byLoose.get(loose[i]).push(i);
-        }
-        if (domain[i]) {
-            if (!byDomain.has(domain[i])) byDomain.set(domain[i], []);
-            byDomain.get(domain[i]).push(i);
-        }
-    }
-    byLoose.forEach(list => list.forEach(i => { idx.url[i] = list.filter(j => j !== i); }));
-    byDomain.forEach(list => list.forEach(i => {
-        // gleiche Domain, aber nicht schon über "fast gleiche Adresse" erfasst
-        idx.domain[i] = list.filter(j => j !== i && loose[j] !== loose[i]);
-    }));
+    const job = { done: false, cost: 0, result: null, phase: 'prepare', progress: 0 };
+    let row = 0;
+    let bucketLists = null, bIdx = 0, bRow = 0;
 
-    for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-            if (loose[i] && loose[i] === loose[j]) continue;
-            if (_ovTitlesSimilar(titles[i], titles[j])) {
-                idx.title[i].push(j);
-                idx.title[j].push(i);
+    function prepareRows() {
+        const stop = Math.min(n, row + _OV_SIM.rowsPerStep);
+        for (; row < stop; row++) {
+            const r = rows[row];
+            loose[row]  = _ovLooseUrl(r.url);
+            domain[row] = _ovDomain(r.url);
+            const norm = _ovNormTitle(r.title);
+            titles[row] = { norm, tokens: _ovTokens(norm) };
+            if (loose[row])  push(byLoose, loose[row], row);
+            if (domain[row]) push(byDomain, domain[row], row);
+            if (norm)        push(byNorm, norm, row);
+            for (const t of titles[row].tokens) {
+                const key = t.slice(0, 3);
+                const list = buckets.get(key);
+                // Zu häufige Wortanfänge nicht weiter sammeln (Speicher bleibt begrenzt)
+                if (!list) buckets.set(key, [row]);
+                else if (list.length <= _OV_SIM.bucketMax) list.push(row);
             }
         }
+        job.progress = 0.2 * row / Math.max(n, 1);
+        if (row < n) return;
+
+        // Gleicher normalisierter Titel → direkt eine Gruppe (ohne paarweise Vergleiche).
+        // Gleiche Adresse zählt schon unter "fast gleiche Adresse".
+        byNorm.forEach(list => {
+            const first = list[0];
+            for (let k = 1; k < list.length; k++) {
+                if (loose[list[k]] !== loose[first]) union(first, list[k]);
+            }
+        });
+        bucketLists = [...buckets.values()].filter(l => l.length > 1 && l.length <= _OV_SIM.bucketMax);
+        job.phase = 'compare';
     }
 
-    // Gruppen für die "Ähnliche"-Ansicht
-    const groups = { url: [], title: [], domain: [] };
-    byLoose.forEach(list => { if (list.length > 1) groups.url.push(list); });
-
-    const seen = new Set();
-    for (let i = 0; i < n; i++) {
-        if (seen.has(i) || idx.title[i].length === 0) continue;
-        // Zusammenhängende Komponente sammeln
-        const comp = [];
-        const stack = [i];
-        seen.add(i);
-        while (stack.length) {
-            const k = stack.pop();
-            comp.push(k);
-            idx.title[k].forEach(m => { if (!seen.has(m)) { seen.add(m); stack.push(m); } });
+    // Ein Schritt = ein Titel gegen die übrigen Titel desselben Wortanfangs (≤ bucketMax Vergleiche)
+    function compareStep() {
+        if (bIdx >= bucketLists.length || job.cost > _OV_SIM.budget) {
+            job.partial = bIdx < bucketLists.length;
+            job.phase = 'finish';
+            return;
         }
-        groups.title.push(comp);
+        const list = bucketLists[bIdx];
+        const i = list[bRow];
+        for (let k = bRow + 1; k < list.length; k++) {
+            const j = list[k];
+            job.cost++;
+            if (loose[i] && loose[i] === loose[j]) continue;
+            if (find(i) === find(j)) continue;
+            if (_ovTitlesSimilar(titles[i], titles[j], job)) union(i, j);
+        }
+        if (++bRow >= list.length - 1) { bIdx++; bRow = 0; }
+        job.progress = 0.2 + 0.8 * bIdx / Math.max(bucketLists.length, 1);
     }
 
-    byDomain.forEach(list => {
-        const distinct = new Set(list.map(i => loose[i]));
-        if (distinct.size > 1) groups.domain.push(list);
-    });
+    function finish() {
+        const toGroups = (lists, keep) => {
+            const groups = [], of = new Int32Array(n).fill(-1);
+            lists.forEach(list => {
+                if (!keep(list)) return;
+                list.forEach(i => { of[i] = groups.length; });
+                groups.push(list);
+            });
+            return { groups, of };
+        };
 
-    return { idx, groups, domain };
+        const url = toGroups([...byLoose.values()], l => l.length > 1);
+        const dom = toGroups([...byDomain.values()], l => l.some(i => loose[i] !== loose[l[0]]));
+
+        const comps = new Map();
+        for (let i = 0; i < n; i++) push(comps, find(i), i);
+        const title = toGroups([...comps.values()], l => l.length > 1);
+
+        job.result = {
+            domain,
+            urlGroups: url.groups,     urlGroupOf: url.of,
+            domGroups: dom.groups,     domGroupOf: dom.of,
+            titleGroups: title.groups, titleGroupOf: title.of,
+            partial: !!job.partial
+        };
+        job.done = true;
+        job.progress = 1;
+    }
+
+    job.step = () => {
+        if (job.phase === 'prepare')      prepareRows();
+        else if (job.phase === 'compare') compareStep();
+        else                              finish();
+    };
+    return job;
 }
 
-function _ovGetSimilarity() {
-    if (!_ovSimilar) _ovSimilar = _ovBuildSimilarity();
-    return _ovSimilar;
+/**
+ * Ähnliche Links einer Zeile: { url, title, domain } als Index-Listen (ohne die Zeile selbst)
+ */
+function _ovSimilarOf(i) {
+    const s = _ovSimilar;
+    const others = (groups, of) => of[i] >= 0 ? groups[of[i]].filter(j => j !== i) : [];
+    const url = others(s.urlGroups, s.urlGroupOf);
+    const sameUrl = new Set(url);
+    return {
+        url,
+        title:  others(s.titleGroups, s.titleGroupOf),
+        // gleiche Domain, aber nicht schon über "fast gleiche Adresse" erfasst
+        domain: others(s.domGroups, s.domGroupOf).filter(j => !sameUrl.has(j))
+    };
+}
+
+/**
+ * Ähnlichkeits-Index im Hintergrund berechnen (in Häppchen, abbrechbar).
+ * Die Liste ist sofort bedienbar; 🧩-Hinweise erscheinen, sobald der Index fertig ist.
+ */
+function _ovStartSimilarity() {
+    const token = ++_ovSimToken;
+    _ovSimilar = null;
+    const job = _ovCreateSimilarityJob(_ovRows);
+
+    const slice = () => {
+        const end = performance.now() + _OV_SIM.sliceMs;
+        while (!job.done && performance.now() < end) job.step();
+        return job.done;
+    };
+
+    // Kleine Sammlungen sind im ersten Häppchen fertig → 🧩 direkt beim ersten Zeichnen, kein Flackern
+    if (slice()) { _ovSimilar = job.result; return; }
+
+    const run = () => {
+        if (token !== _ovSimToken) return;   // abgebrochen (Übersicht geschlossen oder neu geladen)
+        if (slice()) {
+            _ovSimilar = job.result;
+            _ovOnSimilarityReady();
+        } else {
+            _ovUpdateSimStatus(job.progress);
+            setTimeout(run, 0);
+        }
+    };
+    _ovUpdateSimStatus(job.progress);
+    setTimeout(run, 0);
+}
+
+/**
+ * Laufende Berechnung abbrechen
+ */
+function _ovCancelSimilarity() {
+    _ovSimToken++;
+}
+
+/**
+ * Fortschrittsanzeige während der Berechnung
+ */
+function _ovUpdateSimStatus(progress) {
+    const el = document.getElementById('ovSimStatus');
+    if (!el) return;
+    el.textContent = progress === null ? '' : `🧩 Ähnliche Links werden ermittelt … ${Math.floor(progress * 100)} %`;
+    const wait = document.getElementById('ovSimWait');
+    if (wait) wait.textContent = `⏳ Ähnliche Links werden ermittelt … ${Math.floor(progress * 100)} %`;
+}
+
+/**
+ * Index fertig: in der Liste nur die 🧩-Hinweise ergänzen (Scroll-Position und Auswahl bleiben),
+ * in der Ähnlich-Ansicht komplett neu zeichnen
+ */
+function _ovOnSimilarityReady() {
+    _ovUpdateSimStatus(null);
+    if (!document.getElementById('linkOverviewModal')) return;
+    if (_ovMode === 'similar') { _ovRender(); return; }
+    document.querySelectorAll('#ovTableWrap tr[data-row] .ov-title-cell').forEach(cell => {
+        const i = +cell.closest('tr').dataset.row;
+        if (!cell.querySelector('.ov-sim-badge')) cell.insertAdjacentHTML('beforeend', _ovSimilarBadge(i));
+    });
 }
 
 // -----------------------------------------------------------------------
@@ -325,7 +474,7 @@ function openLinkOverview() {
                     <button type="button" id="ovSimilarBtn" class="ov-toggle-btn" onclick="toggleOverviewSimilarMode()" title="Ähnliche Links gruppiert anzeigen">🧩 Ähnliche anzeigen</button>
                 </div>
                 <div class="ov-subbar">
-                    <div class="ov-stats" id="ovStats"></div>
+                    <div class="ov-stats"><span id="ovStats"></span> <span class="ov-sim-status" id="ovSimStatus"></span></div>
                     <div class="ov-focus" id="ovFocus"></div>
                 </div>
                 <div class="ov-bulk" id="ovBulk"></div>
@@ -375,6 +524,7 @@ function openLinkOverview() {
  * Link-Übersicht schließen
  */
 function closeLinkOverview() {
+    _ovCancelSimilarity();
     const modal = document.getElementById('linkOverviewModal');
     if (modal) modal.remove();
     if (_ovKeyHandler) {
@@ -389,12 +539,12 @@ function closeLinkOverview() {
 function _ovReload() {
     if (!document.getElementById('linkOverviewModal')) return;
     _ovRows    = _ovCollectRows();
-    _ovSimilar = null;
     _ovFocusRow = null;
     _ovLastClick = null;
     const uids = new Set(_ovRows.map(r => r.uid));
     _ovSelected = new Set([..._ovSelected].filter(u => uids.has(u)));
     _ovFillCategoryFilter();
+    _ovStartSimilarity();   // setzt _ovSimilar zurück; Liste wird sofort ohne 🧩 gezeichnet
     _ovRender();
 }
 
@@ -432,8 +582,8 @@ function _ovFilteredIndices() {
 
     let allowed = null;
     if (_ovFocusRow !== null) {
-        const { idx } = _ovGetSimilarity();
-        allowed = new Set([_ovFocusRow, ...idx.url[_ovFocusRow], ...idx.title[_ovFocusRow], ...idx.domain[_ovFocusRow]]);
+        const sim = _ovSimilarOf(_ovFocusRow);
+        allowed = new Set([_ovFocusRow, ...sim.url, ...sim.title, ...sim.domain]);
     }
 
     const result = [];
@@ -523,8 +673,9 @@ function _ovShortUrl(url) {
  * Ähnlichkeits-Badge einer Zeile (nur Listenansicht)
  */
 function _ovSimilarBadge(i) {
-    const { idx } = _ovGetSimilarity();
-    const u = idx.url[i].length, t = idx.title[i].length, d = idx.domain[i].length;
+    if (!_ovSimilar) return '';   // Index wird noch berechnet
+    const sim = _ovSimilarOf(i);
+    const u = sim.url.length, t = sim.title.length, d = sim.domain.length;
     if (!u && !t && !d) return '';
 
     const parts = [];
@@ -689,7 +840,11 @@ function _ovRender() {
  * Ähnlichkeits-Ansicht: Gruppen je Stufe
  */
 function _ovSimilarHtml(allowed) {
-    const { groups, domain } = _ovGetSimilarity();
+    if (!_ovSimilar) {
+        return '<div class="ov-empty" id="ovSimWait">⏳ Ähnliche Links werden ermittelt …</div>';
+    }
+    const { domain } = _ovSimilar;
+    const groups = { url: _ovSimilar.urlGroups, title: _ovSimilar.titleGroups, domain: _ovSimilar.domGroups };
 
     const sections = [
         { key: 'url',    title: '🔗 Fast gleiche Adresse', hint: 'Gleich bis auf http/https, www., Parameter oder abschließenden Schrägstrich.' },
@@ -727,7 +882,10 @@ function _ovSimilarHtml(allowed) {
             </div>`;
     });
 
-    return any ? html : '<div class="ov-empty">✅ Keine ähnlichen Links gefunden.</div>';
+    const partialHint = _ovSimilar.partial
+        ? '<div class="ov-sim-partial">⚠️ Sehr große Sammlung: Ähnliche Namen wurden nur teilweise geprüft.</div>'
+        : '';
+    return any ? partialHint + html : partialHint + '<div class="ov-empty">✅ Keine ähnlichen Links gefunden.</div>';
 }
 
 // -----------------------------------------------------------------------
@@ -1220,3 +1378,4 @@ function _ovConfirmMove() {
     showMessage(`${moved.length} Link${moved.length !== 1 ? 's' : ''} nach „${tab ? tab.label : tabId} › ${targetTitle}“ verschoben`, 'success');
     _ovAfterChange();
 }
+
